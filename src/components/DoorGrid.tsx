@@ -12,11 +12,11 @@ function statusStyles(status: DoorRecord["status"]) {
         dot: "bg-[#ef4444]",
         label: "Occupied",
       };
-    case "Assigned":
+    case "Reserved":
       return {
         badge: "bg-[#f59e0b1a] text-[#f59e0b] border-[#f59e0b33]",
         dot: "bg-[#f59e0b]",
-        label: "Assigned",
+        label: "Reserved",
       };
     case "Available":
       return {
@@ -28,21 +28,25 @@ function statusStyles(status: DoorRecord["status"]) {
 }
 
 export default function DoorGrid({ doors }: DoorGridProps) {
+  const occupied = doors.filter((d) => d.status === "Occupied").length;
+  const reserved = doors.filter((d) => d.status === "Reserved").length;
+  const available = doors.filter((d) => d.status === "Available").length;
+
   return (
     <div>
       {/* Legend */}
-      <div className="flex items-center gap-5 mb-4">
+      <div className="flex flex-wrap items-center gap-5 mb-4">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] pulse-dot" />
-          <span className="text-xs text-[#a1a1aa]">Occupied</span>
+          <span className="text-xs text-[#a1a1aa]">Occupied ({occupied})</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-          <span className="text-xs text-[#a1a1aa]">Assigned</span>
+          <span className="text-xs text-[#a1a1aa]">Reserved ({reserved})</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-          <span className="text-xs text-[#a1a1aa]">Available</span>
+          <span className="text-xs text-[#a1a1aa]">Available ({available})</span>
         </div>
       </div>
 
@@ -55,6 +59,7 @@ export default function DoorGrid({ doors }: DoorGridProps) {
               key={door.door}
               className="bg-[#141419] border border-[#1e1e2a] rounded-lg p-3.5 flex flex-col gap-2 hover:border-[#7c3aed66] transition-colors duration-200"
             >
+              {/* Header: door + status badge */}
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-[#f4f4f6] tracking-wide">
                   {door.door}
@@ -68,17 +73,47 @@ export default function DoorGrid({ doors }: DoorGridProps) {
                   {styles.label}
                 </span>
               </div>
-              <div className="text-xs text-[#71717a]">
-                {door.entryTicket ? (
-                  <span className="font-mono text-[#a1a1aa]">
-                    {door.entryTicket}
-                  </span>
-                ) : door.status === "Available" ? (
-                  <span className="text-[#22c55e99]">— Ready —</span>
-                ) : (
-                  <span className="text-[#71717a] italic">No ticket</span>
-                )}
-              </div>
+
+              {/* Body: assignee + duration / or customer */}
+              {door.status === "Available" ? (
+                <div className="text-xs text-[#71717a]">
+                  {door.customer ? (
+                    <span className="text-[#22c55e99]">{door.customer}</span>
+                  ) : (
+                    <span className="text-[#22c55e99]">— Ready —</span>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  {door.assignee && (
+                    <div className="text-xs text-[#a1a1aa] truncate" title={door.assignee}>
+                      {door.assignee}
+                    </div>
+                  )}
+                  {door.duration && (
+                    <div className="text-xs text-[#71717a] font-mono tabular-nums">
+                      {door.duration}
+                    </div>
+                  )}
+                  {door.taskIds.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {door.taskIds.map((tid) => (
+                        <span
+                          key={tid}
+                          className="text-[9px] font-mono text-[#8b5cf6] bg-[#8b5cf61a] px-1.5 py-0.5 rounded"
+                        >
+                          {tid.replace("TASK-", "")}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {!door.assignee && !door.duration && door.taskIds.length === 0 && (
+                    <span className="text-xs text-[#71717a] italic">
+                      {door.customer || "No active task"}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}

@@ -1,7 +1,7 @@
-import type { AssignmentRecord } from "@/lib/data";
+import type { TaskRecord } from "@/lib/data";
 
 interface AssignmentHistoryProps {
-  assignments: AssignmentRecord[];
+  assignments: TaskRecord[];
 }
 
 export default function AssignmentHistory({
@@ -11,7 +11,7 @@ export default function AssignmentHistory({
     <div>
       <div className="bg-[#141419] border border-[#1e1e2a] rounded-xl overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-4 gap-4 px-5 py-3 bg-[#0a0a0f] border-b border-[#1e1e2a]">
+        <div className="grid grid-cols-[1fr_1fr_80px_1fr] gap-4 px-5 py-3 bg-[#0a0a0f] border-b border-[#1e1e2a]">
           <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
             DN
           </span>
@@ -75,24 +75,23 @@ export default function AssignmentHistory({
                 No assignment history available for today
               </span>
               <span className="text-xs text-[#71717a] max-w-xs text-center leading-relaxed">
-                Dock assignment data returned empty for this facility. Assignments
-                may be managed through a separate system.
+                Dock assignment data returned empty for this facility.
               </span>
             </div>
           ) : (
             assignments.map((row, i) => (
               <div
-                key={i}
-                className="grid grid-cols-4 gap-4 px-5 py-3 border-b border-[#1e1e2a] last:border-b-0 hover:bg-[#ffffff05] transition-colors"
+                key={row.taskId}
+                className="grid grid-cols-[1fr_1fr_80px_1fr] gap-4 px-5 py-3 border-b border-[#1e1e2a] last:border-b-0 hover:bg-[#ffffff05] transition-colors"
               >
-                <span className="text-sm text-[#f4f4f6] font-mono">
-                  {row.dn}
+                <span className="text-xs text-[#f4f4f6] font-mono leading-relaxed break-words">
+                  {row.dns}
                 </span>
-                <span className="text-sm text-[#a1a1aa]">{row.customer}</span>
-                <span className="text-sm text-[#a1a1aa] tabular-nums">
-                  {row.pieces.toLocaleString()}
+                <span className="text-xs text-[#a1a1aa]">{row.customer}</span>
+                <span className="text-xs text-[#a1a1aa] tabular-nums">
+                  {row.pieces}
                 </span>
-                <span className="text-sm text-[#a1a1aa]">{row.assignee}</span>
+                <span className="text-xs text-[#a1a1aa]">{row.assignee}</span>
               </div>
             ))
           )}

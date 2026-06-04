@@ -1,18 +1,21 @@
 /**
  * Bay 4 Assignments — Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50–DOCK72
- * Date: June 1, 2026
+ * Pulled: June 4, 2026 ~09:31 PDT
  *
- * All values sourced from the authoritative brief.
+ * All values sourced from live WISE/WMS queries.
  * Do NOT fabricate, estimate, or guess any metric.
  */
 
-export type DoorStatus = "Occupied" | "Assigned" | "Available";
+export type DoorStatus = "Occupied" | "Reserved" | "Available";
 
 export interface DoorRecord {
   door: string;
   status: DoorStatus;
-  entryTicket: string | null;
+  assignee: string | null;
+  customer: string | null;
+  taskIds: string[];
+  duration: string | null;
 }
 
 export interface KpiMetric {
@@ -23,110 +26,155 @@ export interface KpiMetric {
   percentage: number;
 }
 
-export interface UnavailableMetric {
+export interface AssigneeSummary {
+  name: string;
+  taskCount: number;
+}
+
+export interface MixMetric {
   label: string;
-  reason: string;
+  count: number;
+  total: number;
+}
+
+export interface TaskRecord {
+  taskId: string;
+  dns: string;
+  customer: string;
+  pieces: string;
+  assignee: string;
 }
 
 export const TOTAL_DOORS = 23;
 
 export const doors: DoorRecord[] = [
-  // Occupied (17)
-  { door: "DOCK50", status: "Available", entryTicket: null },
-  { door: "DOCK51", status: "Occupied", entryTicket: "ET-1101472" },
-  { door: "DOCK52", status: "Occupied", entryTicket: "ET-1101492" },
-  { door: "DOCK53", status: "Occupied", entryTicket: "ET-1101487" },
-  { door: "DOCK54", status: "Available", entryTicket: null },
-  { door: "DOCK55", status: "Occupied", entryTicket: "ET-1100773" },
-  { door: "DOCK56", status: "Occupied", entryTicket: "ET-1101484" },
-  { door: "DOCK57", status: "Available", entryTicket: null },
-  { door: "DOCK58", status: "Occupied", entryTicket: null },
-  { door: "DOCK59", status: "Occupied", entryTicket: "ET-1100297" },
-  { door: "DOCK60", status: "Occupied", entryTicket: "ET-1100365" },
-  { door: "DOCK61", status: "Occupied", entryTicket: "ET-1101028" },
-  { door: "DOCK62", status: "Occupied", entryTicket: "ET-1101182" },
-  { door: "DOCK63", status: "Assigned", entryTicket: "ET-1101209" },
-  { door: "DOCK64", status: "Assigned", entryTicket: "ET-1101437" },
-  { door: "DOCK65", status: "Occupied", entryTicket: null },
-  { door: "DOCK66", status: "Occupied", entryTicket: null },
-  { door: "DOCK67", status: "Available", entryTicket: null },
-  { door: "DOCK68", status: "Occupied", entryTicket: "ET-1099354" },
-  { door: "DOCK69", status: "Occupied", entryTicket: "ET-1100714" },
-  { door: "DOCK70", status: "Occupied", entryTicket: "ET-1101207" },
-  { door: "DOCK71", status: "Occupied", entryTicket: "ET-1100820" },
-  { door: "DOCK72", status: "Occupied", entryTicket: "ET-1100538" },
+  { door: "DOCK50", status: "Available", assignee: null, customer: "GURUNANDA", taskIds: [], duration: null },
+  { door: "DOCK51", status: "Occupied", assignee: "Arnulfo Munguia", customer: "GURUNANDA", taskIds: ["TASK-5284457"], duration: "0.0h" },
+  { door: "DOCK52", status: "Reserved", assignee: "Arnulfo Munguia", customer: "GURUNANDA", taskIds: ["TASK-5281747"], duration: "40.4h" },
+  { door: "DOCK53", status: "Reserved", assignee: "Arnulfo Munguia, Daniel Beltran, Luis Velazquez", customer: "GURUNANDA", taskIds: ["TASK-5282315", "TASK-5280242", "TASK-5284189"], duration: "53.8h" },
+  { door: "DOCK54", status: "Occupied", assignee: "Arnulfo Munguia", customer: "GURUNANDA", taskIds: ["TASK-5284360"], duration: "0.1h" },
+  { door: "DOCK55", status: "Reserved", assignee: null, customer: "GURUNANDA", taskIds: [], duration: null },
+  { door: "DOCK56", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK57", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK58", status: "Reserved", assignee: null, customer: "GURUNANDA", taskIds: [], duration: null },
+  { door: "DOCK59", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK60", status: "Occupied", assignee: null, customer: "GURUNANDA", taskIds: [], duration: null },
+  { door: "DOCK61", status: "Occupied", assignee: "Daniel Beltran", customer: null, taskIds: ["TASK-5284169"], duration: "0.4h" },
+  { door: "DOCK62", status: "Available", assignee: null, customer: "GURUNANDA", taskIds: [], duration: null },
+  { door: "DOCK63", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK64", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK65", status: "Occupied", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK66", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK67", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK68", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK69", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK70", status: "Available", assignee: null, customer: "GURUNANDA, ORG-585450", taskIds: [], duration: null },
+  { door: "DOCK71", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK72", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
 ];
+
+const occupied = doors.filter((d) => d.status === "Occupied").length;
+const reserved = doors.filter((d) => d.status === "Reserved").length;
+const available = doors.filter((d) => d.status === "Available").length;
+const occupiedReserved = occupied + reserved;
 
 export const kpiMetrics: KpiMetric[] = [
   {
     label: "Total Doors Occupied",
-    value: "17/23",
-    numerator: 17,
+    value: `${occupied}/23`,
+    numerator: occupied,
     denominator: TOTAL_DOORS,
-    percentage: 73.9,
+    percentage: (occupied / TOTAL_DOORS) * 100,
   },
   {
-    label: "Doors Assigned",
-    value: "2",
-    numerator: 2,
+    label: "Doors Reserved",
+    value: `${reserved}`,
+    numerator: reserved,
     denominator: TOTAL_DOORS,
-    percentage: 8.7,
+    percentage: (reserved / TOTAL_DOORS) * 100,
   },
   {
     label: "Doors Available",
-    value: "4",
-    numerator: 4,
+    value: `${available}`,
+    numerator: available,
     denominator: TOTAL_DOORS,
-    percentage: 17.4,
+    percentage: (available / TOTAL_DOORS) * 100,
   },
   {
     label: "Occupancy Rate",
-    value: "73.9%",
-    numerator: 17,
+    value: `${occupiedReserved}/${TOTAL_DOORS}`,
+    numerator: occupiedReserved,
     denominator: TOTAL_DOORS,
-    percentage: 73.9,
+    percentage: (occupiedReserved / TOTAL_DOORS) * 100,
   },
 ];
 
-export const unavailableMetrics: UnavailableMetric[] = [
+export const assigneeSummaries: AssigneeSummary[] = [
+  { name: "Arnulfo Munguia", taskCount: 4 },
+  { name: "Daniel Beltran", taskCount: 2 },
+  { name: "Luis Velazquez", taskCount: 1 },
+];
+
+export const inboundOutboundMix: MixMetric[] = [
+  { label: "Outbound", count: 7, total: 8 },
+  { label: "Inbound", count: 0, total: 8 },
+  { label: "General", count: 1, total: 8 },
+];
+
+export const facilityInboundOpen = 2099;
+export const facilityOutboundOpen = 3643;
+
+export const assignments: TaskRecord[] = [
   {
-    label: "Assigned Activity — Guru live out / in assign to Arnulfo",
-    reason:
-      "No matching task found in the system. Closest matches: TASK-5262195 (GURUNANDA LLC live load, assigned to Rufino Munguia, CLOSED); TASK-5092233 (Disposal, Arnulfo Munguia, NEEDS_APPROVAL).",
+    taskId: "TASK-5284457",
+    dns: "DN-3193690",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Arnulfo Munguia",
   },
   {
-    label: "Door Duration",
-    reason:
-      "The dock door status report service is currently down. Duration per door cannot be retrieved at this time.",
+    taskId: "TASK-5284360",
+    dns: "DN-3194401, DN-3194952, DN-3197812, DN-3195035",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Arnulfo Munguia",
   },
   {
-    label: "Assignments by Assignee",
-    reason:
-      "Dock assignment data returned empty for this facility. Assignments may be managed through a separate system.",
+    taskId: "TASK-5284189",
+    dns: "DN-3194613",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Daniel Beltran",
   },
   {
-    label: "% Scheduled Inbounds Received",
-    reason:
-      "Scheduled receipt comparison data is not currently available for this door scope.",
+    taskId: "TASK-5284169",
+    dns: "DN-3170515, DN-3169557, DN-3168587, DN-3167505",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Daniel Beltran",
   },
   {
-    label: "% Scheduled Outbounds Loaded",
-    reason:
-      "Scheduled load comparison data is not currently available for this door scope.",
+    taskId: "TASK-5282315",
+    dns: "DN-3192751, DN-3193700, DN-3193631",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Arnulfo Munguia",
   },
   {
-    label: "Inbound vs Outbound Mix",
-    reason:
-      "Door task type classification data is not populated. Individual entry ticket lookups would be needed.",
+    taskId: "TASK-5281747",
+    dns: "DN-3190424",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Arnulfo Munguia",
+  },
+  {
+    taskId: "TASK-5280242",
+    dns: "DN-3189539",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Luis Velazquez",
   },
 ];
 
-export interface AssignmentRecord {
-  dn: string;
-  customer: string;
-  pieces: number;
-  assignee: string;
-}
-
-// No assignment history data was returned for today
-export const assignments: AssignmentRecord[] = [];
+// Non-GURUNANDA task noted but excluded from Bay 4 scope:
+// TASK-5278636 — GENERAL / HRS LABOR (rework), GURUNANDA, Mateo Moreno, NEW, May 28 (no dock)
