@@ -38,7 +38,7 @@ export default function DashboardPage() {
               Bay 4 Assignments — Valley View
             </h1>
             <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; June 4, 2026
+              DOCK50–DOCK72 &nbsp;|&nbsp; June 4, 2026 &nbsp;|&nbsp; ~15:31 PDT
             </p>
           </div>
           {/* Facility badge */}
@@ -80,7 +80,7 @@ export default function DashboardPage() {
               Door Utilization
             </h2>
             <span className="text-xs text-[#71717a] ml-auto">
-              23 doors &nbsp;|&nbsp; 11 occupied / reserved
+              23 doors &nbsp;|&nbsp; 5 occupied / 8 reserved
             </span>
           </div>
           <DoorGrid doors={doors} />
@@ -136,10 +136,11 @@ export default function DashboardPage() {
               Data Notes
             </span>
             <ul className="text-xs text-[#71717a] space-y-1 list-disc list-inside">
+              <li>Arnulfo Munguia has <strong className="text-[#f4f4f6]">ZERO</strong> active Bay 4 load tasks this pull — shift change from prior pull (Lorenzo Rodriguez now on DOCK53).</li>
               <li>Piece counts unavailable — order-level search API does not expose a <code className="text-[#a1a1aa] text-[11px]">pieces</code> field. Per-DN line queries would be needed.</li>
               <li>% completion metrics (received/scheduled, loaded/scheduled) cannot be derived from schedule-summary APIs alone — they only return open counts.</li>
-              <li>DOCK57, DOCK58, DOCK59, DOCK60, DOCK65 show occupied/reserved status but have no visible active GURUNANDA load tasks — could be non-GURUNANDA activity or stale state.</li>
-              <li>One non-load task (TASK-5278636 — GENERAL / HRS LABOR rework, GURUNANDA, Mateo Moreno, NEW) found but excluded from Bay 4 scope.</li>
+              <li>DOCK52, DOCK54, DOCK57 show occupied status but have no active load tasks — stale or completed states.</li>
+              <li>Non-load tasks found: Mateo Moreno (1, GURU rework), Ricardo Tapia (2, TORQUAY kits), Yuyang Gong (1), Brayan Escobar (1, NZXT), Unassigned (1, ENVISION cycle count).</li>
             </ul>
           </div>
         </section>
@@ -149,7 +150,7 @@ export default function DashboardPage() {
       <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
         <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
           <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last updated: June 4, 2026 ~09:31 PDT</span>
+          <span>Last updated: June 4, 2026 ~15:31 PDT</span>
         </div>
       </footer>
     </div>

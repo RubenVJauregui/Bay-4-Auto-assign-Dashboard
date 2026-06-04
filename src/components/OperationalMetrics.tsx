@@ -50,7 +50,18 @@ export default function OperationalMetrics({
           ))}
         </div>
         <div className="text-xs text-[#71717a]">
-          <span className="text-[#7c3aed] font-semibold">100% outbound</span> — Bay 4
+          {mix.filter(m => m.count > 0).length > 0 ? (
+            <span>
+              <span className="text-[#7c3aed] font-semibold">
+                {(() => {
+                  const ob = mix.find(m => m.label === "Outbound");
+                  return ob ? Math.round((ob.count / (total || 1)) * 100) : 0;
+                })()}% outbound
+              </span> — Bay 4
+            </span>
+          ) : (
+            <span className="text-[#71717a] italic">No active tasks — Bay 4</span>
+          )}
         </div>
       </div>
 
