@@ -79,7 +79,7 @@ export default function AssignmentHistory({
               </span>
             </div>
           ) : (
-            assignments.map((row, i) => (
+            assignments.map((row) => (
               <div
                 key={row.taskId}
                 className="grid grid-cols-[1fr_1fr_80px_1fr] gap-4 px-5 py-3 border-b border-[#1e1e2a] last:border-b-0 hover:bg-[#ffffff05] transition-colors"

@@ -18,6 +18,8 @@ export default function OperationalMetrics({
   outboundOpen,
 }: OperationalMetricsProps) {
   const total = mix[0]?.total || 1;
+  const inboundUnavailable = inboundOpen < 0;
+  const outboundUnavailable = outboundOpen < 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -57,7 +59,15 @@ export default function OperationalMetrics({
                   const ob = mix.find(m => m.label === "Outbound");
                   return ob ? Math.round((ob.count / (total || 1)) * 100) : 0;
                 })()}% outbound
-              </span> — Bay 4
+              </span>{" "}
+              /{" "}
+              <span className="text-[#22c55e] font-semibold">
+                {(() => {
+                  const ib = mix.find(m => m.label === "Inbound");
+                  return ib ? Math.round((ib.count / (total || 1)) * 100) : 0;
+                })()}% inbound
+              </span>{" "}
+              — Bay 4
             </span>
           ) : (
             <span className="text-[#71717a] italic">No active tasks — Bay 4</span>
@@ -68,27 +78,53 @@ export default function OperationalMetrics({
       {/* Scheduled Inbounds */}
       <div className="bg-[#141419] border border-[#1e1e2a] rounded-xl p-5 flex flex-col gap-3">
         <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
-          Scheduled Inbounds Open
+          Scheduled Inbounds Received
         </span>
-        <span className="text-3xl font-bold text-[#22c55e] tabular-nums">
-          {inboundOpen.toLocaleString()}
-        </span>
-        <span className="text-xs text-[#71717a]">
-          Open receipt orders — facility-wide
-        </span>
+        {inboundUnavailable ? (
+          <>
+            <span className="text-2xl font-bold text-[#71717a]">
+              UNAVAILABLE
+            </span>
+            <span className="text-xs text-[#71717a]">
+              Schedule-summary API returned error
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-3xl font-bold text-[#22c55e] tabular-nums">
+              {inboundOpen.toLocaleString()}
+            </span>
+            <span className="text-xs text-[#71717a]">
+              Open receipt orders — facility-wide
+            </span>
+          </>
+        )}
       </div>
 
       {/* Scheduled Outbounds */}
       <div className="bg-[#141419] border border-[#1e1e2a] rounded-xl p-5 flex flex-col gap-3">
         <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
-          Scheduled Outbounds Open
+          Scheduled Outbounds Loaded
         </span>
-        <span className="text-3xl font-bold text-[#7c3aed] tabular-nums">
-          {outboundOpen.toLocaleString()}
-        </span>
-        <span className="text-xs text-[#71717a]">
-          Open outbound orders — facility-wide
-        </span>
+        {outboundUnavailable ? (
+          <>
+            <span className="text-2xl font-bold text-[#71717a]">
+              UNAVAILABLE
+            </span>
+            <span className="text-xs text-[#71717a]">
+              Schedule-summary API returned error
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-3xl font-bold text-[#7c3aed] tabular-nums">
+              {outboundOpen.toLocaleString()}
+            </span>
+            <span className="text-xs text-[#71717a]">
+              Open outbound orders — facility-wide
+            </span>
+          </>
+        )}
       </div>
     </div>
   );

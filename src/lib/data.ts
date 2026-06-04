@@ -1,7 +1,7 @@
 /**
  * Bay 4 Assignments — Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50–DOCK72
- * Pulled: June 4, 2026 ~15:31 PDT
+ * Pulled: June 4, 2026 ~16:31 PDT
  *
  * All values sourced from live WISE/WMS queries.
  * Do NOT fabricate, estimate, or guess any metric.
@@ -50,27 +50,27 @@ export const TOTAL_DOORS = 23;
 export const doors: DoorRecord[] = [
   { door: "DOCK50", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK51", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK52", status: "Occupied", assignee: null, customer: "GURUNANDA", taskIds: [], duration: "stale (gate out Jun 2)" },
-  { door: "DOCK53", status: "Occupied", assignee: "Lorenzo Rodriguez, Luis Velazquez", customer: "GURUNANDA", taskIds: ["TASK-5284794", "TASK-5280242"], duration: "1.6h / 3.5d stale" },
-  { door: "DOCK54", status: "Occupied", assignee: null, customer: "GURUNANDA", taskIds: [], duration: "stale (ET deleted)" },
+  { door: "DOCK52", status: "Occupied", assignee: "Arnulfo Munguia", customer: "GURUNANDA", taskIds: ["TASK-5281747"], duration: "~28h" },
+  { door: "DOCK53", status: "Occupied", assignee: "Lorenzo Rodriguez, Luis Velazquez", customer: "GURUNANDA", taskIds: ["TASK-5284794", "TASK-5280242"], duration: "4.5h / ~54h" },
+  { door: "DOCK54", status: "Occupied", assignee: "Lorenzo Rodriguez", customer: "GURUNANDA", taskIds: ["TASK-5285010"], duration: "~2.5h" },
   { door: "DOCK55", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK56", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK57", status: "Occupied", assignee: null, customer: "Ross Stores", taskIds: [], duration: "all 6 loads LOADED" },
+  { door: "DOCK57", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK58", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK59", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK60", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK61", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK59", status: "Reserved", assignee: null, customer: "GURUNANDA", taskIds: ["TASK-5283629"], duration: "RECEIVE" },
+  { door: "DOCK60", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK61", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK62", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK63", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK64", status: "Occupied", assignee: null, customer: "GURUNANDA", taskIds: [], duration: "receipt IMPORTED" },
-  { door: "DOCK65", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK63", status: "Reserved", assignee: null, customer: "GURUNANDA", taskIds: ["TASK-5277747"], duration: "RECEIVE" },
+  { door: "DOCK64", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK65", status: "Reserved", assignee: null, customer: "GURUNANDA", taskIds: ["TASK-5283625"], duration: "RECEIVE" },
   { door: "DOCK66", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK67", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK68", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK69", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK70", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK71", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK72", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK68", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK69", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK70", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK71", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK72", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
 ];
 
 const occupied = doors.filter((d) => d.status === "Occupied").length;
@@ -110,31 +110,103 @@ export const kpiMetrics: KpiMetric[] = [
 ];
 
 export const assigneeSummaries: AssigneeSummary[] = [
-  { name: "Lorenzo Rodriguez", taskCount: 1 },
+  { name: "Lorenzo Rodriguez", taskCount: 2 },
+  { name: "Arnulfo Munguia", taskCount: 1 },
   { name: "Luis Velazquez", taskCount: 1 },
-  { name: "Mateo Moreno", taskCount: 1 },
-  { name: "Ricardo Tapia", taskCount: 2 },
-  { name: "Yuyang Gong", taskCount: 1 },
-  { name: "Brayan Escobar", taskCount: 1 },
 ];
 
 export const inboundOutboundMix: MixMetric[] = [
-  { label: "Outbound", count: 2, total: 3 },
-  { label: "Inbound", count: 1, total: 3 },
-  { label: "General", count: 0, total: 3 },
+  { label: "Outbound", count: 4, total: 7 },
+  { label: "Inbound", count: 3, total: 7 },
+  { label: "General", count: 0, total: 7 },
 ];
 
-export const facilityInboundOpen = 2185;
-export const facilityOutboundOpen = 3533;
+// Facility-wide schedule counts unavailable — schedule-summary APIs return server errors (404/405/400)
+export const facilityInboundOpen = -1;
+export const facilityOutboundOpen = -1;
 
 export const assignments: TaskRecord[] = [
+  // TASK-5285010 — DOCK54 — Lorenzo Rodriguez (2 loads)
   {
-    taskId: "TASK-5284794",
+    taskId: "TASK-5285010-1",
+    dns: "DN-3195089",
+    customer: "GURUNANDA",
+    pieces: "19 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  {
+    taskId: "TASK-5285010-2",
+    dns: "50030436",
+    customer: "GURUNANDA",
+    pieces: "24 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  // TASK-5284794 — DOCK53 — Lorenzo Rodriguez (8 loads, all LOADED)
+  {
+    taskId: "TASK-5284794-1",
+    dns: "DN-3197870",
+    customer: "GURUNANDA",
+    pieces: "1 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  {
+    taskId: "TASK-5284794-2",
+    dns: "DN-3198074",
+    customer: "GURUNANDA",
+    pieces: "9 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  {
+    taskId: "TASK-5284794-3",
+    dns: "DN-3195086",
+    customer: "GURUNANDA",
+    pieces: "2 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  {
+    taskId: "TASK-5284794-4",
+    dns: "DN-3198789",
+    customer: "GURUNANDA",
+    pieces: "1 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  {
+    taskId: "TASK-5284794-5",
+    dns: "DN-3195098",
+    customer: "GURUNANDA",
+    pieces: "3 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  {
+    taskId: "TASK-5284794-6",
+    dns: "DN-3190634",
+    customer: "GURUNANDA",
+    pieces: "1 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  {
+    taskId: "TASK-5284794-7",
+    dns: "DN-3197866",
+    customer: "GURUNANDA",
+    pieces: "1 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  {
+    taskId: "TASK-5284794-8",
+    dns: "DN-3194936",
+    customer: "GURUNANDA",
+    pieces: "3 pal",
+    assignee: "Lorenzo Rodriguez",
+  },
+  // TASK-5281747 — DOCK52 — Arnulfo Munguia (IN_PROGRESS ~28h, load details not available)
+  {
+    taskId: "TASK-5281747",
     dns: "—",
     customer: "GURUNANDA",
     pieces: "—",
-    assignee: "Lorenzo Rodriguez",
+    assignee: "Arnulfo Munguia",
   },
+  // TASK-5280242 — DOCK53 — Luis Velazquez (stale ~54h, load details not available)
   {
     taskId: "TASK-5280242",
     dns: "—",
@@ -145,13 +217,16 @@ export const assignments: TaskRecord[] = [
 ];
 
 // Notes:
-// — Arnulfo Munguia has ZERO active Bay 4 load tasks this pull (shift change from prior pull)
-// — DOCK53: TASK-5284794 (Lorenzo Rodriguez, 8 loads PRE_LOAD, IN_PROGRESS ~1.6h)
-// — DOCK53: TASK-5280242 (Luis Velazquez, 1 load LOADED, stale ~3.5d)
-// — DOCK64: inbound receipt RN-5007909 (SAPU5033831, IMPORTED) — no task ID from load-task API
-// — DOCK52: gate checked out Jun 2, no active task
-// — DOCK54: entry ticket ET-1103806 404 — may have been deleted
-// — DOCK57: Ross Stores, all 6 loads already LOADED — no active tasks
-// — Non-load tasks found: Mateo Moreno (1, GURU rework), Ricardo Tapia (2, TORQUAY kits), Yuyang Gong (1), Brayan Escobar (1, NZXT), Unassigned (1, ENVISION cycle count)
-// — % scheduled inbounds received / outbounds loaded: UNAVAILABLE (schedule-summary APIs return open counts only)
-// — DN & pieces per task: UNAVAILABLE (order-level search API does not expose these fields)
+// — All Bay 4 active load/receive tasks are GURUNANDA (ORG-655875). No non-GURUNANDA customers active in Bay 4.
+// — Arnulfo Munguia has 1 active Bay 4 task: TASK-5281747 on DOCK52, IN_PROGRESS ~28h (load details not available from load-task API).
+// — DOCK53: TASK-5284794 (Lorenzo Rodriguez, 8 loads all LOADED, 21 pallets total, ~4.5h active).
+// — DOCK53: TASK-5280242 (Luis Velazquez, stale ~54h).
+// — DOCK54: TASK-5285010 (Lorenzo Rodriguez, 2 loads both LOADED, 43 pallets total, ~2.5h active).
+// — DOCK59: TASK-5283629 (RECEIVE, unassigned, GURUNANDA).
+// — DOCK63: TASK-5277747 (RECEIVE, unassigned, GURUNANDA).
+// — DOCK65: TASK-5283625 (RECEIVE, unassigned, GURUNANDA).
+// — DOCK66-DOCK68: location dockStatus shows OCCUPIED but entry-ticket tasks are CLOSED/FORCE_CLOSED — stale.
+// — % scheduled inbounds received / outbounds loaded: UNAVAILABLE (schedule-summary APIs return 404/405/400 for LT_F1).
+// — Facility-wide open counts: UNAVAILABLE (same API limitation).
+// — Piece counts per DN are pallet counts, not individual piece counts (load-task API granularity).
+// — Non-load tasks (rework, kits, cycle count) from prior pulls were not returned by load/receive task queries in this pull.

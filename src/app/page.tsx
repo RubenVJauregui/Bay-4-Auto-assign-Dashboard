@@ -27,6 +27,9 @@ const GAUGE_CLASSES = [
   "#7c3aed",
 ];
 
+const occupied = doors.filter((d) => d.status === "Occupied").length;
+const reserved = doors.filter((d) => d.status === "Reserved").length;
+
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -38,7 +41,7 @@ export default function DashboardPage() {
               Bay 4 Assignments — Valley View
             </h1>
             <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; June 4, 2026 &nbsp;|&nbsp; ~15:31 PDT
+              DOCK50–DOCK72 &nbsp;|&nbsp; June 4, 2026 &nbsp;|&nbsp; ~16:31 PDT
             </p>
           </div>
           {/* Facility badge */}
@@ -80,7 +83,7 @@ export default function DashboardPage() {
               Door Utilization
             </h2>
             <span className="text-xs text-[#71717a] ml-auto">
-              23 doors &nbsp;|&nbsp; 5 occupied / 8 reserved
+              23 doors &nbsp;|&nbsp; {occupied} occupied / {reserved} reserved
             </span>
           </div>
           <DoorGrid doors={doors} />
@@ -123,7 +126,7 @@ export default function DashboardPage() {
               Assignment History Today
             </h2>
             <span className="text-xs text-[#71717a] ml-auto">
-              {assignments.length} tasks
+              {assignments.length} load lines
             </span>
           </div>
           <AssignmentHistory assignments={assignments} />
@@ -136,11 +139,15 @@ export default function DashboardPage() {
               Data Notes
             </span>
             <ul className="text-xs text-[#71717a] space-y-1 list-disc list-inside">
-              <li>Arnulfo Munguia has <strong className="text-[#f4f4f6]">ZERO</strong> active Bay 4 load tasks this pull — shift change from prior pull (Lorenzo Rodriguez now on DOCK53).</li>
-              <li>Piece counts unavailable — order-level search API does not expose a <code className="text-[#a1a1aa] text-[11px]">pieces</code> field. Per-DN line queries would be needed.</li>
-              <li>% completion metrics (received/scheduled, loaded/scheduled) cannot be derived from schedule-summary APIs alone — they only return open counts.</li>
-              <li>DOCK52, DOCK54, DOCK57 show occupied status but have no active load tasks — stale or completed states.</li>
-              <li>Non-load tasks found: Mateo Moreno (1, GURU rework), Ricardo Tapia (2, TORQUAY kits), Yuyang Gong (1), Brayan Escobar (1, NZXT), Unassigned (1, ENVISION cycle count).</li>
+              <li>All Bay 4 active load/receive tasks are <strong className="text-[#f4f4f6]">GURUNANDA</strong> (ORG-655875). No non-GURUNANDA customers active in Bay 4.</li>
+              <li>Arnulfo Munguia has <strong className="text-[#f4f4f6]">1 active Bay 4 task</strong>: TASK-5281747 on DOCK52, IN_PROGRESS ~28h (load details not available from load-task API).</li>
+              <li>Lorenzo Rodriguez has 2 tasks: DOCK53 (TASK-5284794, 8 loads all LOADED, 21 pallets) and DOCK54 (TASK-5285010, 2 loads both LOADED, 43 pallets).</li>
+              <li>Luis Velazquez still active on DOCK53 (TASK-5280242, stale ~54h).</li>
+              <li>3 unassigned receive tasks: DOCK59 (TASK-5283629), DOCK63 (TASK-5277747), DOCK65 (TASK-5283625) — all GURUNANDA.</li>
+              <li>% scheduled inbounds received / outbounds loaded: <strong className="text-[#f4f4f6]">UNAVAILABLE</strong> — schedule-summary APIs return 404/405/400 for LT_F1.</li>
+              <li>Facility-wide open counts: <strong className="text-[#f4f4f6]">UNAVAILABLE</strong> — same API limitation.</li>
+              <li>Piece counts are pallet counts from load-task API. Per-piece load-line data would require separate DN-level queries.</li>
+              <li>DOCK66-DOCK68 location dockStatus shows OCCUPIED but entry-ticket tasks are CLOSED/FORCE_CLOSED — treated as Available.</li>
             </ul>
           </div>
         </section>
@@ -150,7 +157,7 @@ export default function DashboardPage() {
       <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
         <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
           <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last updated: June 4, 2026 ~15:31 PDT</span>
+          <span>Last updated: June 4, 2026 ~16:31 PDT</span>
         </div>
       </footer>
     </div>
