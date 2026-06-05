@@ -41,7 +41,7 @@ export default function DashboardPage() {
               Bay 4 Assignments — Valley View
             </h1>
             <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; June 4, 2026 &nbsp;|&nbsp; ~16:31 PDT
+              DOCK50–DOCK72 &nbsp;|&nbsp; June 4, 2026 &nbsp;|&nbsp; ~17:00 PDT
             </p>
           </div>
           {/* Facility badge */}
@@ -139,15 +139,18 @@ export default function DashboardPage() {
               Data Notes
             </span>
             <ul className="text-xs text-[#71717a] space-y-1 list-disc list-inside">
-              <li>All Bay 4 active load/receive tasks are <strong className="text-[#f4f4f6]">GURUNANDA</strong> (ORG-655875). No non-GURUNANDA customers active in Bay 4.</li>
-              <li>Arnulfo Munguia has <strong className="text-[#f4f4f6]">1 active Bay 4 task</strong>: TASK-5281747 on DOCK52, IN_PROGRESS ~28h (load details not available from load-task API).</li>
-              <li>Lorenzo Rodriguez has 2 tasks: DOCK53 (TASK-5284794, 8 loads all LOADED, 21 pallets) and DOCK54 (TASK-5285010, 2 loads both LOADED, 43 pallets).</li>
-              <li>Luis Velazquez still active on DOCK53 (TASK-5280242, stale ~54h).</li>
-              <li>3 unassigned receive tasks: DOCK59 (TASK-5283629), DOCK63 (TASK-5277747), DOCK65 (TASK-5283625) — all GURUNANDA.</li>
+              <li>All Bay 4 active OUTBOUND load tasks are <strong className="text-[#f4f4f6]">GURUNANDA</strong> (ORG-655875).</li>
+              <li>Arnulfo Munguia: <strong className="text-[#f4f4f6]">TASK-5281747</strong> on DOCK52, PRE_LOAD ~55h, DN-3190424 (28 pal / ~60,370 pieces).</li>
+              <li>Lorenzo Rodriguez has 2 tasks: DOCK53 (TASK-5284794, 8 loads LOADED, 21 pallets) and DOCK54 (TASK-5285010, 2 loads LOADED, 43 pallets).</li>
+              <li>Luis Velazquez still active on DOCK53 (TASK-5280242, stale ~80h, details TBD).</li>
+              <li>Daniela Gonzalez now active on <strong className="text-[#f4f4f6]">3 receive tasks</strong>: DOCK62 (~0.3h), DOCK65 (~20.5h), DOCK67 (~1.3h).</li>
+              <li>DOCK55: TASK-5284151 (RECEIVE, NEW, unassigned) — Reserved status. Previously Available.</li>
+              <li>DOCK59, DOCK63 previously Reserved — now Available (entry tickets CLOSED).</li>
+              <li>DOCK62, DOCK67 newly Occupied since last pull (were Available ~16:31).</li>
               <li>% scheduled inbounds received / outbounds loaded: <strong className="text-[#f4f4f6]">UNAVAILABLE</strong> — schedule-summary APIs return 404/405/400 for LT_F1.</li>
               <li>Facility-wide open counts: <strong className="text-[#f4f4f6]">UNAVAILABLE</strong> — same API limitation.</li>
-              <li>Piece counts are pallet counts from load-task API. Per-piece load-line data would require separate DN-level queries.</li>
-              <li>DOCK66-DOCK68 location dockStatus shows OCCUPIED but entry-ticket tasks are CLOSED/FORCE_CLOSED — treated as Available.</li>
+              <li>"Guru live out / in assign to Arnulfo" activity: <strong className="text-[#f4f4f6]">NOT RETURNED</strong> by task-action API for June 4 date range.</li>
+              <li>Piece counts are pallet counts from load-task API; receive piece counts not available.</li>
             </ul>
           </div>
         </section>
@@ -157,7 +160,7 @@ export default function DashboardPage() {
       <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
         <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
           <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last updated: June 4, 2026 ~16:31 PDT</span>
+          <span>Last updated: June 4, 2026 ~17:00 PDT</span>
         </div>
       </footer>
     </div>
