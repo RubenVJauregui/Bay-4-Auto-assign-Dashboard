@@ -48,7 +48,7 @@ export default function DashboardPage() {
               Bay 4 Assignments — Valley View
             </h1>
             <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; June 5, 2026 &nbsp;|&nbsp; ~2:00 PM PDT
+              DOCK50–DOCK72 &nbsp;|&nbsp; June 5, 2026 &nbsp;|&nbsp; ~2:39 PM PDT
             </p>
           </div>
           {/* Facility badge */}
@@ -153,18 +153,21 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Live Out (GURUNANDA Outbound)</span>
-                <span className="text-sm font-semibold text-[#7c3aed]">3 outbound tasks on Bay 4</span>
+                <span className="text-sm font-semibold text-[#7c3aed]">4 outbound tasks on Bay 4</span>
                 <span className="text-xs text-[#a1a1aa]">
-                  TASK-5285558 · DOCK53 · PRE_LOAD · ~5.0h · DN-3198181
+                  TASK-5285558 · DOCK53 · PRE_LOAD · ~5.1h · DN-3198181 LOADED
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
-                  TASK-5285835 · DOCK55 · LIVE_LOAD · ~0.8h · 28 pal · 3 DNs
+                  TASK-5285913 · DOCK53 · PRE_LOAD · NEW · DN-3203261 +1
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
-                  TASK-5285860 · DOCK54 · PRE_LOAD · NEW · 29 pal · 4 DNs
+                  TASK-5285860 · DOCK54 · PRE_LOAD · NEW · 4 DNs
+                </span>
+                <span className="text-xs text-[#a1a1aa]">
+                  TASK-5285835 · DOCK55 · LIVE_LOAD · ~1.1h · 3 DNs → Dollar Tree
                 </span>
                 <span className="text-xs text-[#71717a] mt-1">
-                  All GURUNANDA (ORG-655875) · LOAD-5030114 Seal A120211 (DOCK53)
+                  All GURUNANDA (ORG-655875) · DOCK53/DOCK54/DOCK55
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -174,26 +177,35 @@ export default function DashboardPage() {
                   No active GURUNANDA receive tasks for Arnulfo on Bay 4.
                 </span>
                 <span className="text-xs text-[#71717a] mt-2">
-                  No active receive tasks on any Bay 4 door.
+                  Arnulfo has 2 KARAKA receive tasks on DOCK51:
                 </span>
-                <span className="text-xs text-[#71717a]">
-                  Previous KARAKA receives TASK-5285485 / TASK-5285778 (DOCK51) now closed.
+                <span className="text-xs text-[#a1a1aa]">
+                  TASK-5285485 · ~6.4h · RN-186139 (BOK)
+                </span>
+                <span className="text-xs text-[#a1a1aa]">
+                  TASK-5285778 · NEW · RN-182888 (IRO)
                 </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Arnulfo&apos;s Bay 4 Summary</span>
-                <span className="text-sm font-semibold text-[#22c55e]">3 tasks on Bay 4</span>
+                <span className="text-sm font-semibold text-[#22c55e]">6 tasks on Bay 4</span>
                 <span className="text-xs text-[#a1a1aa]">
-                  <span className="text-[#7c3aed]">OUT:</span> 3 GURUNANDA — DOCK53 · DOCK54 · DOCK55
+                  <span className="text-[#7c3aed]">OUT:</span> 4 GURUNANDA — DOCK53 · DOCK54 · DOCK55
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
-                  <span className="text-[#f59e0b]">IN:</span> None on Bay 4
+                  <span className="text-[#f59e0b]">IN:</span> 2 KARAKA — DOCK51
+                </span>
+                <span className="text-xs text-[#a1a1aa]">
+                  <span className="text-[#f59e0b]">IN (GURU):</span> None on Bay 4
                 </span>
                 <span className="text-xs text-[#71717a] mt-1">
                   Previous TASK-5281747 (DOCK52) CLOSED ~10:06 AM today
                 </span>
                 <span className="text-xs text-[#ef4444]">
-                  ⚠ DOCK54 double-booked with Lorenzo (TASK-5285010)
+                  ⚠ DOCK54 double-booked with Lorenzo (TASK-5285010 ~24.4h)
+                </span>
+                <span className="text-xs text-[#ef4444]">
+                  ⚠ DOCK53 double-booked (TASK-5285558 + TASK-5285913)
                 </span>
               </div>
             </div>
@@ -207,23 +219,24 @@ export default function DashboardPage() {
               Data Notes
             </span>
             <ul className="text-xs text-[#71717a] space-y-1 list-disc list-inside">
-              <li><strong className="text-[#f4f4f6]">5 Occupied / 0 Reserved / 18 Available</strong> — 21.7% occupancy rate. All 5 occupied doors have active load tasks.</li>
-              <li>Active tasks: <strong className="text-[#7c3aed]">6 outbound</strong> / <strong className="text-[#22c55e]">0 inbound</strong>. Mix: <strong className="text-[#f4f4f6]">100% outbound</strong>.</li>
-              <li>All 5 occupied doors are GURUNANDA (ORG-655875) except DOCK58 (LA JOLLA GROUP, ORG-313396).</li>
-              <li>4 tasks IN_PROGRESS (TASK-5285558, TASK-5285010, TASK-5285835, TASK-5285812), 2 NEW (TASK-5285860, TASK-5285880).</li>
-              <li><strong className="text-[#7c3aed]">ARNULFO MUNGUIA:</strong> 3 Bay 4 tasks — all GURUNANDA outbound: DOCK53 (PRE_LOAD ~5.0h, DN-3198181), DOCK54 (PRE_LOAD NEW, 29 pal, 4 DNs), DOCK55 (LIVE_LOAD ~0.8h, 28 pal, 3 DNs).</li>
-              <li><strong className="text-[#ef4444]">⚠ DOCK54 DOUBLE-BOOKED:</strong> Lorenzo TASK-5285010 (IN_PROGRESS ~24.0h, since Jun 4 2:04 PM) + Arnulfo TASK-5285860 (NEW, 29 pal, 4 DNs).</li>
-              <li><strong className="text-[#f4f4f6]">Lorenzo Rodriguez:</strong> 1 task — DOCK54 (PRE_LOAD ~24.0h). TASK-5285635 (DOCK52) CLOSED at 11:41 AM.</li>
-              <li><strong className="text-[#f4f4f6]">Sebastian Gonzalez:</strong> 1 task — DOCK58 (LIVE_LOAD ~1.2h, LA JOLLA GROUP, DN-3202378, 6 pal).</li>
-              <li><strong className="text-[#f4f4f6]">Jerome Aranda:</strong> 1 task — DOCK67 (LIVE_LOAD NEW, GURUNANDA, DN-3190330).</li>
-              <li><strong className="text-[#ef4444]">AGING:</strong> TASK-5285010 (Lorenzo, DOCK54, ~24.0h, since Jun 4 2:04 PM).</li>
-              <li>Previous TASK-5281747 (Guru, DOCK52, DN-3190424, 28 pal) CLOSED at ~10:06 AM PDT after ~71h active.</li>
-              <li>Many previously occupied/reserved doors now AVAILABLE after entry checkouts and task closures (was 8 Occupied / 8 Reserved earlier today).</li>
-              <li>No active receive tasks on any Bay 4 door. DOCK62 receive (ET-1103926, TASK-5285184) FORCE_CLOSED. DOCK68 receive (ET-1104218, TASK-5285614) CLOSED.</li>
-              <li>Schedule %: <strong className="text-[#71717a]">UNAVAILABLE</strong> — schedule-summary endpoints returned 404.</li>
-              <li>Facility-wide open: <strong className="text-[#22c55e]">{facilityInboundOpen}</strong> inbound (offloading), <strong className="text-[#7c3aed]">{facilityOutboundOpen}</strong> outbound (46 IN_PROGRESS + 25 NEW).</li>
-              <li>Facility-wide today: 40 load tasks closed, 47 receipts created, 4,458 orders scheduled. 13,698 closed load tasks total.</li>
-              <li>All data sourced from live WISE/WMS queries at ~2:00 PM PDT, June 5, 2026.</li>
+              <li><strong className="text-[#f4f4f6]">8 Occupied / 4 Reserved / 11 Available</strong> — 34.8% occupied, 52.2% occupancy rate. 6 doors with active tasks + 2 ghost-occupied (DOCK63, DOCK66).</li>
+              <li>Active tasks: <strong className="text-[#7c3aed]">6 outbound</strong> / <strong className="text-[#22c55e]">4 inbound</strong>. Mix: <strong className="text-[#f4f4f6]">60% outbound / 40% inbound</strong>.</li>
+              <li>Customer mix: GURUNANDA (ORG-655875) on 7 of 10 tasks, KARAKA LLC (ORG-585450) on 2, TikTok FBT on 1 (DOCK70).</li>
+              <li>5 tasks IN_PROGRESS, 5 NEW. DOCK54 and DOCK53 are double-booked.</li>
+              <li><strong className="text-[#7c3aed]">ARNULFO MUNGUIA:</strong> 6 Bay 4 tasks — 4 outbound (DOCK53×2, DOCK54, DOCK55) + 2 inbound (DOCK51 KARAKA).</li>
+              <li><strong className="text-[#7c3aed]">GURU LIVE OUT:</strong> TASK-5285558 (DOCK53, ~5.1h, LOADED), TASK-5285913 (DOCK53, NEW), TASK-5285860 (DOCK54, NEW, 4 DNs), TASK-5285835 (DOCK55, ~1.1h, 3 DNs → Dollar Tree).</li>
+              <li><strong className="text-[#f59e0b]">GURU LIVE IN:</strong> None — no GURUNANDA receive tasks for Arnulfo on Bay 4.</li>
+              <li><strong className="text-[#ef4444]">⚠ DOCK54 DOUBLE-BOOKED:</strong> Lorenzo TASK-5285010 (~24.4h, since Jun 4) + Arnulfo TASK-5285860 (NEW, 4 DNs).</li>
+              <li><strong className="text-[#ef4444]">⚠ DOCK53 DOUBLE-BOOKED:</strong> Arnulfo TASK-5285558 (~5.1h) + TASK-5285913 (NEW).</li>
+              <li><strong className="text-[#ef4444]">⚠ AGING:</strong> TASK-5285010 (Lorenzo, DOCK54, ~24.4h). TASK-5254195 (~38 days), TASK-5252949 (~39 days) — stale RECEIVE on DOCK65.</li>
+              <li><strong className="text-[#ef4444]">⚠ DOCK63 & DOCK66 ghost-occupied:</strong> dockStatus=OCCUPIED but zero active tasks. Dock status cleanup needed.</li>
+              <li><strong className="text-[#f4f4f6]">Daniel Beltran:</strong> 1 task — DOCK70 (LIVE_LOAD ~25m, DN-3190330 TikTok FBT). New assignee on Bay 4.</li>
+              <li><strong className="text-[#f4f4f6]">Lorenzo Rodriguez:</strong> 1 task — DOCK54 (PRE_LOAD ~24.4h, both loads LOADED, likely needs closing).</li>
+              <li>Sebastian Gonzalez & Jerome Aranda: tasks completed, no longer active on Bay 4.</li>
+              <li>DOCK58 returned to Available (La Jolla Group task completed).</li>
+              <li>Schedule %: <strong className="text-[#71717a]">UNAVAILABLE</strong> — schedule-summary endpoints failed with SQL errors (ER_SP_UNDECLARED_VAR).</li>
+              <li>Facility-wide open: <strong className="text-[#22c55e]">{facilityInboundOpen}</strong> inbound, <strong className="text-[#7c3aed]">{facilityOutboundOpen}</strong> outbound.</li>
+              <li>All data sourced from live WISE/WMS queries at ~2:39 PM PDT, June 5, 2026.</li>
             </ul>
           </div>
         </section>
@@ -233,7 +246,7 @@ export default function DashboardPage() {
       <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
         <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
           <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last updated: June 5, 2026 ~2:00 PM PDT</span>
+          <span>Last updated: June 5, 2026 ~2:39 PM PDT</span>
         </div>
       </footer>
     </div>
