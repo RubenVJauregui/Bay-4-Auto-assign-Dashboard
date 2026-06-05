@@ -11,6 +11,8 @@ import {
   pctScheduledInboundReceived,
   pctScheduledOutboundLoaded,
   assignments,
+  facilityInboundOpen,
+  facilityOutboundOpen,
 } from "@/lib/data";
 import KpiCard from "@/components/KpiCard";
 import DoorGrid from "@/components/DoorGrid";
@@ -46,7 +48,7 @@ export default function DashboardPage() {
               Bay 4 Assignments — Valley View
             </h1>
             <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; June 5, 2026 &nbsp;|&nbsp; ~03:30 PDT
+              DOCK50–DOCK72 &nbsp;|&nbsp; June 5, 2026 &nbsp;|&nbsp; ~04:30 PDT
             </p>
           </div>
           {/* Facility badge */}
@@ -136,7 +138,7 @@ export default function DashboardPage() {
               Assignment History Today
             </h2>
             <span className="text-xs text-[#71717a] ml-auto">
-              {assignments.length} load lines
+              {assignments.length} receive lines
             </span>
           </div>
           <AssignmentHistory assignments={assignments} />
@@ -151,33 +153,28 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Live Out (PRE_LOAD)</span>
-                <span className="text-sm font-semibold text-[#f4f4f6]">
-                  TASK-5281747 — DOCK52
+                <span className="text-sm font-semibold text-[#71717a]">— None —</span>
+                <span className="text-xs text-[#71717a]">
+                  TASK-5281747 concluded since last pull
                 </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  DN-3190424 · PRE_LOAD · ~58h
-                </span>
-                <span className="text-xs text-[#ef4444] font-medium">
-                  ⚠ LOADED — carrier signed 6/4 16:14 — STUCK IN_PROGRESS
+                <span className="text-xs text-[#22c55e] font-medium">
+                  ✓ LOADED — carrier signed 6/4 16:14 PDT
                 </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Live In (RECEIVE)</span>
                 <span className="text-sm font-semibold text-[#71717a]">— None —</span>
                 <span className="text-xs text-[#71717a]">
-                  No active receive tasks for Arnulfo on Bay 4
+                  No active Bay 4 receive tasks for Arnulfo
                 </span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Task Details</span>
+                <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Arnulfo&apos;s Current Tasks</span>
                 <span className="text-xs text-[#a1a1aa]">
-                  Equipment: TRAILER #53532
+                  DOCK37: TASK-5285037 · KARAKA · RN-184451 · NEW ~14.1h
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
-                  Seal: 25079538
-                </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  Started: Jun 2 17:07 PDT
+                  DOCK18: TASK-5280508 · KARAKA · RN-184917 · IN_PROGRESS ~90.5h · Bay 3
                 </span>
               </div>
             </div>
@@ -191,21 +188,22 @@ export default function DashboardPage() {
               Data Notes
             </span>
             <ul className="text-xs text-[#71717a] space-y-1 list-disc list-inside">
-              <li><strong className="text-[#f4f4f6]">7 Occupied / 0 Reserved / 16 Available</strong> — 30.4% occupancy rate. All previously Reserved doors cleared.</li>
-              <li>Active tasks: <strong className="text-[#7c3aed]">3 outbound</strong> (PRE_LOAD) / <strong className="text-[#22c55e]">4 inbound</strong> (RECEIVE). Mix: 43% outbound / 57% inbound.</li>
-              <li>Customer mix: <strong className="text-[#f4f4f6]">GURUNANDA</strong> (ORG-655875) on 6 of 7 doors. <strong className="text-[#f59e0b]">KARAKA</strong> (ORG-585450) on DOCK55 — first KARAKA activity on Bay 4.</li>
-              <li>Arnulfo Munguia: <strong className="text-[#f4f4f6]">TASK-5281747</strong> on DOCK52, PRE_LOAD ~58h, DN-3190424 (LOADED, carrier signed 6/4 16:14, seal 25079538). Task STUCK — should be CLOSED. No live receive for Arnulfo in Bay 4.</li>
-              <li>Lorenzo Rodriguez: 2 PRE_LOAD tasks — DOCK53 (TASK-5284794, ~16h) + DOCK54 (TASK-5285010, ~6h).</li>
-              <li>Daniela Gonzalez: <strong className="text-[#f4f4f6]">3 RECEIVE tasks</strong> — DOCK62 (TASK-5285184, ~4h), DOCK63 (TASK-5278242 ~7d + TASK-5277747), DOCK65 (TASK-5283625 ~20h + 2 NEW).</li>
-              <li>Jerome Aranda: <strong className="text-[#f4f4f6]">1 RECEIVE task</strong> — DOCK55 (TASK-5284151, KARAKA RN-186139, ~12h, NEW). Future appt Jun 5 5PM.</li>
-              <li><strong className="text-[#22c55e]">DOCK53 no longer double-booked</strong>: TASK-5280242 (Luis Velazquez, ~78h) concluded since last pull.</li>
-              <li>Status changes since prior pull: DOCK55 newly Occupied (KARAKA). DOCK63 newly Occupied (GURUNANDA, 2 old tasks). DOCK65 newly Occupied (GURUNANDA). DOCK61 returned to Available (was stale Occupied). All Reserved doors (DOCK60/64/68/70/71) cleared to Available.</li>
-              <li><strong className="text-[#ef4444]">CRITICAL: All 3 Bay 4 load tasks stuck IN_PROGRESS</strong> despite 100% loads LOADED and signatures collected on DOCK52.</li>
-              <li>% scheduled inbounds/outbounds: <strong className="text-[#f59e0b]">UNAVAILABLE</strong> — schedule-summary endpoints returned 404 on this pull.</li>
-              <li>Facility-wide open counts: <strong className="text-[#f4f4f6]">61</strong> inbound receive tasks, <strong className="text-[#f4f4f6]">47</strong> outbound load tasks.</li>
-              <li>"Guru live out / in assign to Arnulfo": <strong className="text-[#f4f4f6]">TASK-5281747</strong> (Arnulfo, DOCK52, GURUNANDA PRE_LOAD ~58h). No live receive for Arnulfo in Bay 4.</li>
-              <li>Piece/pallet counts not returned by load-task API — shown as "—". DN details for TASK-5284794/5285010 carried from prior pull.</li>
-              <li>All data sourced from live WISE/WMS queries at ~03:30 PDT, June 5, 2026.</li>
+              <li><strong className="text-[#f4f4f6]">5 Occupied / 0 Reserved / 18 Available</strong> — 21.7% occupancy rate. All previously Occupied outbound doors (DOCK52–DOCK54) cleared.</li>
+              <li>Active tasks: <strong className="text-[#22c55e]">9 inbound</strong> (RECEIVE) / <strong className="text-[#71717a]">0 outbound</strong>. Mix: <strong className="text-[#22c55e]">100% inbound</strong> — Bay 4 is now exclusively inbound receiving.</li>
+              <li><strong className="text-[#ef4444]">CRITICAL — All outbound/PRE_LOAD tasks concluded.</strong> TASK-5281747 (Arnulfo, DOCK52), TASK-5284794 (Lorenzo, DOCK53), TASK-5285010 (Lorenzo, DOCK54), TASK-5280242 (Luis Velazquez, DOCK53) all closed since prior pull.</li>
+              <li>Customer mix: <strong className="text-[#f4f4f6]">GURUNANDA</strong> (ORG-655875) on 8 of 9 tasks. <strong className="text-[#f59e0b]">KARAKA</strong> (ORG-585450) on DOCK55 (TASK-5284151, RN-186139).</li>
+              <li>Arnulfo Munguia: <strong className="text-[#ef4444]">ZERO active Bay 4 tasks.</strong> His current tasks are on DOCK37 (TASK-5285037, KARAKA, NEW ~14.1h) and DOCK18 (TASK-5280508, KARAKA, IN_PROGRESS ~90.5h, Bay 3).</li>
+              <li>Daniela Gonzalez: <strong className="text-[#f4f4f6]">4 RECEIVE tasks</strong> — DOCK62 (TASK-5285184 ~11.9h + TASK-5207670 ~2,274h), DOCK63 (TASK-5278242 ~180.7h + TASK-5277747 ~202.7h), DOCK65 (TASK-5283625 ~31.9h).</li>
+              <li>Caren Cubides: <strong className="text-[#f4f4f6]">2 RECEIVE tasks</strong> — DOCK62 (TASK-5207670, NEW ~2,274h) + DOCK65 (TASK-5252949, NEW ~932h). Both severely aged.</li>
+              <li>Jerome Aranda: <strong className="text-[#f4f4f6]">1 RECEIVE task</strong> — DOCK55 (TASK-5284151, KARAKA, RN-186139, NEW ~19.8h).</li>
+              <li>daira gonzalez: <strong className="text-[#f4f4f6]">1 RECEIVE task</strong> — DOCK50 (TASK-5090739, ~5,439h, IN_PROGRESS). <strong className="text-[#ef4444]">AGED 227 days (since Oct 2025)</strong>.</li>
+              <li>Rufino Munguia: <strong className="text-[#f4f4f6]">1 RECEIVE task</strong> — DOCK65 (TASK-5254195, NEW ~906h). AGED 38 days (since Apr 28).</li>
+              <li><strong className="text-[#ef4444]">AGING ALERT:</strong> 4 tasks exceed 30 days: TASK-5090739 (227d), TASK-5207670 (95d), TASK-5252949 (39d), TASK-5254195 (38d). These may be abandoned/stuck and need supervisor review.</li>
+              <li>DOCK50 newly Occupied — TASK-5090739 (Oct 2025, GURUNANDA) was previously not appearing in Bay 4 door queries.</li>
+              <li>No Reserved doors. No double-booked doors. 18 of 23 doors (78%) available — significant inbound receiving capacity.</li>
+              <li>% scheduled inbounds/outbounds: <strong className="text-[#f59e0b]">UNAVAILABLE</strong> — schedule-summary endpoints returned 404/timeout on this pull.</li>
+              <li>Facility-wide open counts: <strong className="text-[#f4f4f6]">{facilityInboundOpen}</strong> inbound receive tasks, <strong className="text-[#f4f4f6]">{facilityOutboundOpen}</strong> outbound load tasks.</li>
+              <li>All data sourced from live WISE/WMS queries at ~04:30 PDT, June 5, 2026.</li>
             </ul>
           </div>
         </section>
@@ -215,7 +213,7 @@ export default function DashboardPage() {
       <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
         <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
           <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last updated: June 5, 2026 ~03:30 PDT</span>
+          <span>Last updated: June 5, 2026 ~04:30 PDT</span>
         </div>
       </footer>
     </div>
