@@ -2,6 +2,7 @@ import type { MixMetric } from "@/lib/data";
 
 interface OperationalMetricsProps {
   mix: MixMetric[];
+  scheduleAvailable: boolean;
   scheduledInboundReceived: number;
   scheduledInboundOrders: number;
   scheduledOutboundLoaded: number;
@@ -19,6 +20,7 @@ const MIX_COLORS: Record<string, string> = {
 
 export default function OperationalMetrics({
   mix,
+  scheduleAvailable,
   scheduledInboundReceived,
   scheduledInboundOrders,
   scheduledOutboundLoaded,
@@ -87,12 +89,25 @@ export default function OperationalMetrics({
         <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
           % Scheduled Inbounds Received
         </span>
-        <span className="text-3xl font-bold text-[#22c55e] tabular-nums">
-          {pctInboundReceived.toFixed(1)}%
-        </span>
-        <span className="text-xs text-[#71717a]">
-          {scheduledInboundReceived} received of {scheduledInboundOrders.toLocaleString()} scheduled
-        </span>
+        {scheduleAvailable ? (
+          <>
+            <span className="text-3xl font-bold text-[#22c55e] tabular-nums">
+              {pctInboundReceived.toFixed(1)}%
+            </span>
+            <span className="text-xs text-[#71717a]">
+              {scheduledInboundReceived} received of {scheduledInboundOrders.toLocaleString()} scheduled
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-3xl font-bold text-[#71717a] tabular-nums">
+              —
+            </span>
+            <span className="text-xs text-[#71717a]">
+              UNAVAILABLE — schedule-summary endpoint returned 404
+            </span>
+          </>
+        )}
       </div>
 
       {/* % Scheduled Outbounds Loaded */}
@@ -100,12 +115,25 @@ export default function OperationalMetrics({
         <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
           % Scheduled Outbounds Loaded
         </span>
-        <span className="text-3xl font-bold text-[#7c3aed] tabular-nums">
-          {pctOutboundLoaded.toFixed(1)}%
-        </span>
-        <span className="text-xs text-[#71717a]">
-          {scheduledOutboundLoaded} loaded of {scheduledOutboundOrders.toLocaleString()} scheduled
-        </span>
+        {scheduleAvailable ? (
+          <>
+            <span className="text-3xl font-bold text-[#7c3aed] tabular-nums">
+              {pctOutboundLoaded.toFixed(1)}%
+            </span>
+            <span className="text-xs text-[#71717a]">
+              {scheduledOutboundLoaded} loaded of {scheduledOutboundOrders.toLocaleString()} scheduled
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-3xl font-bold text-[#71717a] tabular-nums">
+              —
+            </span>
+            <span className="text-xs text-[#71717a]">
+              UNAVAILABLE — schedule-summary endpoint returned 404
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
