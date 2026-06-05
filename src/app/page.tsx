@@ -41,7 +41,7 @@ export default function DashboardPage() {
               Bay 4 Assignments — Valley View
             </h1>
             <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; June 4, 2026 &nbsp;|&nbsp; ~17:30 PDT
+              DOCK50–DOCK72 &nbsp;|&nbsp; June 4, 2026 &nbsp;|&nbsp; ~18:00 PDT
             </p>
           </div>
           {/* Facility badge */}
@@ -139,17 +139,17 @@ export default function DashboardPage() {
               Data Notes
             </span>
             <ul className="text-xs text-[#71717a] space-y-1 list-disc list-inside">
-              <li>All Bay 4 activity is <strong className="text-[#f4f4f6]">GURUNANDA</strong> (ORG-655875) except DOCK56 (Dollar Tree, CLOSED).</li>
-              <li>Arnulfo Munguia: <strong className="text-[#f4f4f6]">TASK-5281747</strong> on DOCK52, PRE_LOAD ~52h, DN-3190424 (28 pal).</li>
-              <li>Lorenzo Rodriguez has 2 tasks: DOCK53 (TASK-5284794, 8 loads LOADED, 21 pal) and DOCK54 (TASK-5285010, 2 loads LOADED, 43 pal).</li>
-              <li>Luis Velazquez still active on DOCK53 (TASK-5280242, ~73h, DN-3189539).</li>
-              <li>Daniela Gonzalez active on <strong className="text-[#f4f4f6]">3 receive tasks</strong>: DOCK58 (TASK-5285185 Live Unload), DOCK62 (TASK-5285184), DOCK67 (TASK-5285130).</li>
-              <li>DOCK58 newly Occupied since last pull (was Available ~16:31) — RN-186015 container Live Unload.</li>
-              <li>DOCK50, DOCK55, DOCK56 Reserved (space occupied, tasks CLOSED — Gate Checked Out).</li>
+              <li>All Bay 4 activity is <strong className="text-[#f4f4f6]">GURUNANDA</strong> (ORG-655875). No other customers currently active.</li>
+              <li>Arnulfo Munguia: <strong className="text-[#f4f4f6]">TASK-5281747</strong> on DOCK52, PRE_LOAD ~49h, DN-3190424 (28 pal, LOADED + signed 6/4 16:14).</li>
+              <li>Lorenzo Rodriguez has 2 tasks: DOCK53 (TASK-5284794, 8 loads LOADED, 21 pal, ~23h) and DOCK54 (TASK-5285010, 2 loads LOADED, 43 pal, ~21h).</li>
+              <li>Luis Velazquez still active on DOCK53 (TASK-5280242, ~74h, DN-3189539).</li>
+              <li>Daniela Gonzalez active on <strong className="text-[#f4f4f6]">3 receive tasks</strong>: DOCK58 (TASK-5285185 Live Unload RN-186015), DOCK62 (TASK-5285184 RN-5007923), DOCK67 (TASK-5285130 RN-5007903).</li>
+              <li>DOCK58 newly Occupied since earlier pull (was Available ~16:31) — RN-186015 container Live Unload.</li>
+              <li>DOCK50, DOCK55, DOCK56 now <strong className="text-[#f4f4f6]">Available</strong> — CLOSED tasks fully concluded, doors released.</li>
               <li>DOCK65 now Available (was Occupied by Daniela/Rufino — receive tasks concluded).</li>
-              <li>6 Occupied / 3 Reserved / 14 Available — total 9/23 doors occupied or reserved (39%).</li>
-              <li>% scheduled inbounds received / outbounds loaded: <strong className="text-[#f4f4f6]">UNAVAILABLE</strong> — schedule-summary APIs return server errors for LT_F1.</li>
-              <li>Facility-wide open counts: <strong className="text-[#f4f4f6]">UNAVAILABLE</strong> — same API limitation.</li>
+              <li><strong className="text-[#f4f4f6]">6 Occupied / 0 Reserved / 17 Available</strong> — total 6/23 doors occupied (26.1%).</li>
+              <li>Facility-wide open counts: <strong className="text-[#f4f4f6]">1,456</strong> inbound receipts, <strong className="text-[#f4f4f6]">5,468</strong> outbound orders.</li>
+              <li>% scheduled inbounds received / outbounds loaded: <strong className="text-[#f4f4f6]">UNAVAILABLE</strong> — schedule-summary API returns 404 for LT_F1.</li>
               <li>"Guru live out / in assign to Arnulfo" activity: <strong className="text-[#f4f4f6]">TASK-5281747</strong> (Arnulfo, DOCK52, GURUNANDA PRE_LOAD). No "live in" receive for Arnulfo in Bay 4.</li>
               <li>Piece counts are pallet counts from load-task API; receive piece counts not available.</li>
             </ul>
@@ -161,7 +161,7 @@ export default function DashboardPage() {
       <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
         <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
           <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last updated: June 4, 2026 ~17:30 PDT</span>
+          <span>Last updated: June 4, 2026 ~18:00 PDT</span>
         </div>
       </footer>
     </div>
