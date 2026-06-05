@@ -1,7 +1,7 @@
 /**
  * Bay 4 Assignments — Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50–DOCK72
- * Pulled: June 4, 2026 ~19:00 PDT
+ * Pulled: June 4, 2026 ~20:00 PDT
  *
  * All values sourced from live WISE/WMS queries.
  * Do NOT fabricate, estimate, or guess any metric.
@@ -48,29 +48,34 @@ export interface TaskRecord {
 export const TOTAL_DOORS = 23;
 
 export const doors: DoorRecord[] = [
-  { door: "DOCK50", status: "Reserved", assignee: null, customer: "GURUNANDA", taskIds: [], duration: null },
+  // ── OCCUPIED (8) ──
+  { door: "DOCK52", status: "Occupied", assignee: "Arnulfo Munguia", customer: "GURUNANDA", taskIds: ["TASK-5281747"], duration: "~51h" },
+  { door: "DOCK53", status: "Occupied", assignee: "Lorenzo Rodriguez", customer: "GURUNANDA", taskIds: ["TASK-5284794"], duration: "~1h" },
+  { door: "DOCK54", status: "Occupied", assignee: "Lorenzo Rodriguez", customer: "GURUNANDA", taskIds: ["TASK-5285010"], duration: "~1.5h" },
+  { door: "DOCK55", status: "Occupied", assignee: "Jerome Aranda", customer: "KARAKA", taskIds: ["TASK-5284151"], duration: "RECEIVE" },
+  { door: "DOCK61", status: "Occupied", assignee: null, customer: null, taskIds: [], duration: "No active task" },
+  { door: "DOCK62", status: "Occupied", assignee: "Daniela Gonzalez", customer: "GURUNANDA", taskIds: ["TASK-5285184"], duration: "~20h" },
+  { door: "DOCK63", status: "Occupied", assignee: "Daniela Gonzalez", customer: "GURUNANDA", taskIds: ["TASK-5285210"], duration: "~0.7h" },
+  { door: "DOCK64", status: "Occupied", assignee: "Daniela Gonzalez", customer: "GURUNANDA", taskIds: ["TASK-5285211"], duration: "NEW" },
+  { door: "DOCK65", status: "Occupied", assignee: "Daniela Gonzalez", customer: "GURUNANDA", taskIds: ["TASK-5283625"], duration: "~16h" },
+
+  // ── RESERVED (6) ──
+  { door: "DOCK60", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK68", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK69", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK70", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK71", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+  { door: "DOCK72", status: "Reserved", assignee: null, customer: null, taskIds: [], duration: null },
+
+  // ── AVAILABLE (8) ──
+  { door: "DOCK50", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK51", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK52", status: "Occupied", assignee: "Arnulfo Munguia", customer: "GURUNANDA", taskIds: ["TASK-5281747"], duration: "~50h" },
-  { door: "DOCK53", status: "Occupied", assignee: "Lorenzo Rodriguez, Luis Velazquez", customer: "GURUNANDA", taskIds: ["TASK-5284794", "TASK-5280242"], duration: "~5h / ~75h" },
-  { door: "DOCK54", status: "Occupied", assignee: "Lorenzo Rodriguez", customer: "GURUNANDA", taskIds: ["TASK-5285010"], duration: "~5h" },
-  { door: "DOCK55", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK56", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK57", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK58", status: "Occupied", assignee: "Daniela Gonzalez", customer: "GURUNANDA", taskIds: ["TASK-5285185"], duration: "Live Unload" },
+  { door: "DOCK58", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK59", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK60", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK61", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK62", status: "Occupied", assignee: "Daniela Gonzalez", customer: "GURUNANDA", taskIds: ["TASK-5285184"], duration: "RECEIVE" },
-  { door: "DOCK63", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK64", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK65", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK66", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
   { door: "DOCK67", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK68", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK69", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK70", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK71", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
-  { door: "DOCK72", status: "Available", assignee: null, customer: null, taskIds: [], duration: null },
 ];
 
 const occupied = doors.filter((d) => d.status === "Occupied").length;
@@ -110,33 +115,34 @@ export const kpiMetrics: KpiMetric[] = [
 ];
 
 export const assigneeSummaries: AssigneeSummary[] = [
-  { name: "Daniela Gonzalez", taskCount: 2 },
+  { name: "Daniela Gonzalez", taskCount: 4 },
   { name: "Lorenzo Rodriguez", taskCount: 2 },
   { name: "Arnulfo Munguia", taskCount: 1 },
-  { name: "Luis Velazquez", taskCount: 1 },
+  { name: "Jerome Aranda", taskCount: 1 },
 ];
 
 export const inboundOutboundMix: MixMetric[] = [
-  { label: "Outbound", count: 4, total: 6 },
-  { label: "Inbound", count: 2, total: 6 },
-  { label: "General", count: 0, total: 6 },
+  { label: "Outbound", count: 3, total: 8 },
+  { label: "Inbound", count: 5, total: 8 },
+  { label: "General", count: 0, total: 8 },
 ];
 
-// Facility-wide open counts from WMS (LT_F1, pulled ~19:00 PDT)
+// Facility-wide open counts from WMS (LT_F1, pulled ~20:00 PDT)
 export const facilityInboundOpen = 2204;
-export const facilityOutboundOpen = 3603;
+export const facilityOutboundOpen = 3630;
 
 export const assignments: TaskRecord[] = [
   // ────── OUTBOUND LOAD LINES ──────
-  // TASK-5281747 — DOCK52 — Arnulfo Munguia (IN_PROGRESS ~50h, PRE_LOAD)
+  // TASK-5281747 — DOCK52 — Arnulfo Munguia (IN_PROGRESS ~51h, PRE_LOAD)
+  // 1 load, LOADED + carrier signed 6/4 16:14
   {
     taskId: "TASK-5281747",
     dns: "DN-3190424",
     customer: "GURUNANDA",
-    pieces: "28 pal",
+    pieces: "—",
     assignee: "Arnulfo Munguia",
   },
-  // TASK-5284794 — DOCK53 — Lorenzo Rodriguez (8 loads, all LOADED, 39 pallets total)
+  // TASK-5284794 — DOCK53 — Lorenzo Rodriguez (8 loads, all LOADED, ~1h)
   {
     taskId: "TASK-5284794-1",
     dns: "DN-3197870",
@@ -193,15 +199,7 @@ export const assignments: TaskRecord[] = [
     pieces: "3 pal",
     assignee: "Lorenzo Rodriguez",
   },
-  // TASK-5280242 — DOCK53 — Luis Velazquez (stale ~75h, PRE_LOAD)
-  {
-    taskId: "TASK-5280242",
-    dns: "DN-3189539",
-    customer: "GURUNANDA",
-    pieces: "26 pal",
-    assignee: "Luis Velazquez",
-  },
-  // TASK-5285010 — DOCK54 — Lorenzo Rodriguez (2 loads, LOADED, 43 pallets)
+  // TASK-5285010 — DOCK54 — Lorenzo Rodriguez (2 loads, LOADED, ~1.5h)
   {
     taskId: "TASK-5285010-1",
     dns: "DN-3195089",
@@ -218,15 +216,7 @@ export const assignments: TaskRecord[] = [
   },
 
   // ────── INBOUND RECEIVE LINES ──────
-  // TASK-5285185 — DOCK58 — Daniela Gonzalez (Live Unload)
-  {
-    taskId: "TASK-5285185",
-    dns: "RN-186015",
-    customer: "GURUNANDA",
-    pieces: "—",
-    assignee: "Daniela Gonzalez",
-  },
-  // TASK-5285184 — DOCK62 — Daniela Gonzalez (RECEIVE)
+  // TASK-5285184 — DOCK62 — Daniela Gonzalez (RECEIVE ~20h)
   {
     taskId: "TASK-5285184",
     dns: "RN-5007923",
@@ -234,21 +224,54 @@ export const assignments: TaskRecord[] = [
     pieces: "—",
     assignee: "Daniela Gonzalez",
   },
+  // TASK-5285210 — DOCK63 — Daniela Gonzalez (RECEIVE ~0.7h)
+  {
+    taskId: "TASK-5285210",
+    dns: "RN-5007942",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Daniela Gonzalez",
+  },
+  // TASK-5285211 — DOCK64 — Daniela Gonzalez (RECEIVE, NEW)
+  {
+    taskId: "TASK-5285211",
+    dns: "RN-5007909",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Daniela Gonzalez",
+  },
+  // TASK-5283625 — DOCK65 — Daniela Gonzalez (RECEIVE ~16h)
+  {
+    taskId: "TASK-5283625",
+    dns: "RN-186014",
+    customer: "GURUNANDA",
+    pieces: "—",
+    assignee: "Daniela Gonzalez",
+  },
+  // TASK-5284151 — DOCK55 — Jerome Aranda (RECEIVE, KARAKA)
+  {
+    taskId: "TASK-5284151",
+    dns: "RN-186139",
+    customer: "KARAKA",
+    pieces: "—",
+    assignee: "Jerome Aranda",
+  },
 ];
 
 // Notes:
-// — All Bay 4 activity is GURUNANDA (ORG-655875). No other customers active.
-// — 5 Occupied / 1 Reserved / 17 Available — total 6/23 doors occupied+reserved (26.1%).
-// — DOCK50 now Reserved (ORG-655875 inventory activity, no active task).
-// — DOCK67 now Available (was Occupied by Daniela — TASK-5285130 RECEIVE concluded).
-// — DOCK55, DOCK56 remain Available (CLOSED tasks fully concluded).
-// — DOCK65 remains Available (receive tasks concluded earlier).
-// — Arnulfo Munguia: TASK-5281747 on DOCK52, PRE_LOAD IN_PROGRESS ~50h, DN-3190424 (28 pal, LOADED + signed 6/4 16:14).
-// — No active "Guru live in" receive tasks assigned to Arnulfo in Bay 4.
-// — DOCK53: TASK-5284794 (Lorenzo Rodriguez, 8 loads all LOADED, 39 pallets, ~5h) + TASK-5280242 (Luis Velazquez, ~75h, 26 pal).
-// — DOCK54: TASK-5285010 (Lorenzo Rodriguez, 2 loads LOADED, 43 pallets, ~5h).
-// — Daniela Gonzalez active on 2 receive tasks: DOCK58 (TASK-5285185, Live Unload RN-186015), DOCK62 (TASK-5285184, RN-5007923).
-// — % scheduled inbounds received / outbounds loaded: UNAVAILABLE (schedule-summary API returns 404 for LT_F1).
-// — Facility-wide open counts: 2,204 inbound receipts, 3,603 outbound orders.
+// — 9 Occupied / 6 Reserved / 8 Available — total 15/23 doors occupied+reserved (65.2%).
+// — Active tasks: 3 outbound (PRE_LOAD) / 5 inbound (RECEIVE) — 37.5% outbound / 62.5% inbound.
+// — Dominant customer: GURUNANDA (ORG-655875) on 7 of 8 active tasks. KARAKA on DOCK55.
+// — Arnulfo Munguia: TASK-5281747 on DOCK52, PRE_LOAD IN_PROGRESS ~51h, DN-3190424 (LOADED + carrier signed 6/4 16:14). No live receive tasks for Arnulfo in Bay 4.
+// — Lorenzo Rodriguez: 2 PRE_LOAD tasks — DOCK53 (TASK-5284794, 8 loads LOADED) + DOCK54 (TASK-5285010, 2 loads LOADED).
+// — Daniela Gonzalez: 4 RECEIVE tasks — DOCK62 (TASK-5285184 ~20h), DOCK63 (TASK-5285210 ~0.7h), DOCK64 (TASK-5285211 NEW), DOCK65 (TASK-5283625 ~16h).
+// — Jerome Aranda: 1 RECEIVE task — DOCK55 (TASK-5284151, KARAKA RN-186139).
+// — Luis Velazquez TASK-5280242 (~75h) no longer active on DOCK53.
+// — DOCK58 (Daniela Live Unload TASK-5285185) concluded → now Available.
+// — DOCK50 now Available (was Reserved — reservation released).
+// — DOCK61 marked Occupied (entryId ET-1103945 present) but no active task found.
+// — % scheduled inbounds received / outbounds loaded: UNAVAILABLE (schedule-summary API returned 500 Internal Server Error).
+// — Facility-wide open counts: 2,204 inbound receipt line-items, 3,630 outbound order line-items.
 // — Piece counts for outbound are pallet counts from load-task API; receive piece counts not available.
 // — "Guru live out / in assign to Arnulfo" activity: TASK-5281747 (Arnulfo, DOCK52, GURUNANDA PRE_LOAD). No "live in" receive for Arnulfo in Bay 4.
+// — DOCK55 added KARAKA (first non-GURUNANDA customer on Bay 4 this pull).
