@@ -2,24 +2,31 @@ import type { MixMetric } from "@/lib/data";
 
 interface OperationalMetricsProps {
   mix: MixMetric[];
-  inboundOpen: number;
-  outboundOpen: number;
+  scheduledInboundReceived: number;
+  scheduledInboundOrders: number;
+  scheduledOutboundLoaded: number;
+  scheduledOutboundOrders: number;
+  pctInboundReceived: number;
+  pctOutboundLoaded: number;
 }
 
 const MIX_COLORS: Record<string, string> = {
   Outbound: "#7c3aed",
   Inbound: "#22c55e",
+  Unknown: "#71717a",
   General: "#71717a",
 };
 
 export default function OperationalMetrics({
   mix,
-  inboundOpen,
-  outboundOpen,
+  scheduledInboundReceived,
+  scheduledInboundOrders,
+  scheduledOutboundLoaded,
+  scheduledOutboundOrders,
+  pctInboundReceived,
+  pctOutboundLoaded,
 }: OperationalMetricsProps) {
   const total = mix[0]?.total || 1;
-  const inboundUnavailable = inboundOpen < 0;
-  const outboundUnavailable = outboundOpen < 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -75,56 +82,30 @@ export default function OperationalMetrics({
         </div>
       </div>
 
-      {/* Scheduled Inbounds */}
+      {/* % Scheduled Inbounds Received */}
       <div className="bg-[#141419] border border-[#1e1e2a] rounded-xl p-5 flex flex-col gap-3">
         <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
-          Scheduled Inbounds Received
+          % Scheduled Inbounds Received
         </span>
-        {inboundUnavailable ? (
-          <>
-            <span className="text-2xl font-bold text-[#71717a]">
-              UNAVAILABLE
-            </span>
-            <span className="text-xs text-[#71717a]">
-              Schedule-summary API returned error
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="text-3xl font-bold text-[#22c55e] tabular-nums">
-              {inboundOpen.toLocaleString()}
-            </span>
-            <span className="text-xs text-[#71717a]">
-              Open receipt orders — facility-wide
-            </span>
-          </>
-        )}
+        <span className="text-3xl font-bold text-[#22c55e] tabular-nums">
+          {pctInboundReceived.toFixed(1)}%
+        </span>
+        <span className="text-xs text-[#71717a]">
+          {scheduledInboundReceived} received of {scheduledInboundOrders.toLocaleString()} scheduled
+        </span>
       </div>
 
-      {/* Scheduled Outbounds */}
+      {/* % Scheduled Outbounds Loaded */}
       <div className="bg-[#141419] border border-[#1e1e2a] rounded-xl p-5 flex flex-col gap-3">
         <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
-          Scheduled Outbounds Loaded
+          % Scheduled Outbounds Loaded
         </span>
-        {outboundUnavailable ? (
-          <>
-            <span className="text-2xl font-bold text-[#71717a]">
-              UNAVAILABLE
-            </span>
-            <span className="text-xs text-[#71717a]">
-              Schedule-summary API returned error
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="text-3xl font-bold text-[#7c3aed] tabular-nums">
-              {outboundOpen.toLocaleString()}
-            </span>
-            <span className="text-xs text-[#71717a]">
-              Open outbound orders — facility-wide
-            </span>
-          </>
-        )}
+        <span className="text-3xl font-bold text-[#7c3aed] tabular-nums">
+          {pctOutboundLoaded.toFixed(1)}%
+        </span>
+        <span className="text-xs text-[#71717a]">
+          {scheduledOutboundLoaded} loaded of {scheduledOutboundOrders.toLocaleString()} scheduled
+        </span>
       </div>
     </div>
   );
