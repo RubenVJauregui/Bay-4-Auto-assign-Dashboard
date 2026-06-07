@@ -1,7 +1,7 @@
 /**
  * Bay 4 Assignments — Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50–DOCK72
- * Pulled: June 6, 2026 ~11:35 PM PDT
+ * Pulled: June 7, 2026 ~5:00 AM PDT
  *
  * All values sourced from live WISE/WMS queries.
  * Do NOT fabricate, estimate, or guess any metric.
@@ -63,7 +63,7 @@ export const doors: DoorRecord[] = [
     assignee: "Arnulfo Munguia",
     customer: "KARAKA, LLC",
     taskIds: ["TASK-5285778"],
-    duration: "~1d",
+    duration: "~1d 10h",
   },
   {
     door: "DOCK53",
@@ -71,7 +71,7 @@ export const doors: DoorRecord[] = [
     assignee: "Arnulfo Munguia",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5285558", "TASK-5285913"],
-    duration: "~1d 8h",
+    duration: "~1d 12h",
   },
   {
     door: "DOCK54",
@@ -79,7 +79,7 @@ export const doors: DoorRecord[] = [
     assignee: "Lorenzo Rodriguez + Arnulfo",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5285010", "TASK-5285860"],
-    duration: "~2d 3h ⚠",
+    duration: "~2d 8h ⚠",
   },
   {
     door: "DOCK62",
@@ -87,20 +87,20 @@ export const doors: DoorRecord[] = [
     assignee: "Caren Cubides",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5207670"],
-    duration: "~96d ⚠",
+    duration: "~97d ⚠",
   },
   {
     door: "DOCK65",
     status: "Occupied",
-    assignee: "Rufino Munguia + Caren Cubides",
+    assignee: "Rufino Munguia",
     customer: "GURUNANDA, LLC",
-    taskIds: ["TASK-5254195", "TASK-5252949"],
+    taskIds: ["TASK-5254195"],
     duration: "~40d ⚠",
   },
 
   // ── GHOST-OCCUPIED (2) — dockStatus=OCCUPIED, no active tasks ──
   {
-    door: "DOCK63",
+    door: "DOCK52",
     status: "Occupied",
     assignee: null,
     customer: "⚠ Ghost — no active tasks",
@@ -116,7 +116,7 @@ export const doors: DoorRecord[] = [
     duration: null,
   },
 
-  // ── RESERVED (3) — dockStatus=RESERVED, no active tasks ──
+  // ── RESERVED (3) — dockStatus=ASSIGNED, no active tasks ──
   {
     door: "DOCK56",
     status: "Reserved",
@@ -142,15 +142,7 @@ export const doors: DoorRecord[] = [
     duration: null,
   },
 
-  // ── AVAILABLE (12) ── no active tasks, not occupied/reserved ──
-  {
-    door: "DOCK52",
-    status: "Available",
-    assignee: null,
-    customer: null,
-    taskIds: [],
-    duration: null,
-  },
+  // ── AVAILABLE (12) ── no active tasks, not occupied ──
   {
     door: "DOCK55",
     status: "Available",
@@ -185,6 +177,14 @@ export const doors: DoorRecord[] = [
   },
   {
     door: "DOCK61",
+    status: "Available",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+  },
+  {
+    door: "DOCK63",
     status: "Available",
     assignee: null,
     customer: null,
@@ -279,19 +279,19 @@ export const kpiMetrics: KpiMetric[] = [
 
 export const assigneeSummaries: AssigneeSummary[] = [
   { name: "Arnulfo Munguia", taskCount: 4 },
-  { name: "Caren Cubides", taskCount: 2 },
   { name: "Lorenzo Rodriguez", taskCount: 1 },
+  { name: "Caren Cubides", taskCount: 1 },
   { name: "Rufino Munguia", taskCount: 1 },
   { name: "daira gonzalez", taskCount: 1 },
 ];
 
-// 4 outbound + 5 inbound = 9 active tasks — 44% outbound / 56% inbound
+// 4 outbound + 4 inbound = 8 active tasks — 50% outbound / 50% inbound
 export const inboundOutboundMix: MixMetric[] = [
-  { label: "Outbound", count: 4, total: 9 },
-  { label: "Inbound", count: 5, total: 9 },
+  { label: "Outbound", count: 4, total: 8 },
+  { label: "Inbound", count: 4, total: 8 },
 ];
 
-// Schedule summary: all BAM schedule-summary endpoints return SQL parse errors
+// Schedule summary: BAM schedule-summary endpoints return SQL parse errors
 export const scheduleAvailable = false;
 export const scheduledInboundOrders = 0;
 export const scheduledOutboundOrders = 0;
@@ -300,16 +300,15 @@ export const scheduledOutboundLoaded = 0;
 export const pctScheduledInboundReceived = 0;
 export const pctScheduledOutboundLoaded = 0;
 
-// Facility-wide open counts from WISE (LT_F1, pulled ~11:35 PM PDT June 6)
-// Outbound: 50 open (12 NEW + 38 IN_PROGRESS)
-// Inbound:  50 open (23 NEW + 27 IN_PROGRESS)
-export const facilityInboundOpen = 50;
-export const facilityOutboundOpen = 50;
+// Facility-wide from WISE (LT_F1, pulled ~5:00 AM PDT June 7)
+// All-time totals: inbound 12,226 / outbound 14,467
+export const facilityInboundOpen = 12226;
+export const facilityOutboundOpen = 14467;
 
 export const assignments: TaskRecord[] = [
   // ────── OUTBOUND (4 active load tasks) ──────
-  // TASK-5285558 — DOCK53 — Arnulfo Munguia — LOAD IN_PROGRESS ~1d 8h
-  // LOAD-5030114, GURUNANDA, LLC (ORG-655875), started Jun 5 9:04 AM PDT
+  // TASK-5285558 — DOCK53 — Arnulfo Munguia — LOAD IN_PROGRESS ~1d 12h
+  // LOAD-5030114, GURUNANDA, LLC (ORG-655875), started Jun 5 4:31 PM PDT
   {
     taskId: "TASK-5285558",
     dns: "DN-3198181",
@@ -317,8 +316,8 @@ export const assignments: TaskRecord[] = [
     pieces: "—",
     assignee: "Arnulfo Munguia",
   },
-  // TASK-5285913 — DOCK53 — Arnulfo Munguia — LOAD IN_PROGRESS ~1d 2h
-  // LOAD-5030247 + LOAD-5030248, GURUNANDA, LLC (ORG-655875), started Jun 5 2:21 PM PDT
+  // TASK-5285913 — DOCK53 — Arnulfo Munguia — LOAD IN_PROGRESS ~1d 6h
+  // LOAD-5030247 + LOAD-5030248, GURUNANDA, LLC (ORG-655875), started Jun 5 11:15 PM PDT
   {
     taskId: "TASK-5285913",
     dns: "DN-3203261 +1",
@@ -326,8 +325,8 @@ export const assignments: TaskRecord[] = [
     pieces: "—",
     assignee: "Arnulfo Munguia",
   },
-  // TASK-5285010 — DOCK54 — Lorenzo Rodriguez — LOAD IN_PROGRESS ~2d 3h ⚠
-  // LOAD-5030073 + LOAD-5030195, GURUNANDA, LLC (ORG-655875), since Jun 4 2:04 PM PDT
+  // TASK-5285010 — DOCK54 — Lorenzo Rodriguez — LOAD IN_PROGRESS ~2d 8h ⚠
+  // LOAD-5030073 + LOAD-5030195, GURUNANDA, LLC (ORG-655875), since Jun 4 9:13 PM PDT
   {
     taskId: "TASK-5285010",
     dns: "DN-3195089, DN-3195088",
@@ -335,7 +334,7 @@ export const assignments: TaskRecord[] = [
     pieces: "—",
     assignee: "Lorenzo Rodriguez",
   },
-  // TASK-5285860 — DOCK54 — Arnulfo Munguia — LOAD NEW → ~1d 3h
+  // TASK-5285860 — DOCK54 — Arnulfo Munguia — LOAD NEW → ~1d 8h
   // 4 loads: LOAD-5030111, LOAD-5030113, LOAD-5030115, LOAD-5029667, GURUNANDA, LLC
   {
     taskId: "TASK-5285860",
@@ -345,7 +344,7 @@ export const assignments: TaskRecord[] = [
     assignee: "Arnulfo Munguia",
   },
 
-  // ────── INBOUND (5 active receive tasks) ──────
+  // ────── INBOUND (4 active receive tasks) ──────
   // TASK-5090739 — DOCK50 — daira gonzalez — RECEIVE IN_PROGRESS ~229d ⚠
   // RN-5002143, GURUNANDA, LLC (ORG-655875), since Oct 21, 2025
   {
@@ -355,7 +354,7 @@ export const assignments: TaskRecord[] = [
     pieces: "—",
     assignee: "daira gonzalez",
   },
-  // TASK-5285778 — DOCK51 — Arnulfo Munguia — RECEIVE NEW → ~1d
+  // TASK-5285778 — DOCK51 — Arnulfo Munguia — RECEIVE NEW → ~1d 10h
   // RN-182888 (POKRK2135), KARAKA, LLC (ORG-585450)
   {
     taskId: "TASK-5285778",
@@ -382,42 +381,37 @@ export const assignments: TaskRecord[] = [
     pieces: "PO 125-16768253",
     assignee: "Rufino Munguia",
   },
-  // TASK-5252949 — DOCK65 — Caren Cubides — RECEIVE NEW ~40 days ⚠
-  // RN-183707 (Alnor oils), GURUNANDA, LLC (ORG-655875), since Apr 27
-  {
-    taskId: "TASK-5252949",
-    dns: "RN-183707",
-    customer: "GURUNANDA",
-    pieces: "Alnor oils",
-    assignee: "Caren Cubides",
-  },
 ];
 
 // Notes:
 // — 8 Occupied / 3 Reserved / 12 Available — 34.8% occupied, 47.8% occupancy rate (incl. reserved).
-// — 6 of 8 OCCUPIED doors have active tasks (LOAD or RECEIVE). 2 are ghost-occupied (DOCK63, DOCK66).
-// — Active tasks: 4 outbound / 5 inbound. Mix: 44% / 56%.
-// — 4 tasks IN_PROGRESS (TASK-5285558, TASK-5285913, TASK-5285010, TASK-5090739), 5 NEW.
-// — ⚠ DOCK54 DOUBLE-BOOKED: Lorenzo TASK-5285010 (IN_PROGRESS ~2d 3h) + Arnulfo TASK-5285860 (NEW → ~1d 3h, 4 DNs).
-// — ⚠ DOCK53 DOUBLE-BOOKED: Arnulfo TASK-5285558 (IN_PROGRESS ~1d 8h) + TASK-5285913 (IN_PROGRESS ~1d 2h).
-// — ⚠ DOCK65 has 2 stale RECEIVE tasks: TASK-5254195 (~40 days, Rufino), TASK-5252949 (~40 days, Caren).
-// — ⚠ DOCK63, DOCK66 ghost-occupied: dockStatus=OCCUPIED but zero active tasks.
-// — ⚠ DOCK63 was Reserved in previous pull — now a new ghost.
+// — 6 of 8 OCCUPIED doors have active tasks (LOAD or RECEIVE). 2 are ghost-occupied (DOCK52, DOCK66).
+// — Active tasks: 4 outbound / 4 inbound. Mix: 50% / 50%.
+// — 3 tasks IN_PROGRESS (TASK-5285558, TASK-5285913, TASK-5285010), 5 NEW.
+// — ⚠ DOCK54 DOUBLE-BOOKED: Lorenzo TASK-5285010 (IN_PROGRESS ~2d 8h) + Arnulfo TASK-5285860 (NEW → ~1d 8h, 4 DNs).
+// — ⚠ DOCK53 DOUBLE-BOOKED: Arnulfo TASK-5285558 (IN_PROGRESS ~1d 12h) + TASK-5285913 (IN_PROGRESS ~1d 6h).
+// — ⚠ DOCK52 is a NEW GHOST (was Available in prior pull). YMS shows OCCUPIED with ET-1104275 but zero active load/receive tasks.
+// — ⚠ DOCK66 ghost-occupied: YMS OCCUPIED, no active tasks.
 // — ⚠ TASK-5090739 (daira gonzalez, DOCK50) critically stale at ~229 days (since Oct 2025).
-// — ✅ DOCK52 and DOCK61 ghosts CLEARED — now Available.
+// — ✅ DOCK63 ghost CLEARED — now Available (was OCCUPIED with no tasks in prior pull).
+// — ✅ TASK-5252949 (Caren Cubides, DOCK65, RN-183707) RESOLVED — no longer active on Bay 4.
 // — ARNULFO MUNGUIA: 4 Bay 4 tasks (3 outbound, 1 inbound) — 3 LOAD GURUNANDA + 1 RECEIVE KARAKA.
-//   OUT: TASK-5285558 (DOCK53, ~1d 8h, DN-3198181), TASK-5285913 (DOCK53, ~1d 2h, DN-3203261+1), TASK-5285860 (DOCK54, ~1d 3h, 4 DNs).
-//   IN: TASK-5285778 (DOCK51, ~1d, KARAKA RN-182888).
+//   OUT: TASK-5285558 (DOCK53, ~1d 12h), TASK-5285913 (DOCK53, ~1d 6h), TASK-5285860 (DOCK54, ~1d 8h, 4 DNs).
+//   IN: TASK-5285778 (DOCK51, ~1d 10h, KARAKA RN-182888).
 // — "Guru live out / in assign to Arnulfo":
-//   LIVE OUT: 3 GURUNANDA outbound — TASK-5285558 (DOCK53, ~1d 8h), TASK-5285913 (DOCK53, ~1d 2h), TASK-5285860 (DOCK54, ~1d 3h, 4 DNs).
-//   LIVE IN: None — no GURUNANDA receive tasks for Arnulfo on Bay 4. 1 KARAKA receive (TASK-5285778, DOCK51).
-// — Lorenzo Rodriguez: 1 task — DOCK54 (LOAD ~2d 3h, DN-3195089+DN-3195088). Aging concern — needs closing attention.
-// — Caren Cubides: 2 tasks — DOCK62 (RN-5006269, ~96d), DOCK65 (RN-183707, ~40d).
+//   LIVE OUT: 3 GURUNANDA outbound — TASK-5285558 (DOCK53, ~1d 12h), TASK-5285913 (DOCK53, ~1d 6h), TASK-5285860 (DOCK54, ~1d 8h, 4 DNs).
+//   LIVE IN: None — no GURUNANDA receive tasks for Arnulfo on Bay 4. 1 KARAKA receive (TASK-5285778, DOCK51, ~1d 10h).
+// — Lorenzo Rodriguez: 1 task — DOCK54 (LOAD ~2d 8h). Aging concern — needs closing attention.
+// — Caren Cubides: 1 task — DOCK62 (RN-5006269, ~97d). Was 2 tasks; TASK-5252949 (DOCK65) resolved.
 // — daira gonzalez: 1 task — DOCK50 (RN-5002143, ~229d stale since Oct 2025).
 // — Rufino Munguia: 1 task — DOCK65 (RN-5007343, ~40d).
-// — Customer mix: GURUNANDA (ORG-655875) on 7 of 9 active tasks, KARAKA LLC (ORG-585450) on 1. Ghost: DOCK63, DOCK66.
-// — AGING: TASK-5285010 (~2d 3h, Lorenzo), TASK-5090739 (~229d, daira), TASK-5254195 (~40d), TASK-5252949 (~40d), TASK-5207670 (~96d).
-// — Key changes since Jun 5 pull: DOCK52 ghost cleared → Available. DOCK61 ghost cleared → Available. DOCK63 new ghost. Reserved 8→3. Available 6→12.
-// — Facility-wide: 50 inbound open / 50 outbound open — parity maintained (was 52/52).
-// — Schedule %: UNAVAILABLE — all BAM schedule-summary endpoints return SQL parse errors.
-// — All data sourced from live WISE/WMS queries at ~11:35 PM PDT, June 6, 2026.
+// — Customer mix: GURUNANDA (ORG-655875) on 7 of 8 active tasks, KARAKA LLC (ORG-585450) on 1.
+// — AGING: TASK-5285010 (~2d 8h, Lorenzo), TASK-5090739 (~229d, daira), TASK-5254195 (~40d), TASK-5207670 (~97d).
+// — Key changes since Jun 6 ~11:35 PM pull:
+//   - DOCK63 ghost cleared → Available. DOCK52 is NEW ghost (was Available).
+//   - TASK-5252949 (Caren, DOCK65) resolved → mix now 4/4 (50/50) vs 4/5 (44/56).
+//   - Caren now 1 task (was 2). Occupied/Reserved/Available counts unchanged (8/3/12).
+//   - Door durations: TASK-5285558 ~1d 8h→~1d 12h, TASK-5285913 ~1d 2h→~1d 6h, TASK-5285860 ~1d 3h→~1d 8h, TASK-5285010 ~2d 3h→~2d 8h.
+// — Facility-wide: All-time totals 12,226 inbound / 14,467 outbound (all statuses).
+// — Schedule %: UNAVAILABLE — BAM schedule-summary endpoints return SQL parse errors.
+// — All data sourced from live WISE/WMS queries at ~5:00 AM PDT, June 7, 2026.
