@@ -104,7 +104,7 @@ export default function OperationalMetrics({
               —
             </span>
             <span className="text-xs text-[#71717a]">
-              UNAVAILABLE — schedule-summary endpoint returned 404
+              UNAVAILABLE — BAM endpoints returning SQL errors
             </span>
           </>
         )}
@@ -130,7 +130,7 @@ export default function OperationalMetrics({
               —
             </span>
             <span className="text-xs text-[#71717a]">
-              UNAVAILABLE — schedule-summary endpoint returned 404
+              UNAVAILABLE — BAM endpoints returning SQL errors
             </span>
           </>
         )}
