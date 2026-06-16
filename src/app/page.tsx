@@ -47,7 +47,7 @@ export default function DashboardPage() {
               Bay 4 Assignments — Valley View
             </h1>
             <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; June 15, 2026 &nbsp;|&nbsp; ~3:08 PM PDT
+              DOCK50–DOCK72 &nbsp;|&nbsp; June 15, 2026 &nbsp;|&nbsp; ~6:08 PM PDT
             </p>
           </div>
           {/* Facility badge */}
@@ -89,7 +89,7 @@ export default function DashboardPage() {
               Door Utilization
             </h2>
             <span className="text-xs text-[#71717a] ml-auto">
-              23 doors &nbsp;|&nbsp; {occupied} occupied / {available} available
+              23 doors &nbsp;|&nbsp; 14 occupied / 7 available / 2 anom.
             </span>
           </div>
           <DoorGrid doors={doors} />
@@ -152,31 +152,28 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Live Out (GURUNANDA Outbound)</span>
-                <span className="text-sm font-semibold text-[#71717a]">0 — All CLOSED</span>
+                <span className="text-sm font-semibold text-[#71717a]">0 — No Active Tasks</span>
                 <span className="text-xs text-[#71717a]">
-                  No active GURUNANDA outbound tasks for Arnulfo on Bay 4.
+                  No GURUNANDA outbound tasks for Arnulfo on Bay 4.
                 </span>
                 <span className="text-xs text-[#a1a1aa] mt-2">
-                  Most recent closing: TASK-5291144 (DOCK55, Jun 15 18:36)
+                  DOCK53 load now assigned to DANIEL BELTRAN (TASK-5291922).
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
-                  TASK-5290890 (DOCK54, Jun 15 16:00)
+                  All prior Arnulfo outbound tasks CLOSED.
                 </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Live In (GURUNANDA Receive)</span>
-                <span className="text-sm font-semibold text-[#71717a]">0 — All CLOSED</span>
+                <span className="text-sm font-semibold text-[#71717a]">0 — No Active Tasks</span>
                 <span className="text-xs text-[#71717a]">
-                  No active GURUNANDA receive tasks for Arnulfo on Bay 4.
+                  No GURUNANDA receive tasks for Arnulfo on Bay 4.
                 </span>
                 <span className="text-xs text-[#a1a1aa] mt-2">
-                  TASK-5290712 (DOCK53, Jun 12 21:58)
+                  WISE query returned 0 results for Arnulfo+Bay4+GURUNANDA.
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
-                  TASK-5290628 (DOCK61, Jun 12 16:54)
-                </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  TASK-5288507 (DOCK56, Jun 10 17:13)
+                  All prior Arnulfo receive tasks CLOSED.
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -189,10 +186,10 @@ export default function DashboardPage() {
                   <span className="text-[#f59e0b]">IN:</span> 0 GURUNANDA
                 </span>
                 <span className="text-xs text-[#22c55e] mt-1">
-                  ✓ All prior Arnulfo Bay 4 tasks now CLOSED
+                  ✓ All Bay 4 GURUNANDA tasks for Arnulfo CLOSED
                 </span>
                 <span className="text-xs text-[#71717a] mt-1">
-                  5 tasks closed since Jun 10 — DOCK53, DOCK54, DOCK55, DOCK56, DOCK61
+                  Active Bay 4 GURUNANDA tasks now assigned to: Beltran, Rosales, Gonzalez, Rufino
                 </span>
               </div>
             </div>
@@ -206,21 +203,18 @@ export default function DashboardPage() {
               Data Notes
             </span>
             <ul className="text-xs text-[#71717a] space-y-1 list-disc list-inside">
-              <li><strong className="text-[#f4f4f6]">5 Occupied / 0 Reserved / 18 Available</strong> — 21.7% occupancy. All 5 occupied doors have active tasks.</li>
-              <li>Active tasks: <strong className="text-[#7c3aed]">2 outbound</strong> / <strong className="text-[#22c55e]">5 inbound</strong>. Mix: <strong className="text-[#f4f4f6]">29% outbound / 71% inbound</strong>.</li>
-              <li>Customer mix: 100% GURUNANDA, LLC (ORG-655875) — all 7 active tasks.</li>
-              <li>3 assignees: RUFINO MUNGUIA (5), Renato Rosales (1), DANIEL BELTRAN (1).</li>
-              <li><strong className="text-[#7c3aed]">ARNULFO MUNGUIA:</strong> 0 active Bay 4 tasks — all prior assignments CLOSED.</li>
-              <li><strong className="text-[#7c3aed]">GURU LIVE OUT:</strong> 0 — All Arnulfo GURUNANDA outbound tasks CLOSED. Most recent: TASK-5291144 (DOCK55, Jun 15) and TASK-5290890 (DOCK54, Jun 15).</li>
-              <li><strong className="text-[#f59e0b]">GURU LIVE IN:</strong> 0 — All Arnulfo GURUNANDA receive tasks CLOSED.</li>
-              <li><strong className="text-[#ef4444]">⚠ DOCK65 DOUBLE-BOOKED:</strong> TASK-5291946 (NEW ~4.4h) + TASK-5290955 (IN_PROGRESS ~73.8h since Jun 12).</li>
-              <li><strong className="text-[#ef4444]">⚠ DOCK66 DOUBLE-BOOKED:</strong> TASK-5292030 (IN_PROGRESS ~3.8h) + TASK-5290744 (IN_PROGRESS ~77.0h since Jun 12).</li>
-              <li><strong className="text-[#ef4444]">⚠ STUCK TASKS:</strong> DOCK65 and DOCK66 occupied since June 12 (~3+ days) — these receive tasks may need escalation.</li>
-              <li><strong className="text-[#ef4444]">⚠ YMS UNAVAILABLE:</strong> Location API returned 500 errors — door occupancy status is inferred from active tasks, not independently verified via YMS. Reserved count shown as UNAVAIL.</li>
-              <li><strong className="text-[#ef4444]">⚠ SCHEDULE UNAVAILABLE:</strong> Full Appointments API query not performed — % scheduled inbounds received and % outbounds loaded are not available in this pull.</li>
-              <li><strong className="text-[#f4f4f6]">MAJOR SHIFT since June 7:</strong> 5 occupied (was 8), 18 available (was 0), 0 reserved (was 15). Active tasks: 7 (was 9). Arnulfo tasks: 0 (was 4). Mix: 29/71 (was 44/56). All ghost-occupied doors cleared.</li>
-              <li>GURUNANDA outbounds shipped today: DOCK54 (APPT-6030779), DOCK55 (APPT-6030808), DOCK56 (5 loads), DOCK59 (APPT-6030726), DOCK62 (APPT-6030431).</li>
-              <li>All data sourced from live WISE/WMS queries at ~3:08 PM PDT, June 15, 2026.</li>
+              <li><strong className="text-[#f4f4f6]">14 Occupied / 0 Reserved / 7 Available</strong> — 60.9% occupancy (by WISE location spaceStatus). 6 of 14 occupied doors have active tasks.</li>
+              <li>Active tasks: <strong className="text-[#7c3aed]">2 outbound</strong> / <strong className="text-[#22c55e]">4 inbound</strong>. Mix: <strong className="text-[#f4f4f6]">33% outbound / 67% inbound</strong>.</li>
+              <li>Customer mix: 100% GURUNANDA, LLC (ORG-655875) — all 6 active tasks. DOCK70 also has SAGA (ORG-585450).</li>
+              <li>4 assignees: RUFINO MUNGUIA (3), DANIEL BELTRAN (1), Renato Rosales (1), DANIEL GONZALEZ (1).</li>
+              <li><strong className="text-[#7c3aed]">ARNULFO MUNGUIA:</strong> 0 active Bay 4 tasks — WISE returned 0 GURUNANDA tasks for Arnulfo on Bay 4 doors. All prior assignments CLOSED.</li>
+              <li><strong className="text-[#ef4444]">⚠ DOCK65 ANOMALY:</strong> Location space EMPTY but TASK-5291946 (NEW, RN-5008070) is assigned to this door. Space may have been released without closing the task.</li>
+              <li><strong className="text-[#ef4444]">⚠ DOCK66 ANOMALY:</strong> Location space EMPTY but TASK-5292030 (IN_PROGRESS ~3.3h, RN-186778) is assigned to this door.</li>
+              <li><strong className="text-[#f59e0b]">⚠ 8 OCCUPIED DOORS with NO active tasks:</strong> DOCK50, 51, 55, 56, 57, 58, 60, 61, 67, 70 — these doors show OCCUPIED in WISE but have no linked active receive or load tasks.</li>
+              <li><strong className="text-[#ef4444]">⚠ LOCATION API WORKING:</strong> Door occupancy status sourced from live WISE location spaceStatus queries — all 23 doors returned valid data.</li>
+              <li><strong className="text-[#ef4444]">⚠ SCHEDULE UNAVAILABLE:</strong> BAM appointment endpoints returning SQL errors — % scheduled inbounds received and % outbounds loaded are not available in this pull.</li>
+              <li><strong className="text-[#f4f4f6]">SHIFT from prior pull:</strong> Was 5 occupied, now 14 occupied (location API working vs previously broken). DOCK53 load task reassigned from Arnulfo to DANIEL BELTRAN. DOCK54 receive now active with DANIEL GONZALEZ.</li>
+              <li>All data sourced from live WISE/WMS queries at ~6:08 PM PDT, June 15, 2026.</li>
             </ul>
           </div>
         </section>
@@ -230,7 +224,7 @@ export default function DashboardPage() {
       <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
         <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
           <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last updated: June 15, 2026 ~3:08 PM PDT</span>
+          <span>Last updated: June 15, 2026 ~6:08 PM PDT</span>
         </div>
       </footer>
     </div>
