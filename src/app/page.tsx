@@ -47,7 +47,7 @@ export default function DashboardPage() {
               Bay 4 Assignments — Valley View
             </h1>
             <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; June 18, 2026 &nbsp;|&nbsp; ~9:08 AM PDT
+              DOCK50–DOCK72 &nbsp;|&nbsp; June 18, 2026 &nbsp;|&nbsp; ~12:07 PM PDT
             </p>
           </div>
           {/* Facility badge */}
@@ -152,53 +152,68 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Live Out (GURUNANDA Outbound)</span>
-                <span className="text-sm font-semibold text-[#7c3aed]">3 Active Load Tasks</span>
+                <span className="text-sm font-semibold text-[#7c3aed]">5 Active Load Tasks</span>
                 <span className="text-xs text-[#a1a1aa] mt-1">
-                  <strong>TASK-5295058</strong> — DOCK51 — NEW (~2h)
+                  <strong>TASK-5295058</strong> — DOCK51 — IN_PROGRESS (~3h)
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
                   ET-1110214 — GURUNANDA
                 </span>
                 <span className="text-xs text-[#a1a1aa] mt-1">
-                  <strong>TASK-5294114</strong> — DOCK52 — IN_PROGRESS (~18h)
+                  <strong>TASK-5295159</strong> — DOCK51 — <span className="text-[#22c55e]">NEW</span>
+                </span>
+                <span className="text-xs text-[#a1a1aa]">
+                  GURUNANDA LOAD
+                </span>
+                <span className="text-xs text-[#a1a1aa] mt-1">
+                  <strong>TASK-5294114</strong> — DOCK52 — IN_PROGRESS (~21h)
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
                   ET-1109561 — GURUNANDA
                 </span>
                 <span className="text-xs text-[#a1a1aa] mt-1">
-                  <strong>TASK-5294336</strong> — DOCK54 — IN_PROGRESS (~16h)
+                  <strong>TASK-5294336</strong> — DOCK54 — IN_PROGRESS (~19h)
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
                   ET-1109680 — GURUNANDA
                 </span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Live In (GURUNANDA Receive)</span>
-                <span className="text-sm font-semibold text-[#f59e0b]">0 — No GURUNANDA Receive Tasks</span>
-                <span className="text-xs text-[#71717a]">
-                  No active GURUNANDA receive tasks for Arnulfo on Bay 4.
-                </span>
-                <span className="text-xs text-[#a1a1aa] mt-2">
-                  TASK-5293980 on DOCK53 is Arnulfo&apos;s but customer is ORG-585450 (not GURUNANDA).
+                <span className="text-xs text-[#a1a1aa] mt-1">
+                  <strong>TASK-5295174</strong> — DOCK61 — IN_PROGRESS (~2h)
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
-                  ET-1109499 — IN_PROGRESS — ~19h on DOCK53.
+                  GURUNANDA LOAD
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Live In (Receive — Arnulfo)</span>
+                <span className="text-sm font-semibold text-[#f59e0b]">0 — No Receive Tasks</span>
+                <span className="text-xs text-[#71717a]">
+                  No active receive tasks assigned to Arnulfo on Bay 4.
+                </span>
+                <span className="text-xs text-[#a1a1aa] mt-2">
+                  <span className="text-[#22c55e]">✅</span> TASK-5293980 (ORG-585450 RECEIVE, DOCK53) — CLOSED since 9:08 AM pull.
+                </span>
+                <span className="text-xs text-[#a1a1aa]">
+                  Arnulfo is now 100% GURUNANDA LOAD (outbound) — all 5 tasks.
                 </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Arnulfo&apos;s Bay 4 Summary</span>
-                <span className="text-sm font-semibold text-[#22c55e]">4 active tasks on Bay 4</span>
+                <span className="text-sm font-semibold text-[#22c55e]">5 active tasks on Bay 4</span>
                 <span className="text-xs text-[#a1a1aa]">
-                  <span className="text-[#7c3aed]">OUT:</span> 3 GURUNANDA LOAD (DOCK51, DOCK52, DOCK54)
+                  <span className="text-[#7c3aed]">OUT:</span> 5 GURUNANDA LOAD (DOCK51×2, DOCK52, DOCK54, DOCK61)
                 </span>
                 <span className="text-xs text-[#a1a1aa]">
-                  <span className="text-[#f59e0b]">IN:</span> 1 RECEIVE ORG-585450 (DOCK53)
+                  <span className="text-[#f59e0b]">IN:</span> 0 receive — prior ORG-585450 task closed
                 </span>
                 <span className="text-xs text-[#22c55e] mt-1">
-                  ✅ Arnulfo remains #1 active assignee on Bay 4 (4 tasks)
+                  ✅ Arnulfo remains #1 active assignee on Bay 4 (5 tasks, +1 since 9 AM)
                 </span>
                 <span className="text-xs text-[#71717a] mt-1">
-                  New: TASK-5295058 (GURUNANDA LOAD, DOCK51, NEW) since last pull.
+                  New: TASK-5295159 (GURUNANDA LOAD, DOCK51, NEW) and TASK-5295174 (GURUNANDA LOAD, DOCK61).
+                </span>
+                <span className="text-xs text-[#71717a] mt-1">
+                  DOCK61 is newly occupied for Arnulfo — was available at 9:08 AM.
                 </span>
               </div>
             </div>
@@ -212,17 +227,17 @@ export default function DashboardPage() {
               Data Notes
             </span>
             <ul className="text-xs text-[#71717a] space-y-1 list-disc list-inside">
-              <li><strong className="text-[#f4f4f6]">7 Occupied / 0 Reserved / 16 Available</strong> — 30.4% occupancy. All 7 occupied doors have live active tasks (no orphaned occupancy).</li>
-              <li>Active tasks: <strong className="text-[#7c3aed]">3 outbound (LOAD)</strong> / <strong className="text-[#22c55e]">4 inbound (RECEIVE)</strong>. Mix: <strong className="text-[#f4f4f6]">42.9% outbound / 57.1% inbound</strong>.</li>
-              <li>Schedule data not refreshed — BAM appointment API unavailable.</li>
-              <li>3 assignees: ARNULFO MUNGUIA (4), Caren Cubides (2), 11769 (1 on DOCK59).</li>
-              <li><strong className="text-[#22c55e]">ARNULFO MUNGUIA:</strong> #1 active assignee on Bay 4 — 3 LOAD (GURUNANDA, DOCK51/52/54) + 1 RECEIVE (ORG-585450, DOCK53).</li>
-              <li><strong className="text-[#ef4444]">⚠ DOCK59 ANOMALY:</strong> Space EMPTY per WISE but TASK-5294674 (IN_PROGRESS, 11769, GURUNANDA) active — phantom occupancy.</li>
-              <li><strong className="text-[#f4f4f6]">🔁 Changes since ~6:29 AM pull:</strong> DOCK50 freed (TASK-5090739 closed). DOCK62 freed (TASK-5207670 closed). DOCK65 reduced 2→1 task (TASK-5252949 closed). TASK-5293980 moved DOCK51→DOCK53. New TASK-5295058 on DOCK51.</li>
-              <li><strong className="text-[#f59e0b]">⚠ 15 FORCE_CLOSED GURUNANDA receive tasks</strong> on Bay 4 doors (DOCK59, DOCK65–DOCK70 dockIds) — stale dock close-out procedures.</li>
-              <li><strong className="text-[#f59e0b]">⚠ 3 FORCE_CLOSED ORG-585450 tasks</strong> on DOCK51/DOCK52 dockIds.</li>
-              <li><strong className="text-[#f4f4f6]">11769</strong> is an unresolved user ID on DOCK59.</li>
-              <li>All data sourced from live WISE/WMS queries at ~9:08 AM PDT, June 18, 2026.</li>
+              <li><strong className="text-[#f4f4f6]">9 Occupied / 0 Reserved / 14 Available</strong> — 39.1% occupancy (up from 30.4% at 9 AM). All 9 occupied doors have live active tasks (no orphaned occupancy).</li>
+              <li>Active tasks: <strong className="text-[#7c3aed]">7 outbound (LOAD)</strong> / <strong className="text-[#22c55e]">5 inbound (RECEIVE)</strong>. Mix: <strong className="text-[#f4f4f6]">58.3% outbound / 41.7% inbound</strong> — flip from 42.9/57.1 at 9 AM.</li>
+              <li>Schedule data not refreshed — BAM appointment API still returns 400/SQL errors.</li>
+              <li>6 assignees (up from 3): Arnulfo Munguia (5), Jerome Aranda (2), Caren Cubides (2), Rufino Munguia (1), Daniela Gonzalez (1), Daniel Beltran (1).</li>
+              <li><strong className="text-[#22c55e]">ARNULFO MUNGUIA:</strong> #1 active — now <strong className="text-[#f4f4f6]">100% GURUNANDA LOAD</strong> on 4 doors: DOCK51×2, DOCK52, DOCK54, DOCK61. Zero receive tasks.</li>
+              <li><strong className="text-[#ef4444]">⚠ DOCK59 ANOMALY:</strong> Still active with unresolved user (was &quot;11769&quot;). 1 RECEIVE task IN_PROGRESS.</li>
+              <li><strong className="text-[#f4f4f6]">🔁 Key changes since ~9:08 AM:</strong> DOCK61 newly occupied by Arnulfo. DOCK68 newly occupied (RECEIVE). DOCK53 switched from RECEIVE→LOAD. DOCK65 doubled (1→2 tasks). Arnulfo&apos;s TASK-5293980 (ORG-585450 RECEIVE) closed. Total occupied 7→9, active tasks 7→12.</li>
+              <li><strong className="text-[#f59e0b]">⚠ 3 doors unresolved:</strong> DOCK59, DOCK67, DOCK68 have active tasks but door-level assignee mapping requires BAM query not executed in this pull.</li>
+              <li>GURUNANDA dominates: 11 of 12 active tasks.</li>
+              <li><strong className="text-[#f4f4f6]">⚠ 5 tasks have UNRESOLVED task IDs</strong> — door-level BAM call needed to resolve task IDs for non-Arnulfo doors.</li>
+              <li>All core metrics sourced from live WISE/WMS queries at ~12:07 PM PDT, June 18, 2026.</li>
             </ul>
           </div>
         </section>
@@ -232,7 +247,7 @@ export default function DashboardPage() {
       <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
         <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
           <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last updated: June 18, 2026 ~9:08 AM PDT</span>
+          <span>Last updated: June 18, 2026 ~12:07 PM PDT</span>
         </div>
       </footer>
     </div>
