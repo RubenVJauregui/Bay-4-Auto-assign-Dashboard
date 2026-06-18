@@ -31,6 +31,7 @@ export default function DoorGrid({ doors }: DoorGridProps) {
   const occupied = doors.filter((d) => d.status === "Occupied").length;
   const reserved = doors.filter((d) => d.status === "Reserved").length;
   const available = doors.filter((d) => d.status === "Available").length;
+  const anomalous = doors.filter((d) => d.anomaly).length;
 
   return (
     <div>
@@ -48,6 +49,12 @@ export default function DoorGrid({ doors }: DoorGridProps) {
           <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
           <span className="text-xs text-[#a1a1aa]">Available ({available})</span>
         </div>
+        {anomalous > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] animate-pulse" />
+            <span className="text-xs text-[#ef4444]">Anomalies ({anomalous})</span>
+          </div>
+        )}
       </div>
 
       {/* Door cards grid */}
@@ -57,13 +64,25 @@ export default function DoorGrid({ doors }: DoorGridProps) {
           return (
             <div
               key={door.door}
-              className="bg-[#141419] border border-[#1e1e2a] rounded-lg p-3.5 flex flex-col gap-2 hover:border-[#7c3aed66] transition-colors duration-200"
+              className={`bg-[#141419] border rounded-lg p-3.5 flex flex-col gap-2 hover:border-[#7c3aed66] transition-colors duration-200 ${
+                door.anomaly ? "border-[#ef444466]" : "border-[#1e1e2a]"
+              }`}
             >
-              {/* Header: door + status badge */}
+              {/* Header: door + status badge + anomaly flag */}
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-[#f4f4f6] tracking-wide">
-                  {door.door}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold text-[#f4f4f6] tracking-wide">
+                    {door.door}
+                  </span>
+                  {door.anomaly && (
+                    <span
+                      className="text-[10px] text-[#ef4444]"
+                      title="Anomaly: space status mismatch or stale task"
+                    >
+                      ⚠
+                    </span>
+                  )}
+                </div>
                 <span
                   className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${styles.badge}`}
                 >
@@ -75,7 +94,7 @@ export default function DoorGrid({ doors }: DoorGridProps) {
               </div>
 
               {/* Body: assignee + duration / or customer */}
-              {door.status === "Available" ? (
+              {door.status === "Available" && !door.assignee ? (
                 <div className="text-xs text-[#71717a]">
                   {door.customer ? (
                     <span className="text-[#22c55e99]">{door.customer}</span>

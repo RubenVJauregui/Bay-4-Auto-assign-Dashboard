@@ -11,7 +11,10 @@ export default function AssignmentHistory({
     <div>
       <div className="bg-[#141419] border border-[#1e1e2a] rounded-xl overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[1fr_1fr_80px_1fr] gap-4 px-5 py-3 bg-[#0a0a0f] border-b border-[#1e1e2a]">
+        <div className="grid grid-cols-[80px_1fr_100px_80px_1fr] gap-4 px-5 py-3 bg-[#0a0a0f] border-b border-[#1e1e2a]">
+          <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
+            Door
+          </span>
           <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
             DN
           </span>
@@ -27,7 +30,7 @@ export default function AssignmentHistory({
         </div>
 
         {/* Table body — scrollable */}
-        <div className="max-h-64 overflow-y-auto">
+        <div className="max-h-80 overflow-y-auto">
           {assignments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-14 gap-3">
               <svg
@@ -79,21 +82,27 @@ export default function AssignmentHistory({
               </span>
             </div>
           ) : (
-            assignments.map((row) => (
-              <div
-                key={row.taskId}
-                className="grid grid-cols-[1fr_1fr_80px_1fr] gap-4 px-5 py-3 border-b border-[#1e1e2a] last:border-b-0 hover:bg-[#ffffff05] transition-colors"
-              >
-                <span className="text-xs text-[#f4f4f6] font-mono leading-relaxed break-words">
-                  {row.dns}
-                </span>
-                <span className="text-xs text-[#a1a1aa]">{row.customer}</span>
-                <span className="text-xs text-[#a1a1aa] tabular-nums">
-                  {row.pieces}
-                </span>
-                <span className="text-xs text-[#a1a1aa]">{row.assignee}</span>
-              </div>
-            ))
+            assignments.map((row) => {
+              const isStale = row.pieces.includes("STALE");
+              return (
+                <div
+                  key={row.taskId}
+                  className={`grid grid-cols-[80px_1fr_100px_80px_1fr] gap-4 px-5 py-3 border-b border-[#1e1e2a] last:border-b-0 hover:bg-[#ffffff05] transition-colors ${
+                    isStale ? "bg-[#ef444408]" : ""
+                  }`}
+                >
+                  <span className="text-xs text-[#8b5cf6] font-mono">{row.door}</span>
+                  <span className="text-xs text-[#f4f4f6] font-mono leading-relaxed break-words">
+                    {row.dns}
+                  </span>
+                  <span className="text-xs text-[#a1a1aa]">{row.customer}</span>
+                  <span className={`text-xs tabular-nums ${isStale ? "text-[#ef4444]" : "text-[#a1a1aa]"}`}>
+                    {row.pieces}
+                  </span>
+                  <span className="text-xs text-[#a1a1aa]">{row.assignee}</span>
+                </div>
+              );
+            })
           )}
         </div>
       </div>
