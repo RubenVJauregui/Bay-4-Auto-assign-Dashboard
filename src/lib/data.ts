@@ -532,7 +532,19 @@ export interface GrazaDispatchData {
   summary: GrazaSummary;
 }
 
-export const grazaDispatch: GrazaDispatchData = {
+export interface GrazaDispatchRun extends GrazaDispatchData {
+  runLabel: string;
+  time: string;
+}
+
+export interface GrazaCombinedDispatchData {
+  combinedSummary: GrazaSummary;
+  runs: GrazaDispatchRun[];
+}
+
+export const grazaDispatchRun1: GrazaDispatchRun = {
+  runLabel: "Run 1",
+  time: "11:34 AM PDT",
   runInfo: {
     date: "2026-06-19T11:34:00-07:00",
     facility: "LT_F1 (Valley View)",
@@ -581,3 +593,64 @@ export const grazaDispatch: GrazaDispatchData = {
     ],
   },
 };
+
+export const grazaDispatchRun2: GrazaDispatchRun = {
+  runLabel: "Run 2",
+  time: "2:41 PM PDT",
+  runInfo: {
+    date: "2026-06-19T14:41:00-07:00",
+    facility: "LT_F1 (Valley View)",
+    customer: "DRUPLEY INC / DBA GRAZA (ORG-747717)",
+    orderType: "DS (Dropship)",
+    totalOrdersFound: 3,
+    labelNoteOrders: 0,
+    assignee: "MARTHA OLVERA (userId: 4419)",
+    assigneeUsername: "molvera",
+  },
+  plans: [
+    { planId: "PLAN-5073201", taskId: "TASK-5296620", status: "RELEASED", method: "BATCH_ORDER_PICK", orderCount: 3, skipPackingScan: true, assigneeUserId: "4419" },
+  ],
+  labelNoteOrders: [],
+  exceptions: [],
+  summary: {
+    totalPlans: 1,
+    totalTasks: 1,
+    totalOrdersCovered: 3,
+    wavePlans: 0,
+    batchPlans: 1,
+    labelNotePlans: 0,
+    exceptions: 0,
+    released: 1,
+    inProgress: 0,
+    stuckPlans: 0,
+    unassignedTasks: 0,
+    failures: 0,
+    coveragePct: 100,
+    issues: [],
+  },
+};
+
+export const grazaCombinedDispatch: GrazaCombinedDispatchData = {
+  combinedSummary: {
+    totalPlans: 12,
+    totalTasks: 12,
+    totalOrdersCovered: 115,
+    wavePlans: 4,
+    batchPlans: 6,
+    labelNotePlans: 2,
+    exceptions: 2,
+    released: 8,
+    inProgress: 4,
+    stuckPlans: 0,
+    unassignedTasks: 0,
+    failures: 0,
+    coveragePct: 100,
+    issues: [
+      "skipPackingScanForItem not set on PLAN-5073143 and PLAN-5073118 (created by molvera without the flag)",
+    ],
+  },
+  runs: [grazaDispatchRun1, grazaDispatchRun2],
+};
+
+// Keep backward-compatible export
+export const grazaDispatch: GrazaDispatchData = grazaDispatchRun1;

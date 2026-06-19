@@ -11,7 +11,7 @@ import {
   pctScheduledInboundReceived,
   pctScheduledOutboundLoaded,
   assignments,
-  grazaDispatch,
+  grazaCombinedDispatch,
 } from "@/lib/data";
 import KpiCard from "@/components/KpiCard";
 import DoorGrid from "@/components/DoorGrid";
@@ -228,10 +228,10 @@ export default function DashboardPage() {
               Team 2 Auto Assign — Graza DS
             </h2>
             <span className="text-xs text-[#71717a] ml-auto">
-              June 19, 2026 · Martha Olvera · 112 orders · 0 failures
+              June 19, 2026 · Martha Olvera · 115 orders · 2 runs · 0 failures
             </span>
           </div>
-          <GrazaDispatchSummary data={grazaDispatch} />
+          <GrazaDispatchSummary data={grazaCombinedDispatch} />
         </section>
 
         {/* ── Data Notes ── */}
