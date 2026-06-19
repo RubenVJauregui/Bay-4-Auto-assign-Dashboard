@@ -11,12 +11,14 @@ import {
   pctScheduledInboundReceived,
   pctScheduledOutboundLoaded,
   assignments,
+  grazaDispatch,
 } from "@/lib/data";
 import KpiCard from "@/components/KpiCard";
 import DoorGrid from "@/components/DoorGrid";
 import AssigneeSummaryList from "@/components/AssigneeSummary";
 import OperationalMetrics from "@/components/OperationalMetrics";
 import AssignmentHistory from "@/components/AssignmentHistory";
+import GrazaDispatchSummary from "@/components/GrazaDispatchSummary";
 
 const ACCENT_CLASSES = [
   "text-[#ef4444]",
@@ -48,7 +50,7 @@ export default function DashboardPage() {
               Bay 4 Assignments — Valley View
             </h1>
             <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; June 18, 2026 &nbsp;|&nbsp; ~16:20 PDT
+              DOCK50–DOCK72 &nbsp;|&nbsp; June 19, 2026 &nbsp;|&nbsp; ~11:34 PDT
             </p>
           </div>
           {/* Facility badge */}
@@ -218,6 +220,20 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        {/* ── Section: Team 2 Auto Assign — Graza DS Dispatch ── */}
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-5 w-1 rounded-full bg-[#22c55e]" />
+            <h2 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-widest">
+              Team 2 Auto Assign — Graza DS
+            </h2>
+            <span className="text-xs text-[#71717a] ml-auto">
+              June 19, 2026 · Martha Olvera · 112 orders · 0 failures
+            </span>
+          </div>
+          <GrazaDispatchSummary data={grazaDispatch} />
+        </section>
+
         {/* ── Data Notes ── */}
         <section>
           <div className="bg-[#141419] border border-[#1e1e2a] rounded-xl p-5 flex flex-col gap-2">
@@ -246,7 +262,7 @@ export default function DashboardPage() {
       <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
         <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
           <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last updated: June 18, 2026 ~16:20 PDT</span>
+          <span>Last updated: June 19, 2026 ~11:34 PDT</span>
         </div>
       </footer>
     </div>

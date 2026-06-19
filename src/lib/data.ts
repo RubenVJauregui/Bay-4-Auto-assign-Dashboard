@@ -467,3 +467,117 @@ export const assignments: TaskRecord[] = [
 // — All door durations calculated from WISE start timestamps against 16:20 PDT.
 // — All core metrics (door count, assignee counts, mix) sourced from live WISE/WMS
 //   queries at ~16:20 PDT, June 18, 2026.
+
+// ═══════════════════════════════════════════════════════════════
+// TEAM 2 AUTO ASSIGN — Graza DS Dispatch (Martha Olvera)
+// ═══════════════════════════════════════════════════════════════
+
+export interface GrazaPlan {
+  planId: string;
+  taskId: string;
+  status: string;
+  method: string;
+  orderCount: number;
+  skipPackingScan: boolean | null;
+  assigneeUserId: string;
+}
+
+export interface GrazaLabelNote {
+  dn: string;
+  planId: string;
+  taskId: string;
+  status: string;
+  note: string;
+}
+
+export interface GrazaException {
+  dn: string;
+  reason: string;
+  action: string;
+}
+
+export interface GrazaRunInfo {
+  date: string;
+  facility: string;
+  customer: string;
+  orderType: string;
+  totalOrdersFound: number;
+  labelNoteOrders: number;
+  assignee: string;
+  assigneeUsername: string;
+}
+
+export interface GrazaSummary {
+  totalPlans: number;
+  totalTasks: number;
+  totalOrdersCovered: number;
+  wavePlans: number;
+  batchPlans: number;
+  labelNotePlans: number;
+  exceptions: number;
+  released: number;
+  inProgress: number;
+  stuckPlans: number;
+  unassignedTasks: number;
+  failures: number;
+  coveragePct: number;
+  issues: string[];
+}
+
+export interface GrazaDispatchData {
+  runInfo: GrazaRunInfo;
+  plans: GrazaPlan[];
+  labelNoteOrders: GrazaLabelNote[];
+  exceptions: GrazaException[];
+  summary: GrazaSummary;
+}
+
+export const grazaDispatch: GrazaDispatchData = {
+  runInfo: {
+    date: "2026-06-19T11:34:00-07:00",
+    facility: "LT_F1 (Valley View)",
+    customer: "DRUPLEY INC / DBA GRAZA (ORG-747717)",
+    orderType: "DS (Dropship)",
+    totalOrdersFound: 112,
+    labelNoteOrders: 2,
+    assignee: "MARTHA OLVERA (userId: 4419)",
+    assigneeUsername: "molvera",
+  },
+  plans: [
+    { planId: "PLAN-5073109", taskId: "TASK-5296259", status: "RELEASED", method: "BATCH_ORDER_PICK", orderCount: 3, skipPackingScan: null, assigneeUserId: "4419" },
+    { planId: "PLAN-5073144", taskId: "TASK-5296359", status: "RELEASED", method: "BATCH_ORDER_PICK", orderCount: 22, skipPackingScan: null, assigneeUserId: "4419" },
+    { planId: "PLAN-5073145", taskId: "TASK-5296360", status: "RELEASED", method: "BATCH_ORDER_PICK", orderCount: 22, skipPackingScan: null, assigneeUserId: "4419" },
+    { planId: "PLAN-5073146", taskId: "TASK-5296361", status: "RELEASED", method: "BATCH_ORDER_PICK", orderCount: 22, skipPackingScan: null, assigneeUserId: "4419" },
+    { planId: "PLAN-5073147", taskId: "TASK-5296362", status: "RELEASED", method: "BATCH_ORDER_PICK", orderCount: 13, skipPackingScan: null, assigneeUserId: "4419" },
+    { planId: "PLAN-5073140", taskId: "TASK-5296351", status: "RELEASED", method: "WAVE_PICK_BY_ITEM", orderCount: 6, skipPackingScan: true, assigneeUserId: "4419" },
+    { planId: "PLAN-5073143", taskId: "TASK-5296357", status: "RELEASED", method: "WAVE_PICK_BY_ITEM", orderCount: 4, skipPackingScan: null, assigneeUserId: "4419" },
+    { planId: "PLAN-5073118", taskId: "TASK-5296301", status: "IN_PROGRESS", method: "WAVE_PICK_BY_ITEM", orderCount: 7, skipPackingScan: null, assigneeUserId: "4419" },
+    { planId: "PLAN-5073114", taskId: "TASK-5296296", status: "IN_PROGRESS", method: "WAVE_PICK_BY_ITEM", orderCount: 11, skipPackingScan: true, assigneeUserId: "4419" },
+  ],
+  labelNoteOrders: [
+    { dn: "DN-5195845", planId: "PLAN-5073117", taskId: "TASK-5296299", status: "IN_PROGRESS", note: "To Lauren, Enjoy your gift! - Hawthorne Capital, via Goody" },
+    { dn: "DN-5195835", planId: "PLAN-5073113", taskId: "TASK-5296295", status: "IN_PROGRESS", note: "To Bradley, Enjoy your gift! - Phreesia Network Solutions, via Goody" },
+  ],
+  exceptions: [
+    { dn: "DN-5195799", reason: "Retailer(Schuneman Insurance Agency) not found", action: "Legitimately blocked" },
+    { dn: "DN-5195746", reason: "Retailer(EY) not found", action: "Legitimately blocked" },
+  ],
+  summary: {
+    totalPlans: 11,
+    totalTasks: 11,
+    totalOrdersCovered: 112,
+    wavePlans: 4,
+    batchPlans: 5,
+    labelNotePlans: 2,
+    exceptions: 2,
+    released: 7,
+    inProgress: 4,
+    stuckPlans: 0,
+    unassignedTasks: 0,
+    failures: 0,
+    coveragePct: 100,
+    issues: [
+      "skipPackingScanForItem not set on PLAN-5073143 and PLAN-5073118 (created by molvera without the flag)",
+    ],
+  },
+};
