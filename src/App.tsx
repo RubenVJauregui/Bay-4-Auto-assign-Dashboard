@@ -1,0 +1,423 @@
+import { useState, useRef, useCallback } from 'react';
+import { assigneeNames, inYardRowsSeed, locationOptions, orderRowsSeed, shippingRowsSeed } from './data';
+import './style.css';
+
+type KpiPopup = 'inyard' | 'inbounds' | 'planned' | 'older48h' | null;
+type SortDir = 'asc' | 'desc' | null;
+
+interface Assignment {
+  task: string;
+  assignee: string;
+  time: string;
+}
+
+interface PendingAssign {
+  taskId: string;
+  locationSelectId: string;
+  assigneeSelectId: string;
+  assignee: string;
+}
+
+function SelectCell({ value, options, id }: { value: string; options: string[]; id: string }) {
+  return (
+    <select className="control-select" defaultValue={value} id={id}>
+      {options.map((option) => <option key={option} value={option}>{option}</option>)}
+    </select>
+  );
+}
+
+function formatScheduleDate(value: string) {
+  return new Date(value).toLocaleString('en-US', {
+    timeZone: 'America/Los_Angeles',
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function nowTimeString() {
+  return new Date().toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/Los_Angeles',
+  });
+}
+
+const older48hRows = orderRowsSeed.filter((_, i) => {
+  const createdDay = 18 - (i % 5);
+  return (22 - createdDay) >= 2;
+});
+
+function SortableHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
+  const arrow = active ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+  return <th onClick={onClick} style={{ cursor: 'pointer' }}>{label}{arrow}</th>;
+}
+
+function Toast({ message, visible }: { message: string; visible: boolean }) {
+  if (!visible) return null;
+  return <div className="toast">{message}</div>;
+}
+
+function ConfirmModal({ pending, onCancel, onConfirm }: { pending: PendingAssign; onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <h3 className="modal-title">Confirm Assignment</h3>
+        <div className="modal-body">
+          <p><span className="modal-label">Task:</span> {pending.taskId}</p>
+          <p><span className="modal-label">Customer:</span> GURUNANDA, LLC</p>
+          <p><span className="modal-label">Assign to:</span> <span className="modal-assignee">{pending.assignee}</span></p>
+        </div>
+        <p className="modal-hint">Press OK to send this assignment to WISE.</p>
+        <div className="modal-actions">
+          <button className="modal-btn" onClick={onCancel}>Cancel</button>
+          <button className="modal-btn modal-btn-ok" onClick={onConfirm}>OK</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KpiDetailPopup({ type, onClose }: { type: KpiPopup; onClose: () => void }) {
+  if (!type) return null;
+
+  let title = '';
+  let content: React.ReactNode = null;
+
+  if (type === 'inyard') {
+    title = 'Inbound Transfers Detail';
+    content = (
+      <div className="table-wrap kpi-popup-scroll">
+        <table>
+          <thead><tr><th>Trailer #</th><th>RN #</th><th>Check-in (PT)</th><th>Time in Yard</th><th>Customer</th><th>Location</th></tr></thead>
+          <tbody>
+            {inYardRowsSeed.map((row) => (
+              <tr key={row.trailer}><td>{row.trailer}</td><td>{row.rn}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td><td>{row.location}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  } else if (type === 'inbounds') {
+    title = 'Inbound Containers - FULL / Not Devanned';
+    content = (
+      <div className="table-wrap kpi-popup-scroll">
+        <table>
+          <thead><tr><th>Container #</th><th>Seal #</th><th>Customer</th><th>Devanned</th><th>Arrived (PT)</th><th>Cartons</th><th>CBM</th><th>Location</th></tr></thead>
+          <tbody>
+            <tr><td>CSLU2184370</td><td>SL-90244</td><td>GURUNANDA, LLC</td><td><span className="status new">No</span></td><td>06/22/2026, 06:15 AM</td><td>1280</td><td>62.4</td><td>SPOT740</td></tr>
+            <tr><td>TCKU7531908</td><td>SL-90187</td><td>GURUNANDA, LLC</td><td><span className="status new">No</span></td><td>06/20/2026, 04:50 AM</td><td>1104</td><td>55.8</td><td>SPOT126</td></tr>
+            <tr><td>MSKU0294851</td><td>SL-90102</td><td>GURUNANDA, LLC</td><td><span className="status new">No</span></td><td>06/19/2026, 11:30 AM</td><td>960</td><td>48.2</td><td>SPOT124</td></tr>
+            <tr><td>OOLU8827643</td><td>SL-90088</td><td>GURUNANDA, LLC</td><td><span className="status new">No</span></td><td>06/18/2026, 09:20 PM</td><td>1440</td><td>71.6</td><td>DOCK57</td></tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  } else if (type === 'planned') {
+    title = 'Planned Orders Detail (62)';
+    content = (
+      <div className="table-wrap kpi-popup-scroll">
+        <table>
+          <thead><tr><th>Order #</th><th>Customer</th><th>Status</th><th>BASE QTY</th><th>Order Type</th><th>PO / Reference</th><th>Ship To Name</th><th>Appointment Time</th></tr></thead>
+          <tbody>
+            {orderRowsSeed.map((row) => (
+              <tr key={row.id}><td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.status}</span></td><td>{row.baseQty}</td><td>{row.orderType}</td><td>{row.reference}</td><td>{row.shipToName}</td><td>{formatScheduleDate(row.scheduleDate)}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  } else if (type === 'older48h') {
+    title = `Older than 48h (${older48hRows.length})`;
+    content = (
+      <div className="table-wrap kpi-popup-scroll">
+        <table>
+          <thead><tr><th>Order #</th><th>Customer</th><th>Status</th><th>BASE QTY</th><th>Age</th><th>PO / Reference</th><th>Ship To Name</th><th>Created</th></tr></thead>
+          <tbody>
+            {older48hRows.map((row, i) => {
+              const createdDay = 18 - (i % 5);
+              const age = 22 - createdDay;
+              return (
+                <tr key={row.id}><td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.status}</span></td><td>{row.baseQty}</td><td>{age}d</td><td>{row.reference}</td><td>{row.shipToName}</td><td>{formatScheduleDate(row.createdTime)}</td></tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="kpi-popup" onClick={(e) => e.stopPropagation()}>
+        <div className="kpi-popup-header">
+          <h3>{title}</h3>
+          <button className="kpi-popup-close" onClick={onClose}>Close</button>
+        </div>
+        {content}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [kpiPopup, setKpiPopup] = useState<KpiPopup>(null);
+  const [assignedRows, setAssignedRows] = useState<Set<string>>(new Set());
+  const [assignments, setAssignments] = useState<Assignment[]>([
+    { task: 'RN-5008131', assignee: 'GONZALO RANGEL', time: '8:16 AM' },
+  ]);
+  const [toast, setToast] = useState({ message: '', visible: false });
+  const [pending, setPending] = useState<PendingAssign | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const [s1SortCol, setS1SortCol] = useState<string | null>(null);
+  const [s1SortDir, setS1SortDir] = useState<SortDir>(null);
+  const [s2SortCol, setS2SortCol] = useState<string | null>(null);
+  const [s2SortDir, setS2SortDir] = useState<SortDir>(null);
+
+  const toggleSort = (current: string | null, dir: SortDir, col: string, setCol: (c: string | null) => void, setDir: (d: SortDir) => void) => {
+    if (current === col) {
+      if (dir === 'asc') setDir('desc');
+      else if (dir === 'desc') { setCol(null); setDir(null); }
+      else setDir('asc');
+    } else {
+      setCol(col);
+      setDir('asc');
+    }
+  };
+
+  const sortedYardRows = [...inYardRowsSeed].sort((a, b) => {
+    if (!s1SortCol || !s1SortDir) return 0;
+    const av = (a as Record<string, string>)[s1SortCol] || '';
+    const bv = (b as Record<string, string>)[s1SortCol] || '';
+    return s1SortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  const sortedOrderRows = [...orderRowsSeed].sort((a, b) => {
+    if (!s2SortCol || !s2SortDir) return 0;
+    const av = String((a as Record<string, unknown>)[s2SortCol] ?? '');
+    const bv = String((b as Record<string, unknown>)[s2SortCol] ?? '');
+    if (s2SortCol === 'baseQty') return s2SortDir === 'asc' ? a.baseQty - b.baseQty : b.baseQty - a.baseQty;
+    return s2SortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  const showToast = useCallback((msg: string) => {
+    setToast({ message: msg, visible: true });
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast({ message: '', visible: false }), 3000);
+  }, []);
+
+  const requestAssign = useCallback((taskId: string, locationSelectId: string, assigneeSelectId: string) => {
+    const assEl = document.getElementById(assigneeSelectId) as HTMLSelectElement | null;
+    const assignee = assEl?.value || '-';
+    setPending({ taskId, locationSelectId, assigneeSelectId, assignee });
+  }, []);
+
+  const confirmAssign = useCallback(() => {
+    if (!pending) return;
+    const locEl = document.getElementById(pending.locationSelectId) as HTMLSelectElement | null;
+    const location = locEl?.value || '-';
+
+    setAssignedRows(prev => new Set(prev).add(pending.taskId));
+    setAssignments(prev => {
+      const filtered = prev.filter(a => a.task !== pending.taskId);
+      return [{ task: pending.taskId, assignee: pending.assignee, time: nowTimeString() }, ...filtered];
+    });
+    showToast(`Assigned ${pending.taskId} to ${pending.assignee} at ${location}`);
+    setPending(null);
+  }, [pending, showToast]);
+
+  const cancelAssign = useCallback(() => {
+    setPending(null);
+  }, []);
+
+  const handleAutoSuggest = useCallback(() => {
+    const unassignedYard = inYardRowsSeed.filter(r => !assignedRows.has(r.trailer));
+    const unassignedShip = shippingRowsSeed.filter(r => !assignedRows.has(r.id));
+    if (unassignedYard.length === 0 && unassignedShip.length === 0) {
+      showToast('All tasks already assigned');
+      return;
+    }
+    const first = unassignedYard[0] || unassignedShip[0];
+    if (first && 'trailer' in first) {
+      requestAssign(first.trailer, `loc-${first.trailer}`, `asg-${first.trailer}`);
+    } else if (first) {
+      requestAssign(first.id, `loc-${first.id}`, `asg-${first.id}`);
+    }
+  }, [assignedRows, requestAssign, showToast]);
+
+  return (
+    <main className="dashboard-shell">
+      <Toast message={toast.message} visible={toast.visible} />
+      {pending && <ConfirmModal pending={pending} onCancel={cancelAssign} onConfirm={confirmAssign} />}
+      <KpiDetailPopup type={kpiPopup} onClose={() => setKpiPopup(null)} />
+
+      <div className="top-actions">
+        <div className="action-left">
+          <button onClick={handleAutoSuggest}>Auto Suggest</button>
+          <button>Auto Assign All</button>
+          <button>Autonomous</button>
+        </div>
+        <div className="action-right">
+          <button>Refresh</button>
+          <button>Download CSV</button>
+        </div>
+      </div>
+
+      <header className="page-header">
+        <div>
+          <h1>Bay 4 Dashboard</h1>
+          <p>Valley View (LT_F1)</p>
+        </div>
+        <div className="refresh-time">
+          <strong>Last refreshed 6/22/2026, 09:27 AM</strong>
+          <span>refreshing in 3:38</span>
+        </div>
+      </header>
+
+      <div className="info-strip">
+        <span>Fresh WISE data every 5 minutes</span>
+        <span>Auto Suggest holds RNs and orders until Auto Assign is confirmed</span>
+        <span>Auto Assign assigns new tasks only after confirmation</span>
+      </div>
+
+      <section className="kpi-grid">
+        <button type="button" onClick={() => setKpiPopup('inyard')}><strong>4</strong><span>Inbound Transfers</span></button>
+        <button type="button" onClick={() => setKpiPopup('inbounds')}><strong>4</strong><span>Inbound Containers</span></button>
+        <button type="button" onClick={() => setKpiPopup('planned')}><strong>62</strong><span>Planned Orders</span></button>
+        <button type="button" onClick={() => setKpiPopup('older48h')}><strong>62</strong><span>Older than 48h</span></button>
+      </section>
+
+      <div className="content-grid">
+        <div className="content-left">
+          <section id="section-1" className="panel section-one">
+            <div className="panel-header"><h2>Section 1 - In-Yard FULL Equipment</h2><span>4 rows</span></div>
+            <div className="chip-row"><span>All (4)</span><span>GURUNANDA, LLC (4)</span></div>
+            <div className="table-wrap">
+              <table>
+                <thead><tr>
+                  <SortableHeader label="Trailer #" active={s1SortCol === 'trailer'} dir={s1SortCol === 'trailer' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'trailer', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="RN #" active={s1SortCol === 'rn'} dir={s1SortCol === 'rn' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'rn', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Check-in (PT)" active={s1SortCol === 'checkIn'} dir={s1SortCol === 'checkIn' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'checkIn', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Time in Yard" active={s1SortCol === 'timeInYard'} dir={s1SortCol === 'timeInYard' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'timeInYard', setS1SortCol, setS1SortDir)} />
+                  <th>Customer</th><th>Location</th><th>Assignee</th><th>Action</th>
+                </tr></thead>
+                <tbody>
+                  {sortedYardRows.map((row) => {
+                    const isAssigned = assignedRows.has(row.trailer);
+                    return (
+                      <tr key={row.trailer} className={isAssigned ? 'row-assigned' : ''}>
+                        <td>{row.trailer}</td><td>{row.rn}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td>
+                        <td><SelectCell value={row.location} options={locationOptions} id={`loc-${row.trailer}`} /></td>
+                        <td><SelectCell value={row.assignee} options={assigneeNames} id={`asg-${row.trailer}`} /></td>
+                        <td>
+                          {isAssigned
+                            ? <button className="assign-button assigned" disabled>Assigned</button>
+                            : <button className="assign-button" onClick={() => requestAssign(row.trailer, `loc-${row.trailer}`, `asg-${row.trailer}`)}>Assign</button>
+                          }
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="section-2" className="panel section-two">
+            <div className="panel-header"><h2>Section 2 - PLANNED Outbound Orders</h2><span>62 of 62</span></div>
+            <div className="section-tools"><div className="chip-row"><span>All (62)</span><span>GURUNANDA, LLC (62)</span></div><input aria-label="Search orders" placeholder="Search order, PO, carrier..." /></div>
+            <div className="table-wrap orders-scroll">
+              <table>
+                <thead><tr>
+                  <SortableHeader label="Order #" active={s2SortCol === 'id'} dir={s2SortCol === 'id' ? s2SortDir : null} onClick={() => toggleSort(s2SortCol, s2SortDir, 'id', setS2SortCol, setS2SortDir)} />
+                  <th>Customer</th>
+                  <SortableHeader label="Status" active={s2SortCol === 'status'} dir={s2SortCol === 'status' ? s2SortDir : null} onClick={() => toggleSort(s2SortCol, s2SortDir, 'status', setS2SortCol, setS2SortDir)} />
+                  <SortableHeader label="BASE QTY" active={s2SortCol === 'baseQty'} dir={s2SortCol === 'baseQty' ? s2SortDir : null} onClick={() => toggleSort(s2SortCol, s2SortDir, 'baseQty', setS2SortCol, setS2SortDir)} />
+                  <SortableHeader label="Order Type" active={s2SortCol === 'orderType'} dir={s2SortCol === 'orderType' ? s2SortDir : null} onClick={() => toggleSort(s2SortCol, s2SortDir, 'orderType', setS2SortCol, setS2SortDir)} />
+                  <th>PO / Reference</th>
+                  <SortableHeader label="Ship To Name" active={s2SortCol === 'shipToName'} dir={s2SortCol === 'shipToName' ? s2SortDir : null} onClick={() => toggleSort(s2SortCol, s2SortDir, 'shipToName', setS2SortCol, setS2SortDir)} />
+                  <SortableHeader label="Appointment Time" active={s2SortCol === 'scheduleDate'} dir={s2SortCol === 'scheduleDate' ? s2SortDir : null} onClick={() => toggleSort(s2SortCol, s2SortDir, 'scheduleDate', setS2SortCol, setS2SortDir)} />
+                  <th>Assignee</th><th>Action</th>
+                </tr></thead>
+                <tbody>
+                  {sortedOrderRows.map((row, i) => {
+                    const isAssigned = assignedRows.has(row.id);
+                    const defaultAssignee = assigneeNames[i % assigneeNames.length];
+                    return (
+                      <tr key={row.id} className={isAssigned ? 'row-assigned' : ''}>
+                        <td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.status}</span></td><td>{row.baseQty}</td><td>{row.orderType}</td><td>{row.reference}</td><td>{row.shipToName}</td><td>{formatScheduleDate(row.scheduleDate)}</td>
+                        <td><SelectCell value={defaultAssignee} options={assigneeNames} id={`asg-${row.id}`} /></td>
+                        <td>
+                          {isAssigned
+                            ? <button className="assign-button assigned" disabled>Assigned</button>
+                            : <button className="assign-button" onClick={() => requestAssign(row.id, `asg-${row.id}`, `asg-${row.id}`)}>Assign</button>
+                          }
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="panel section-three">
+            <div className="panel-header"><h2>Section 3 - Outbound Shipping</h2><span>2 rows</span></div>
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>DN / Order</th><th>Customer</th><th>DN Status</th><th>Load Status</th><th>Dock</th><th>ET</th><th>Assignee</th><th>Action</th></tr></thead>
+                <tbody>
+                  {shippingRowsSeed.map((row) => {
+                    const isAssigned = assignedRows.has(row.id);
+                    return (
+                      <tr key={row.id} className={isAssigned ? 'row-assigned' : ''}>
+                        <td>{row.id}</td><td>{row.customer}</td><td><span className="status picked">{row.dnStatus}</span></td><td><span className="status new">{row.loadStatus}</span></td>
+                        <td><SelectCell value={row.dock} options={locationOptions} id={`loc-${row.id}`} /></td><td>{row.et}</td>
+                        <td><SelectCell value={row.assignee} options={assigneeNames} id={`asg-${row.id}`} /></td>
+                        <td>
+                          {isAssigned
+                            ? <button className="assign-button assigned" disabled>Assigned</button>
+                            : <button className="assign-button" onClick={() => requestAssign(row.id, `loc-${row.id}`, `asg-${row.id}`)}>Assign</button>
+                          }
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <aside className="sidebar">
+          <section className="panel assigned-panel">
+            <div className="panel-header"><h2>Assigned Today</h2><button>Refresh</button></div>
+            <p className="assigned-note"><strong>{assignments.length} task{assignments.length !== 1 ? 's' : ''}</strong> Dashboard assigned only</p>
+            <table>
+              <thead><tr><th>Task</th><th>Assignee</th><th>Time</th></tr></thead>
+              <tbody>
+                {assignments.map((a) => (
+                  <tr key={a.task}>
+                    <td>{a.task}</td><td>{a.assignee}</td><td>{a.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+          <section className="panel assignee-panel">
+            <div className="panel-header"><h2>Bay 4 Assignees</h2><span>22 assignees</span></div>
+            <div className="assignee-list">
+              {assigneeNames.map((name) => <div className="assignee-card" key={name}><span>{name.split(' ').map((part) => part[0]).join('').slice(0, 2)}</span><strong>{name}</strong></div>)}
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  );
+}
+
+export default App;
