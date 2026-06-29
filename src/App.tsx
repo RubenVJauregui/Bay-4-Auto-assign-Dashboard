@@ -1,14 +1,18 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { assigneeNames, inYardRowsSeed, locationOptions, orderRowsSeed, shippingRowsSeed } from './data';
+import { assigneeNames, locationOptions } from './data';
 import './style.css';
 
 type KpiPopup = 'inyard' | 'inbounds' | 'planned' | 'older48h' | null;
 type SortDir = 'asc' | 'desc' | null;
 
+interface InYardRow { trailer: string; rn: string; checkIn: string; timeInYard: string; customer: string; location: string; assignee: string; }
+interface OrderRow { id: string; customer: string; status: string; baseQty: number; orderType: string; reference: string; retailerName?: string; shipToName: string; scheduleDate: string; createdTime: string; }
+interface ShippingRow { id: string; customer: string; dnStatus: string; loadStatus: string; dock: string; et: string; assignee: string; }
+
 interface LiveData {
-  inYardRows: typeof inYardRowsSeed;
-  orderRows: typeof orderRowsSeed;
-  shippingRows: typeof shippingRowsSeed;
+  inYardRows: InYardRow[];
+  orderRows: OrderRow[];
+  shippingRows: ShippingRow[];
   loaded: boolean;
 }
 
@@ -53,10 +57,14 @@ function nowTimeString() {
   });
 }
 
-const older48hRows = orderRowsSeed.filter((_, i) => {
-  const createdDay = 18 - (i % 5);
-  return (22 - createdDay) >= 2;
-});
+function computeOlder48h(rows: OrderRow[]): OrderRow[] {
+  const now = Date.now();
+  return rows.filter(r => {
+    if (!r.createdTime || r.createdTime === '-') return false;
+    const created = new Date(r.createdTime).getTime();
+    return (now - created) >= 48 * 3600000;
+  });
+}
 
 function SortableHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
   const arrow = active ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
@@ -88,69 +96,80 @@ function ConfirmModal({ pending, onCancel, onConfirm }: { pending: PendingAssign
   );
 }
 
-function KpiDetailPopup({ type, onClose }: { type: KpiPopup; onClose: () => void }) {
+function KpiDetailPopup({ type, onClose, live }: { type: KpiPopup; onClose: () => void; live: LiveData }) {
   if (!type) return null;
 
+  const older48h = computeOlder48h(live.orderRows);
   let title = '';
   let content: React.ReactNode = null;
 
   if (type === 'inyard') {
-    title = 'Inbound Transfers Detail';
+    title = `Inbound Transfers Detail (${live.inYardRows.length})`;
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
           <thead><tr><th>Trailer #</th><th>RN #</th><th>Check-in (PT)</th><th>Time in Yard</th><th>Customer</th><th>Location</th></tr></thead>
           <tbody>
-            {inYardRowsSeed.map((row) => (
-              <tr key={row.trailer}><td>{row.trailer}</td><td>{row.rn}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td><td>{row.location}</td></tr>
-            ))}
+            {live.inYardRows.length === 0
+              ? <tr><td colSpan={6} style={{ textAlign: 'center', color: '#64748b' }}>No in-yard equipment for GURUNANDA, LLC</td></tr>
+              : live.inYardRows.map((row) => (
+                <tr key={row.trailer}><td>{row.trailer}</td><td>{row.rn}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td><td>{row.location}</td></tr>
+              ))
+            }
           </tbody>
         </table>
       </div>
     );
   } else if (type === 'inbounds') {
-    title = 'Inbound Containers - FULL / Not Devanned';
+    title = `Inbound Containers (${live.inYardRows.length})`;
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
-          <thead><tr><th>Container #</th><th>Seal #</th><th>Customer</th><th>Devanned</th><th>Arrived (PT)</th><th>Cartons</th><th>CBM</th><th>Location</th></tr></thead>
+          <thead><tr><th>Trailer / Equipment</th><th>RN #</th><th>Customer</th><th>Status</th><th>Check-in (PT)</th><th>Time in Yard</th><th>Location</th></tr></thead>
           <tbody>
-            <tr><td>CSLU2184370</td><td>SL-90244</td><td>GURUNANDA, LLC</td><td><span className="status new">No</span></td><td>06/22/2026, 06:15 AM</td><td>1280</td><td>62.4</td><td>SPOT740</td></tr>
-            <tr><td>TCKU7531908</td><td>SL-90187</td><td>GURUNANDA, LLC</td><td><span className="status new">No</span></td><td>06/20/2026, 04:50 AM</td><td>1104</td><td>55.8</td><td>SPOT126</td></tr>
-            <tr><td>MSKU0294851</td><td>SL-90102</td><td>GURUNANDA, LLC</td><td><span className="status new">No</span></td><td>06/19/2026, 11:30 AM</td><td>960</td><td>48.2</td><td>SPOT124</td></tr>
-            <tr><td>OOLU8827643</td><td>SL-90088</td><td>GURUNANDA, LLC</td><td><span className="status new">No</span></td><td>06/18/2026, 09:20 PM</td><td>1440</td><td>71.6</td><td>DOCK57</td></tr>
+            {live.inYardRows.length === 0
+              ? <tr><td colSpan={7} style={{ textAlign: 'center', color: '#64748b' }}>No inbound containers for GURUNANDA, LLC</td></tr>
+              : live.inYardRows.map((row) => (
+                <tr key={row.trailer}><td>{row.trailer}</td><td>{row.rn}</td><td>{row.customer}</td><td><span className="status planned">In Yard</span></td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.location}</td></tr>
+              ))
+            }
           </tbody>
         </table>
       </div>
     );
   } else if (type === 'planned') {
-    title = 'Planned Orders Detail (62)';
+    title = `Planned Orders Detail (${live.orderRows.length})`;
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
           <thead><tr><th>Order #</th><th>Customer</th><th>Status</th><th>BASE QTY</th><th>Order Type</th><th>PO / Reference</th><th>Ship To Name</th><th>Appointment Time</th></tr></thead>
           <tbody>
-            {orderRowsSeed.map((row) => (
-              <tr key={row.id}><td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.status}</span></td><td>{row.baseQty}</td><td>{row.orderType}</td><td>{row.reference}</td><td>{row.shipToName}</td><td>{formatScheduleDate(row.scheduleDate)}</td></tr>
-            ))}
+            {live.orderRows.length === 0
+              ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b' }}>No planned orders for GURUNANDA, LLC</td></tr>
+              : live.orderRows.map((row) => (
+                <tr key={row.id}><td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.status}</span></td><td>{row.baseQty}</td><td>{row.orderType}</td><td>{row.reference}</td><td>{row.shipToName}</td><td>{formatScheduleDate(row.scheduleDate)}</td></tr>
+              ))
+            }
           </tbody>
         </table>
       </div>
     );
   } else if (type === 'older48h') {
-    title = `Older than 48h (${older48hRows.length})`;
+    title = `Older than 48h (${older48h.length})`;
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
           <thead><tr><th>Order #</th><th>Customer</th><th>Status</th><th>BASE QTY</th><th>Age</th><th>PO / Reference</th><th>Ship To Name</th><th>Created</th></tr></thead>
           <tbody>
-            {older48hRows.map((row, i) => {
-              const createdDay = 18 - (i % 5);
-              const age = 22 - createdDay;
-              return (
-                <tr key={row.id}><td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.status}</span></td><td>{row.baseQty}</td><td>{age}d</td><td>{row.reference}</td><td>{row.shipToName}</td><td>{formatScheduleDate(row.createdTime)}</td></tr>
-              );
-            })}
+            {older48h.length === 0
+              ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b' }}>No orders older than 48h</td></tr>
+              : older48h.map((row) => {
+                const age = Math.floor((Date.now() - new Date(row.createdTime).getTime()) / 86400000);
+                return (
+                  <tr key={row.id}><td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.status}</span></td><td>{row.baseQty}</td><td>{age}d</td><td>{row.reference}</td><td>{row.shipToName}</td><td>{formatScheduleDate(row.createdTime)}</td></tr>
+                );
+              })
+            }
           </tbody>
         </table>
       </div>
@@ -185,7 +204,7 @@ function App() {
   const [s2SortCol, setS2SortCol] = useState<string | null>(null);
   const [s2SortDir, setS2SortDir] = useState<SortDir>(null);
 
-  const [live, setLive] = useState<LiveData>({ inYardRows: inYardRowsSeed, orderRows: orderRowsSeed, shippingRows: shippingRowsSeed, loaded: false });
+  const [live, setLive] = useState<LiveData>({ inYardRows: [], orderRows: [], shippingRows: [], loaded: false });
 
   useEffect(() => {
     fetch('/api/dashboard')
@@ -193,17 +212,17 @@ function App() {
       .then(data => {
         if (data.success) {
           setLive({
-            inYardRows: data.inYardRows.length > 0 ? data.inYardRows : inYardRowsSeed,
-            orderRows: data.orderRows.length > 0 ? data.orderRows : orderRowsSeed,
-            shippingRows: data.shippingRows.length > 0 ? data.shippingRows : shippingRowsSeed,
+            inYardRows: data.inYardRows || [],
+            orderRows: data.orderRows || [],
+            shippingRows: data.shippingRows || [],
             loaded: true,
           });
         } else {
-          setLive({ inYardRows: inYardRowsSeed, orderRows: orderRowsSeed, shippingRows: shippingRowsSeed, loaded: true });
+          setLive({ inYardRows: [], orderRows: [], shippingRows: [], loaded: true });
         }
       })
       .catch(() => {
-        setLive({ inYardRows: inYardRowsSeed, orderRows: orderRowsSeed, shippingRows: shippingRowsSeed, loaded: true });
+        setLive({ inYardRows: [], orderRows: [], shippingRows: [], loaded: true });
       });
   }, []);
 
@@ -282,7 +301,7 @@ function App() {
     <main className="dashboard-shell">
       <Toast message={toast.message} visible={toast.visible} />
       {pending && <ConfirmModal pending={pending} onCancel={cancelAssign} onConfirm={confirmAssign} />}
-      <KpiDetailPopup type={kpiPopup} onClose={() => setKpiPopup(null)} />
+      <KpiDetailPopup type={kpiPopup} onClose={() => setKpiPopup(null)} live={live} />
 
       <div className="top-actions">
         <div className="action-left">
@@ -317,7 +336,7 @@ function App() {
         <button type="button" onClick={() => setKpiPopup('inyard')}><strong>{live.inYardRows.length}</strong><span>Inbound Transfers</span></button>
         <button type="button" onClick={() => setKpiPopup('inbounds')}><strong>{live.inYardRows.length}</strong><span>Inbound Containers</span></button>
         <button type="button" onClick={() => setKpiPopup('planned')}><strong>{live.orderRows.length}</strong><span>Planned Orders</span></button>
-        <button type="button" onClick={() => setKpiPopup('older48h')}><strong>{live.orderRows.length}</strong><span>Older than 48h</span></button>
+        <button type="button" onClick={() => setKpiPopup('older48h')}><strong>{computeOlder48h(live.orderRows).length}</strong><span>Older than 48h</span></button>
       </section>
 
       <div className="content-grid">
@@ -335,7 +354,9 @@ function App() {
                   <th>Customer</th><th>Location</th><th>Assignee</th><th>Action</th>
                 </tr></thead>
                 <tbody>
-                  {sortedYardRows.map((row) => {
+                  {sortedYardRows.length === 0
+                    ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No in-yard equipment for GURUNANDA, LLC</td></tr>
+                    : sortedYardRows.map((row) => {
                     const isAssigned = assignedRows.has(row.trailer);
                     return (
                       <tr key={row.trailer} className={isAssigned ? 'row-assigned' : ''}>
@@ -373,7 +394,9 @@ function App() {
                   <th>Assignee</th><th>Action</th>
                 </tr></thead>
                 <tbody>
-                  {sortedOrderRows.map((row, i) => {
+                  {sortedOrderRows.length === 0
+                    ? <tr><td colSpan={10} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No planned orders for GURUNANDA, LLC</td></tr>
+                    : sortedOrderRows.map((row, i) => {
                     const isAssigned = assignedRows.has(row.id);
                     const defaultAssignee = assigneeNames[i % assigneeNames.length];
                     return (
@@ -400,7 +423,9 @@ function App() {
               <table>
                 <thead><tr><th>DN / Order</th><th>Customer</th><th>DN Status</th><th>Load Status</th><th>Dock</th><th>ET</th><th>Assignee</th><th>Action</th></tr></thead>
                 <tbody>
-                  {live.shippingRows.map((row) => {
+                  {live.shippingRows.length === 0
+                    ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No outbound shipping for GURUNANDA, LLC</td></tr>
+                    : live.shippingRows.map((row) => {
                     const isAssigned = assignedRows.has(row.id);
                     return (
                       <tr key={row.id} className={isAssigned ? 'row-assigned' : ''}>
