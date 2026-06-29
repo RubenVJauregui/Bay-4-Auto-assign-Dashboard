@@ -1,9 +1,16 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { assigneeNames, inYardRowsSeed, locationOptions, orderRowsSeed, shippingRowsSeed } from './data';
 import './style.css';
 
 type KpiPopup = 'inyard' | 'inbounds' | 'planned' | 'older48h' | null;
 type SortDir = 'asc' | 'desc' | null;
+
+interface LiveData {
+  inYardRows: typeof inYardRowsSeed;
+  orderRows: typeof orderRowsSeed;
+  shippingRows: typeof shippingRowsSeed;
+  loaded: boolean;
+}
 
 interface Assignment {
   task: string;
@@ -178,6 +185,28 @@ function App() {
   const [s2SortCol, setS2SortCol] = useState<string | null>(null);
   const [s2SortDir, setS2SortDir] = useState<SortDir>(null);
 
+  const [live, setLive] = useState<LiveData>({ inYardRows: inYardRowsSeed, orderRows: orderRowsSeed, shippingRows: shippingRowsSeed, loaded: false });
+
+  useEffect(() => {
+    fetch('/api/dashboard')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          setLive({
+            inYardRows: data.inYardRows.length > 0 ? data.inYardRows : inYardRowsSeed,
+            orderRows: data.orderRows.length > 0 ? data.orderRows : orderRowsSeed,
+            shippingRows: data.shippingRows.length > 0 ? data.shippingRows : shippingRowsSeed,
+            loaded: true,
+          });
+        } else {
+          setLive({ inYardRows: inYardRowsSeed, orderRows: orderRowsSeed, shippingRows: shippingRowsSeed, loaded: true });
+        }
+      })
+      .catch(() => {
+        setLive({ inYardRows: inYardRowsSeed, orderRows: orderRowsSeed, shippingRows: shippingRowsSeed, loaded: true });
+      });
+  }, []);
+
   const toggleSort = (current: string | null, dir: SortDir, col: string, setCol: (c: string | null) => void, setDir: (d: SortDir) => void) => {
     if (current === col) {
       if (dir === 'asc') setDir('desc');
@@ -189,14 +218,14 @@ function App() {
     }
   };
 
-  const sortedYardRows = [...inYardRowsSeed].sort((a, b) => {
+  const sortedYardRows = [...live.inYardRows].sort((a, b) => {
     if (!s1SortCol || !s1SortDir) return 0;
     const av = (a as Record<string, string>)[s1SortCol] || '';
     const bv = (b as Record<string, string>)[s1SortCol] || '';
     return s1SortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
   });
 
-  const sortedOrderRows = [...orderRowsSeed].sort((a, b) => {
+  const sortedOrderRows = [...live.orderRows].sort((a, b) => {
     if (!s2SortCol || !s2SortDir) return 0;
     const av = String((a as Record<string, unknown>)[s2SortCol] ?? '');
     const bv = String((b as Record<string, unknown>)[s2SortCol] ?? '');
@@ -235,8 +264,8 @@ function App() {
   }, []);
 
   const handleAutoSuggest = useCallback(() => {
-    const unassignedYard = inYardRowsSeed.filter(r => !assignedRows.has(r.trailer));
-    const unassignedShip = shippingRowsSeed.filter(r => !assignedRows.has(r.id));
+    const unassignedYard = live.inYardRows.filter(r => !assignedRows.has(r.trailer));
+    const unassignedShip = live.shippingRows.filter(r => !assignedRows.has(r.id));
     if (unassignedYard.length === 0 && unassignedShip.length === 0) {
       showToast('All tasks already assigned');
       return;
@@ -247,7 +276,7 @@ function App() {
     } else if (first) {
       requestAssign(first.id, `loc-${first.id}`, `asg-${first.id}`);
     }
-  }, [assignedRows, requestAssign, showToast]);
+  }, [assignedRows, live, requestAssign, showToast]);
 
   return (
     <main className="dashboard-shell">
@@ -285,17 +314,17 @@ function App() {
       </div>
 
       <section className="kpi-grid">
-        <button type="button" onClick={() => setKpiPopup('inyard')}><strong>4</strong><span>Inbound Transfers</span></button>
-        <button type="button" onClick={() => setKpiPopup('inbounds')}><strong>4</strong><span>Inbound Containers</span></button>
-        <button type="button" onClick={() => setKpiPopup('planned')}><strong>62</strong><span>Planned Orders</span></button>
-        <button type="button" onClick={() => setKpiPopup('older48h')}><strong>62</strong><span>Older than 48h</span></button>
+        <button type="button" onClick={() => setKpiPopup('inyard')}><strong>{live.inYardRows.length}</strong><span>Inbound Transfers</span></button>
+        <button type="button" onClick={() => setKpiPopup('inbounds')}><strong>{live.inYardRows.length}</strong><span>Inbound Containers</span></button>
+        <button type="button" onClick={() => setKpiPopup('planned')}><strong>{live.orderRows.length}</strong><span>Planned Orders</span></button>
+        <button type="button" onClick={() => setKpiPopup('older48h')}><strong>{live.orderRows.length}</strong><span>Older than 48h</span></button>
       </section>
 
       <div className="content-grid">
         <div className="content-left">
           <section id="section-1" className="panel section-one">
-            <div className="panel-header"><h2>Section 1 - In-Yard FULL Equipment</h2><span>4 rows</span></div>
-            <div className="chip-row"><span>All (4)</span><span>GURUNANDA, LLC (4)</span></div>
+            <div className="panel-header"><h2>Section 1 - In-Yard FULL Equipment</h2><span>{live.inYardRows.length} rows</span></div>
+            <div className="chip-row"><span>All ({live.inYardRows.length})</span><span>GURUNANDA, LLC ({live.inYardRows.length})</span></div>
             <div className="table-wrap">
               <table>
                 <thead><tr>
@@ -328,8 +357,8 @@ function App() {
           </section>
 
           <section id="section-2" className="panel section-two">
-            <div className="panel-header"><h2>Section 2 - PLANNED Outbound Orders</h2><span>62 of 62</span></div>
-            <div className="section-tools"><div className="chip-row"><span>All (62)</span><span>GURUNANDA, LLC (62)</span></div><input aria-label="Search orders" placeholder="Search order, PO, carrier..." /></div>
+            <div className="panel-header"><h2>Section 2 - PLANNED Outbound Orders</h2><span>{live.orderRows.length} of {live.orderRows.length}</span></div>
+            <div className="section-tools"><div className="chip-row"><span>All ({live.orderRows.length})</span><span>GURUNANDA, LLC ({live.orderRows.length})</span></div><input aria-label="Search orders" placeholder="Search order, PO, carrier..." /></div>
             <div className="table-wrap orders-scroll">
               <table>
                 <thead><tr>
@@ -366,12 +395,12 @@ function App() {
           </section>
 
           <section className="panel section-three">
-            <div className="panel-header"><h2>Section 3 - Outbound Shipping</h2><span>2 rows</span></div>
+            <div className="panel-header"><h2>Section 3 - Outbound Shipping</h2><span>{live.shippingRows.length} rows</span></div>
             <div className="table-wrap">
               <table>
                 <thead><tr><th>DN / Order</th><th>Customer</th><th>DN Status</th><th>Load Status</th><th>Dock</th><th>ET</th><th>Assignee</th><th>Action</th></tr></thead>
                 <tbody>
-                  {shippingRowsSeed.map((row) => {
+                  {live.shippingRows.map((row) => {
                     const isAssigned = assignedRows.has(row.id);
                     return (
                       <tr key={row.id} className={isAssigned ? 'row-assigned' : ''}>
