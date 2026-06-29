@@ -24,25 +24,38 @@ async function getAccessToken() {
   if (!WISE_SERVICE_USERNAME || !WISE_SERVICE_PASSWORD) return null;
 
   try {
-    const res = await fetch(`${IAM_BASE_URL}/auth/exchange-token`, {
+    const res = await fetch(`${WMS_API_BASE_URL}/wms-bam/auth/login-by-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-tenant-id': TENANT_ID,
+        'x-facility-id': FACILITY_ID,
+        'item-time-zone': TIMEZONE,
+      },
       body: JSON.stringify({
-        grant_type: 'password',
         username: WISE_SERVICE_USERNAME,
         password: WISE_SERVICE_PASSWORD,
+        tenantId: TENANT_ID,
       }),
     });
     const data = await res.json();
-    if (String(data.code) === '0' && data.data?.access_token) {
-      cachedToken = data.data.access_token;
-      tokenExpiry = Date.now() + ((data.data.expires_in || 3600) - 60) * 1000;
+    const payload = data?.data || data;
+    const token =
+      payload?.accessToken ||
+      payload?.access_token ||
+      payload?.token ||
+      payload?.idToken ||
+      payload?.id_token ||
+      payload?.jwt;
+    if (res.ok && token) {
+      cachedToken = token;
+      tokenExpiry = Date.now() + ((payload?.expiresIn || payload?.expires_in || 3600) - 60) * 1000;
       return cachedToken;
     }
-    console.error('IAM token exchange failed:', data.msg || data.code);
+    console.error('WMS password login failed:', data?.message || data?.msg || data?.code || res.status);
     return null;
   } catch (err) {
-    console.error('IAM token exchange error:', err.message);
+    console.error('WMS password login error:', err.message);
     return null;
   }
 }
