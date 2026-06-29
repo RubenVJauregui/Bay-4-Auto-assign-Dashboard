@@ -1,15 +1,18 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import dns from 'dns';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+dns.setDefaultResultOrder?.('ipv4first');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const IAM_BASE_URL = process.env.IAM_BASE_URL || 'https://iam.item.pub';
-const WMS_API_BASE_URL = process.env.WMS_API_BASE_URL || 'https://wms-api.item.pub';
+const WMS_API_BASE_URL = process.env.WMS_API_BASE_URL || 'https://unis.item.com/api';
 const WISE_SERVICE_USERNAME = process.env.WISE_SERVICE_USERNAME || '';
 const WISE_SERVICE_PASSWORD = process.env.WISE_SERVICE_PASSWORD || '';
 const TENANT_ID = process.env.TENANT_ID || 'LT';
@@ -55,7 +58,7 @@ async function getAccessToken() {
     console.error('WMS password login failed:', data?.message || data?.msg || data?.code || res.status);
     return null;
   } catch (err) {
-    console.error('WMS password login error:', err.message);
+    console.error('WMS password login error:', err.message, err.cause?.code || '', err.cause?.hostname || '');
     return null;
   }
 }
@@ -111,7 +114,7 @@ app.get('/api/dashboard', async (req, res) => {
       }));
     }
   } catch (err) {
-    console.error('Entry ticket fetch error:', err.message);
+    console.error('Entry ticket fetch error:', err.message, err.cause?.code || '', err.cause?.hostname || '');
   }
 
   try {
@@ -135,7 +138,7 @@ app.get('/api/dashboard', async (req, res) => {
       }));
     }
   } catch (err) {
-    console.error('Order fetch error:', err.message);
+    console.error('Order fetch error:', err.message, err.cause?.code || '', err.cause?.hostname || '');
   }
 
   try {
@@ -156,7 +159,7 @@ app.get('/api/dashboard', async (req, res) => {
       assignee: l.assignee || '-',
     }));
   } catch (err) {
-    console.error('Load fetch error:', err.message);
+    console.error('Load fetch error:', err.message, err.cause?.code || '', err.cause?.hostname || '');
   }
 
   res.json(results);
