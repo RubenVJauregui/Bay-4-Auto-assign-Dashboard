@@ -5,7 +5,7 @@ import './style.css';
 type KpiPopup = 'inyard' | 'inbounds' | 'planned' | 'older48h' | null;
 type SortDir = 'asc' | 'desc' | null;
 
-interface InYardRow { trailer: string; rn: string; checkIn: string; timeInYard: string; customer: string; location: string; assignee: string; }
+interface InYardRow { equipmentNo: string; entryTicket: string; checkIn: string; timeInYard: string; customer: string; location: string; }
 interface OrderRow { id: string; customer: string; status: string; baseQty: number; orderType: string; reference: string; retailerName?: string; shipToName: string; scheduleDate: string; createdTime: string; }
 interface ShippingRow { id: string; customer: string; dnStatus: string; loadStatus: string; dock: string; et: string; assignee: string; }
 
@@ -108,12 +108,12 @@ function KpiDetailPopup({ type, onClose, live }: { type: KpiPopup; onClose: () =
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
-          <thead><tr><th>Trailer #</th><th>RN #</th><th>Check-in (PT)</th><th>Time in Yard</th><th>Customer</th><th>Location</th></tr></thead>
+          <thead><tr><th>Equipment #</th><th>Entry Ticket</th><th>Check In</th><th>Time in Yard</th><th>Customer</th><th>Location</th></tr></thead>
           <tbody>
             {live.inYardRows.length === 0
-              ? <tr><td colSpan={6} style={{ textAlign: 'center', color: '#64748b' }}>No in-yard equipment for GURUNANDA, LLC</td></tr>
+              ? <tr><td colSpan={6} style={{ textAlign: 'center', color: '#64748b' }}>No in-yard equipment available</td></tr>
               : live.inYardRows.map((row) => (
-                <tr key={row.trailer}><td>{row.trailer}</td><td>{row.rn}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td><td>{row.location}</td></tr>
+                <tr key={row.entryTicket || row.equipmentNo}><td>{row.equipmentNo}</td><td>{row.entryTicket}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td><td>{row.location}</td></tr>
               ))
             }
           </tbody>
@@ -125,12 +125,12 @@ function KpiDetailPopup({ type, onClose, live }: { type: KpiPopup; onClose: () =
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
-          <thead><tr><th>Trailer / Equipment</th><th>RN #</th><th>Customer</th><th>Status</th><th>Check-in (PT)</th><th>Time in Yard</th><th>Location</th></tr></thead>
+          <thead><tr><th>Equipment #</th><th>Entry Ticket</th><th>Customer</th><th>Status</th><th>Check In</th><th>Time in Yard</th><th>Location</th></tr></thead>
           <tbody>
             {live.inYardRows.length === 0
-              ? <tr><td colSpan={7} style={{ textAlign: 'center', color: '#64748b' }}>No inbound containers for GURUNANDA, LLC</td></tr>
+              ? <tr><td colSpan={7} style={{ textAlign: 'center', color: '#64748b' }}>No inbound containers available</td></tr>
               : live.inYardRows.map((row) => (
-                <tr key={row.trailer}><td>{row.trailer}</td><td>{row.rn}</td><td>{row.customer}</td><td><span className="status planned">In Yard</span></td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.location}</td></tr>
+                <tr key={row.entryTicket || row.equipmentNo}><td>{row.equipmentNo}</td><td>{row.entryTicket}</td><td>{row.customer}</td><td><span className="status planned">In Yard</span></td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.location}</td></tr>
               ))
             }
           </tbody>
@@ -283,15 +283,15 @@ function App() {
   }, []);
 
   const handleAutoSuggest = useCallback(() => {
-    const unassignedYard = live.inYardRows.filter(r => !assignedRows.has(r.trailer));
+    const unassignedYard = live.inYardRows.filter(r => !assignedRows.has(r.equipmentNo));
     const unassignedShip = live.shippingRows.filter(r => !assignedRows.has(r.id));
     if (unassignedYard.length === 0 && unassignedShip.length === 0) {
       showToast('All tasks already assigned');
       return;
     }
     const first = unassignedYard[0] || unassignedShip[0];
-    if (first && 'trailer' in first) {
-      requestAssign(first.trailer, `loc-${first.trailer}`, `asg-${first.trailer}`);
+    if (first && 'equipmentNo' in first) {
+      requestAssign(first.equipmentNo, `loc-${first.equipmentNo}`, `asg-${first.equipmentNo}`);
     } else if (first) {
       requestAssign(first.id, `loc-${first.id}`, `asg-${first.id}`);
     }
@@ -342,36 +342,25 @@ function App() {
       <div className="content-grid">
         <div className="content-left">
           <section id="section-1" className="panel section-one">
-            <div className="panel-header"><h2>Section 1 - In-Yard FULL Equipment</h2><span>{live.inYardRows.length} rows</span></div>
+            <div className="panel-header"><h2>Section 1 - IN-YARD FULL Equipment</h2><span>{live.inYardRows.length} rows</span></div>
             <div className="chip-row"><span>All ({live.inYardRows.length})</span><span>GURUNANDA, LLC ({live.inYardRows.length})</span></div>
             <div className="table-wrap">
               <table>
                 <thead><tr>
-                  <SortableHeader label="Trailer #" active={s1SortCol === 'trailer'} dir={s1SortCol === 'trailer' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'trailer', setS1SortCol, setS1SortDir)} />
-                  <SortableHeader label="RN #" active={s1SortCol === 'rn'} dir={s1SortCol === 'rn' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'rn', setS1SortCol, setS1SortDir)} />
-                  <SortableHeader label="Check-in (PT)" active={s1SortCol === 'checkIn'} dir={s1SortCol === 'checkIn' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'checkIn', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Equipment #" active={s1SortCol === 'equipmentNo'} dir={s1SortCol === 'equipmentNo' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'equipmentNo', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Entry Ticket" active={s1SortCol === 'entryTicket'} dir={s1SortCol === 'entryTicket' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'entryTicket', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Check In" active={s1SortCol === 'checkIn'} dir={s1SortCol === 'checkIn' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'checkIn', setS1SortCol, setS1SortDir)} />
                   <SortableHeader label="Time in Yard" active={s1SortCol === 'timeInYard'} dir={s1SortCol === 'timeInYard' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'timeInYard', setS1SortCol, setS1SortDir)} />
-                  <th>Customer</th><th>Location</th><th>Assignee</th><th>Action</th>
+                  <th>Customer</th><th>Location</th>
                 </tr></thead>
                 <tbody>
                   {sortedYardRows.length === 0
-                    ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No in-yard equipment for GURUNANDA, LLC</td></tr>
-                    : sortedYardRows.map((row) => {
-                    const isAssigned = assignedRows.has(row.trailer);
-                    return (
-                      <tr key={row.trailer} className={isAssigned ? 'row-assigned' : ''}>
-                        <td>{row.trailer}</td><td>{row.rn}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td>
-                        <td><SelectCell value={row.location} options={locationOptions} id={`loc-${row.trailer}`} /></td>
-                        <td><SelectCell value={row.assignee} options={assigneeNames} id={`asg-${row.trailer}`} /></td>
-                        <td>
-                          {isAssigned
-                            ? <button className="assign-button assigned" disabled>Assigned</button>
-                            : <button className="assign-button" onClick={() => requestAssign(row.trailer, `loc-${row.trailer}`, `asg-${row.trailer}`)}>Assign</button>
-                          }
-                        </td>
+                    ? <tr><td colSpan={6} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No in-yard equipment available</td></tr>
+                    : sortedYardRows.map((row) => (
+                      <tr key={row.entryTicket || row.equipmentNo}>
+                        <td>{row.equipmentNo}</td><td>{row.entryTicket}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td><td>{row.location}</td>
                       </tr>
-                    );
-                  })}
+                    ))}
                 </tbody>
               </table>
             </div>

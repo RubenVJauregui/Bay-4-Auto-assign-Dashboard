@@ -118,7 +118,11 @@ app.get('/api/dashboard', async (req, res) => {
 
   const results = { success: true, inYardRows: [], orderRows: [], shippingRows: [] };
 
-  // Section 1: In-Yard FULL Equipment (entry tickets in yard, filtered to GURUNANDA customer)
+  // Section 1: IN-YARD FULL Equipment (all in-yard for facility, no customer filter)
+  // Prior dashes were caused by using taskEquipmentId/vehicleId/inboundReceiptId fields
+  // that don't exist in the live entry-ticket payload. The actual response has:
+  // trailerNo, containerNo, referenceNo1, id, spotId, dockId, checkInStartTime,
+  // officialWindowCheckInTime, driverArrivedTime, createdWhen, customerIds[]
   try {
     const body = {
       currentPage: 1,
@@ -126,25 +130,22 @@ app.get('/api/dashboard', async (req, res) => {
       statuses: ['GATE_CHECKED_IN', 'WINDOW_CHECKED_IN', 'DOCK_CHECKED_IN', 'DROPPING_OFF_DELIVERY', 'WAITING'],
       sortingFields: [{ field: 'checkInStartTime', orderBy: 'DESC' }],
     };
-    if (CUSTOMER_ID) {
-      body.inboundCustomerIds = [CUSTOMER_ID];
-    }
     const entryRes = await wmsPost('wms-bam/yms/entry-ticket/search', body, token);
     if (entryRes.code === 0) {
       const entries = Array.isArray(entryRes.data) ? entryRes.data : (entryRes.data?.records || []);
       results.inYardRows = entries.map(e => {
-        const trailer = e.trailerNo || e.containerNo || e.taskEquipmentId || e.vehicleId || e.id || '';
-        const receiptId = e.inboundReceiptId || e.receiveTaskId || e.referenceNo1 || e.entryId || e.id || '';
-        const spot = e.spotId || e.dockId || e.dropOffLocationId || e.pickUpLocationId || '';
+        const equipNum = e.trailerNo || e.containerNo || e.referenceNo1 || e.id || '';
+        const entryId = e.id || '';
         const checkTime = e.checkInStartTime || e.officialWindowCheckInTime || e.driverArrivedTime || e.createdWhen || '';
+        const loc = e.spotId || e.dockId || '';
+        const cust = (e.customerIds && e.customerIds.length > 0) ? e.customerIds.join(', ') : 'GURUNANDA, LLC';
         return {
-          trailer: trailer || '—',
-          rn: (trailer || '—') + ' | ' + (receiptId || '—'),
-          checkIn: formatPT(checkTime) || '—',
-          timeInYard: computeTimeInYard(checkTime) || '—',
-          customer: 'GURUNANDA, LLC',
-          location: spot || '—',
-          assignee: '—',
+          equipmentNo: equipNum,
+          entryTicket: entryId,
+          checkIn: formatPT(checkTime),
+          timeInYard: computeTimeInYard(checkTime),
+          customer: cust,
+          location: loc,
         };
       });
     }
