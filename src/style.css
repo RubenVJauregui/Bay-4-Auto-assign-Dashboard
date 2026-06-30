@@ -31,8 +31,8 @@ h1 { font-size: 30px; line-height: 1; margin: 0 0 10px; color: #fff; font-weight
 .section-tools { display: flex; justify-content: space-between; align-items: center; padding-right: 14px; }
 .section-tools .chip-row { padding-right: 8px; }
 .section-tools input { width: 210px; height: 29px; background: rgba(5, 16, 38, .95); color: #d7e4ff; border: 1px solid #315bd6; border-radius: 4px; padding: 0 10px; outline: none; }
-.table-wrap { overflow: auto; }
-.orders-scroll { max-height: 430px; }
+.table-wrap { overflow: auto; max-height: 462px; }
+.orders-scroll { max-height: 462px; }
 table { width: 100%; border-collapse: collapse; }
 th { height: 32px; padding: 0 12px; text-align: left; background: rgba(7, 24, 54, .95); color: #b9c8e6; text-transform: uppercase; font-size: 10px; font-weight: 900; white-space: nowrap; border-bottom: 1px solid rgba(49, 91, 214, .35); }
 td { height: 43px; padding: 0 12px; color: #eef4ff; font-size: 10px; font-weight: 800; white-space: nowrap; border-bottom: 1px solid rgba(49, 91, 214, .35); }
