@@ -23,7 +23,7 @@ export const assigneeNames = [
   'RUFINO MUNGUIA',
 ];
 
-export const locationOptions = ['-', 'SPOT740', 'SPOT126', 'SPOT124', 'DOCK57', '540', '541', '542'];
+export const locationOptions = ['-', ...Array.from({ length: 23 }, (_, index) => `DOCK${50 + index}`)];
 
 export const inYardRowsSeed = [
   { trailer: 'TRL-7408', rn: 'TRL-7408 | RN-187260', checkIn: '06/22/2026, 09:02 AM', timeInYard: '0 Days 0 Hours 23 Minutes', customer: 'GURUNANDA, LLC', location: 'SPOT740', assignee: 'JORGE FRANCO' },
