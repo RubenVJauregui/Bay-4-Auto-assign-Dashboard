@@ -87,7 +87,7 @@ function ConfirmModal({ pending, onCancel, onConfirm }: { pending: PendingAssign
           <p><span className="modal-label">Customer:</span> GURUNANDA, LLC</p>
           <p><span className="modal-label">Assign to:</span> <span className="modal-assignee">{pending.assignee}</span></p>
         </div>
-        <p className="modal-hint">Press OK to send this assignment to WISE.</p>
+        <p className="modal-hint">Press OK to confirm this dashboard assignment.</p>
         <div className="modal-actions">
           <button className="modal-btn" onClick={onCancel}>Cancel</button>
           <button className="modal-btn modal-btn-ok" onClick={onConfirm}>OK</button>
@@ -260,9 +260,51 @@ function App() {
     toastTimer.current = setTimeout(() => setToast({ message: '', visible: false }), 3000);
   }, []);
 
-  const requestAssign = useCallback((taskId: string, locationSelectId: string, assigneeSelectId: string) => {
+  const busyAssignees = useCallback(() => new Set(assignments.map(a => a.assignee).filter(a => a && a !== '-')), [assignments]);
+
+  const firstAvailableAssignee = useCallback((ranked: string[], fallback?: string) => {
+    const busy = busyAssignees();
+    const cleanRanked = [...ranked, fallback || '', ...assigneeNames]
+      .map(name => name.trim())
+      .filter((name, idx, arr) => name && name !== '-' && assigneeNames.includes(name) && arr.indexOf(name) === idx);
+    return cleanRanked.find(name => !busy.has(name)) || cleanRanked[0] || '-';
+  }, [busyAssignees]);
+
+  const historicalAssigneeForSection1 = useCallback((row: InYardRow) => {
+    const ranked = live.inYardRows
+      .filter(r => r.assignee && assigneeNames.includes(r.assignee))
+      .map(r => ({
+        assignee: r.assignee,
+        score: (r.condition === row.condition ? 4 : 0) + (r.inYard === row.inYard ? 2 : 0) + (Boolean(r.receipt) === Boolean(row.receipt) ? 1 : 0),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .map(r => r.assignee);
+    return firstAvailableAssignee(ranked, row.assignee);
+  }, [firstAvailableAssignee, live.inYardRows]);
+
+  const historicalAssigneeForOrder = useCallback((row: OrderRow, fallback: string) => {
+    const ranked = live.orderRows
+      .filter(r => r.orderType === row.orderType || r.shipToName === row.shipToName || r.status === row.status)
+      .map((_, i) => assigneeNames[i % assigneeNames.length]);
+    return firstAvailableAssignee(ranked, fallback);
+  }, [firstAvailableAssignee, live.orderRows]);
+
+  const historicalAssigneeForShipping = useCallback((row: ShippingRow) => {
+    const ranked = live.shippingRows
+      .filter(r => r.assignee && assigneeNames.includes(r.assignee))
+      .map(r => ({
+        assignee: r.assignee,
+        score: (r.customer === row.customer ? 3 : 0) + (r.dock === row.dock ? 2 : 0) + (r.dnStatus === row.dnStatus ? 1 : 0) + (r.loadStatus === row.loadStatus ? 1 : 0),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .map(r => r.assignee);
+    return firstAvailableAssignee(ranked, row.assignee);
+  }, [firstAvailableAssignee, live.shippingRows]);
+
+  const requestAssign = useCallback((taskId: string, locationSelectId: string, assigneeSelectId: string, recommendedAssignee?: string) => {
     const assEl = document.getElementById(assigneeSelectId) as HTMLSelectElement | null;
-    const assignee = assEl?.value || '-';
+    const assignee = recommendedAssignee || assEl?.value || '-';
+    if (assEl && recommendedAssignee) assEl.value = recommendedAssignee;
     setPending({ taskId, locationSelectId, assigneeSelectId, assignee });
   }, []);
 
@@ -358,6 +400,7 @@ function App() {
                     : sortedYardRows.map((row) => {
                       const key = row.container || row.entryET;
                       const isAssigned = assignedRows.has(key);
+                      const historicalAssignee = historicalAssigneeForSection1(row);
                       return (
                         <tr key={key} className={`${row.conditionColor === 'yellow' ? 'row-yellow' : ''} ${isAssigned ? 'row-assigned' : ''}`}>
                           <td>{row.container}</td>
@@ -366,14 +409,14 @@ function App() {
                           <td><span className={`status ${row.conditionColor === 'yellow' ? 'planned' : row.conditionColor === 'green' ? 'picked' : 'new'}`}>{row.condition}</span></td>
                           <td>{row.entryET}</td>
                           <td>{row.status}</td>
-                          <td><SelectCell value={row.assignee || '-'} options={['-', ...assigneeNames]} id={`asg-s1-${key}`} /></td>
+                          <td><SelectCell value={historicalAssignee} options={['-', ...assigneeNames]} id={`asg-s1-${key}`} /></td>
                           <td><SelectCell value={'-'} options={locationOptions} id={`dock-s1-${key}`} /></td>
                           <td>{row.receipt}</td>
                           <td>{row.note}</td>
                           <td>
                             {isAssigned
                               ? <button className="assign-button assigned" disabled>Assigned</button>
-                              : <button className="assign-button" onClick={() => requestAssign(key, `dock-s1-${key}`, `asg-s1-${key}`)}>Assign</button>
+                              : <button className="assign-button" onClick={() => requestAssign(key, `dock-s1-${key}`, `asg-s1-${key}`, historicalAssignee)}>Assign</button>
                             }
                           </td>
                         </tr>
@@ -405,7 +448,7 @@ function App() {
                     ? <tr><td colSpan={10} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No planned orders for GURUNANDA, LLC</td></tr>
                     : sortedOrderRows.map((row, i) => {
                     const isAssigned = assignedRows.has(row.id);
-                    const defaultAssignee = assigneeNames[i % assigneeNames.length];
+                    const defaultAssignee = historicalAssigneeForOrder(row, assigneeNames[i % assigneeNames.length]);
                     return (
                       <tr key={row.id} className={isAssigned ? 'row-assigned' : ''}>
                         <td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.status}</span></td><td>{row.baseQty}</td><td>{row.orderType}</td><td>{row.reference}</td><td>{row.shipToName}</td><td>{formatScheduleDate(row.scheduleDate)}</td>
@@ -413,7 +456,7 @@ function App() {
                         <td>
                           {isAssigned
                             ? <button className="assign-button assigned" disabled>Assigned</button>
-                            : <button className="assign-button" onClick={() => requestAssign(row.id, `asg-${row.id}`, `asg-${row.id}`)}>Assign</button>
+                            : <button className="assign-button" onClick={() => requestAssign(row.id, `asg-${row.id}`, `asg-${row.id}`, defaultAssignee)}>Assign</button>
                           }
                         </td>
                       </tr>
@@ -434,15 +477,16 @@ function App() {
                     ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No outbound shipping for GURUNANDA, LLC</td></tr>
                     : live.shippingRows.map((row) => {
                     const isAssigned = assignedRows.has(row.id);
+                    const historicalAssignee = historicalAssigneeForShipping(row);
                     return (
                       <tr key={row.id} className={isAssigned ? 'row-assigned' : ''}>
                         <td>{row.id}</td><td>{row.customer}</td><td><span className="status picked">{row.dnStatus}</span></td><td><span className="status new">{row.loadStatus}</span></td>
                         <td><SelectCell value={row.dock} options={locationOptions} id={`loc-${row.id}`} /></td><td>{row.et}</td>
-                        <td><SelectCell value={row.assignee} options={assigneeNames} id={`asg-${row.id}`} /></td>
+                        <td><SelectCell value={historicalAssignee} options={assigneeNames} id={`asg-${row.id}`} /></td>
                         <td>
                           {isAssigned
                             ? <button className="assign-button assigned" disabled>Assigned</button>
-                            : <button className="assign-button" onClick={() => requestAssign(row.id, `loc-${row.id}`, `asg-${row.id}`)}>Assign</button>
+                            : <button className="assign-button" onClick={() => requestAssign(row.id, `loc-${row.id}`, `asg-${row.id}`, historicalAssignee)}>Assign</button>
                           }
                         </td>
                       </tr>
@@ -469,14 +513,15 @@ function App() {
               </tbody>
             </table>
           </section>
-          <section className="panel assignee-panel">
-            <div className="panel-header"><h2>Bay 4 Assignees</h2><span>22 assignees</span></div>
-            <div className="assignee-list">
-              {assigneeNames.map((name) => <div className="assignee-card" key={name}><span>{name.split(' ').map((part) => part[0]).join('').slice(0, 2)}</span><strong>{name}</strong></div>)}
-            </div>
-          </section>
         </aside>
       </div>
+
+      <section className="panel assignee-panel assignee-panel-bottom">
+        <div className="panel-header"><h2>Bay 4 Assignees</h2><span>22 assignees</span></div>
+        <div className="assignee-list">
+          {assigneeNames.map((name) => <div className="assignee-card" key={name}><span>{name.split(' ').map((part) => part[0]).join('').slice(0, 2)}</span><strong>{name}</strong></div>)}
+        </div>
+      </section>
     </main>
   );
 }
