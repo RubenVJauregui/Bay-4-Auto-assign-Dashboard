@@ -5,7 +5,7 @@ import './style.css';
 type KpiPopup = 'inyard' | 'inbounds' | 'planned' | 'older48h' | null;
 type SortDir = 'asc' | 'desc' | null;
 
-interface InYardRow { equipmentNo: string; entryTicket: string; checkIn: string; timeInYard: string; customer: string; location: string; }
+interface InYardRow { container: string; appointmentTime: string; inYard: boolean; condition: string; conditionColor: string; entryET: string; status: string; assignee: string; receipt: string; note: string; }
 interface OrderRow { id: string; customer: string; status: string; baseQty: number; orderType: string; reference: string; retailerName?: string; shipToName: string; scheduleDate: string; createdTime: string; }
 interface ShippingRow { id: string; customer: string; dnStatus: string; loadStatus: string; dock: string; et: string; assignee: string; }
 
@@ -13,6 +13,7 @@ interface LiveData {
   inYardRows: InYardRow[];
   orderRows: OrderRow[];
   shippingRows: ShippingRow[];
+  containerMessage: string;
   loaded: boolean;
 }
 
@@ -104,16 +105,16 @@ function KpiDetailPopup({ type, onClose, live }: { type: KpiPopup; onClose: () =
   let content: React.ReactNode = null;
 
   if (type === 'inyard') {
-    title = `Inbound Transfers Detail (${live.inYardRows.length})`;
+    title = `In-Yard Containers (${live.inYardRows.filter(r => r.inYard).length})`;
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
-          <thead><tr><th>Equipment #</th><th>Entry Ticket</th><th>Check In</th><th>Time in Yard</th><th>Customer</th><th>Location</th></tr></thead>
+          <thead><tr><th>Container</th><th>Appointment Time</th><th>En yarda</th><th>Condition</th><th>Entry / ET</th><th>Status</th><th>RN / Receipt</th></tr></thead>
           <tbody>
-            {live.inYardRows.length === 0
-              ? <tr><td colSpan={6} style={{ textAlign: 'center', color: '#64748b' }}>No in-yard equipment available</td></tr>
-              : live.inYardRows.map((row) => (
-                <tr key={row.entryTicket || row.equipmentNo}><td>{row.equipmentNo}</td><td>{row.entryTicket}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td><td>{row.location}</td></tr>
+            {live.inYardRows.filter(r => r.inYard).length === 0
+              ? <tr><td colSpan={7} style={{ textAlign: 'center', color: '#64748b' }}>No in-yard containers</td></tr>
+              : live.inYardRows.filter(r => r.inYard).map((row) => (
+                <tr key={row.container || row.entryET}><td>{row.container}</td><td>{row.appointmentTime}</td><td>Yes</td><td>{row.condition}</td><td>{row.entryET}</td><td>{row.status}</td><td>{row.receipt}</td></tr>
               ))
             }
           </tbody>
@@ -121,16 +122,16 @@ function KpiDetailPopup({ type, onClose, live }: { type: KpiPopup; onClose: () =
       </div>
     );
   } else if (type === 'inbounds') {
-    title = `Inbound Containers (${live.inYardRows.length})`;
+    title = `All Containers (${live.inYardRows.length})`;
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
-          <thead><tr><th>Equipment #</th><th>Entry Ticket</th><th>Customer</th><th>Status</th><th>Check In</th><th>Time in Yard</th><th>Location</th></tr></thead>
+          <thead><tr><th>Container</th><th>Appointment Time</th><th>En yarda</th><th>Condition</th><th>Entry / ET</th><th>Status</th><th>Assignee</th><th>RN / Receipt</th><th>Note</th></tr></thead>
           <tbody>
             {live.inYardRows.length === 0
-              ? <tr><td colSpan={7} style={{ textAlign: 'center', color: '#64748b' }}>No inbound containers available</td></tr>
+              ? <tr><td colSpan={9} style={{ textAlign: 'center', color: '#64748b' }}>No containers available</td></tr>
               : live.inYardRows.map((row) => (
-                <tr key={row.entryTicket || row.equipmentNo}><td>{row.equipmentNo}</td><td>{row.entryTicket}</td><td>{row.customer}</td><td><span className="status planned">In Yard</span></td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.location}</td></tr>
+                <tr key={row.container || row.entryET}><td>{row.container}</td><td>{row.appointmentTime}</td><td>{row.inYard ? 'Yes' : 'No'}</td><td>{row.condition}</td><td>{row.entryET}</td><td>{row.status}</td><td>{row.assignee}</td><td>{row.receipt}</td><td>{row.note}</td></tr>
               ))
             }
           </tbody>
@@ -204,7 +205,7 @@ function App() {
   const [s2SortCol, setS2SortCol] = useState<string | null>(null);
   const [s2SortDir, setS2SortDir] = useState<SortDir>(null);
 
-  const [live, setLive] = useState<LiveData>({ inYardRows: [], orderRows: [], shippingRows: [], loaded: false });
+  const [live, setLive] = useState<LiveData>({ inYardRows: [], orderRows: [], shippingRows: [], containerMessage: '', loaded: false });
 
   useEffect(() => {
     fetch('/api/dashboard')
@@ -215,14 +216,15 @@ function App() {
             inYardRows: data.inYardRows || [],
             orderRows: data.orderRows || [],
             shippingRows: data.shippingRows || [],
+            containerMessage: data.containerMessage || '',
             loaded: true,
           });
         } else {
-          setLive({ inYardRows: [], orderRows: [], shippingRows: [], loaded: true });
+          setLive({ inYardRows: [], orderRows: [], shippingRows: [], containerMessage: data.error || '', loaded: true });
         }
       })
       .catch(() => {
-        setLive({ inYardRows: [], orderRows: [], shippingRows: [], loaded: true });
+        setLive({ inYardRows: [], orderRows: [], shippingRows: [], containerMessage: 'Dashboard unavailable', loaded: true });
       });
   }, []);
 
@@ -239,8 +241,8 @@ function App() {
 
   const sortedYardRows = [...live.inYardRows].sort((a, b) => {
     if (!s1SortCol || !s1SortDir) return 0;
-    const av = (a as Record<string, string>)[s1SortCol] || '';
-    const bv = (b as Record<string, string>)[s1SortCol] || '';
+    const av = String((a as Record<string, unknown>)[s1SortCol] ?? '');
+    const bv = String((b as Record<string, unknown>)[s1SortCol] ?? '');
     return s1SortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
   });
 
@@ -283,16 +285,13 @@ function App() {
   }, []);
 
   const handleAutoSuggest = useCallback(() => {
-    const unassignedYard = live.inYardRows.filter(r => !assignedRows.has(r.equipmentNo));
     const unassignedShip = live.shippingRows.filter(r => !assignedRows.has(r.id));
-    if (unassignedYard.length === 0 && unassignedShip.length === 0) {
+    if (unassignedShip.length === 0) {
       showToast('All tasks already assigned');
       return;
     }
-    const first = unassignedYard[0] || unassignedShip[0];
-    if (first && 'equipmentNo' in first) {
-      requestAssign(first.equipmentNo, `loc-${first.equipmentNo}`, `asg-${first.equipmentNo}`);
-    } else if (first) {
+    const first = unassignedShip[0];
+    if (first) {
       requestAssign(first.id, `loc-${first.id}`, `asg-${first.id}`);
     }
   }, [assignedRows, live, requestAssign, showToast]);
@@ -333,7 +332,7 @@ function App() {
       </div>
 
       <section className="kpi-grid">
-        <button type="button" onClick={() => setKpiPopup('inyard')}><strong>{live.inYardRows.length}</strong><span>Inbound Transfers</span></button>
+        <button type="button" onClick={() => setKpiPopup('inyard')}><strong>{live.inYardRows.filter(r => r.inYard).length}</strong><span>In-Yard FULL</span></button>
         <button type="button" onClick={() => setKpiPopup('inbounds')}><strong>{live.inYardRows.length}</strong><span>Inbound Containers</span></button>
         <button type="button" onClick={() => setKpiPopup('planned')}><strong>{live.orderRows.length}</strong><span>Planned Orders</span></button>
         <button type="button" onClick={() => setKpiPopup('older48h')}><strong>{computeOlder48h(live.orderRows).length}</strong><span>Older than 48h</span></button>
@@ -342,23 +341,31 @@ function App() {
       <div className="content-grid">
         <div className="content-left">
           <section id="section-1" className="panel section-one">
-            <div className="panel-header"><h2>Section 1 - IN-YARD FULL Equipment</h2><span>{live.inYardRows.length} rows</span></div>
-            <div className="chip-row"><span>All ({live.inYardRows.length})</span><span>GURUNANDA, LLC ({live.inYardRows.length})</span></div>
+            <div className="panel-header"><h2>Section 1 - IN-YARD Containers</h2><span>{live.inYardRows.length} containers</span></div>
+            <div className="chip-row"><span>All ({live.inYardRows.length})</span><span>In Yard ({live.inYardRows.filter(r => r.inYard).length})</span></div>
             <div className="table-wrap">
               <table>
                 <thead><tr>
-                  <SortableHeader label="Equipment #" active={s1SortCol === 'equipmentNo'} dir={s1SortCol === 'equipmentNo' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'equipmentNo', setS1SortCol, setS1SortDir)} />
-                  <SortableHeader label="Entry Ticket" active={s1SortCol === 'entryTicket'} dir={s1SortCol === 'entryTicket' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'entryTicket', setS1SortCol, setS1SortDir)} />
-                  <SortableHeader label="Check In" active={s1SortCol === 'checkIn'} dir={s1SortCol === 'checkIn' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'checkIn', setS1SortCol, setS1SortDir)} />
-                  <SortableHeader label="Time in Yard" active={s1SortCol === 'timeInYard'} dir={s1SortCol === 'timeInYard' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'timeInYard', setS1SortCol, setS1SortDir)} />
-                  <th>Customer</th><th>Location</th>
+                  <SortableHeader label="Container" active={s1SortCol === 'container'} dir={s1SortCol === 'container' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'container', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Appointment Time" active={s1SortCol === 'appointmentTime'} dir={s1SortCol === 'appointmentTime' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'appointmentTime', setS1SortCol, setS1SortDir)} />
+                  <th>En yarda</th>
+                  <SortableHeader label="Condition" active={s1SortCol === 'condition'} dir={s1SortCol === 'condition' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'condition', setS1SortCol, setS1SortDir)} />
+                  <th>Entry / ET</th><th>Status</th><th>Assignee</th><th>RN / Receipt</th><th>Note</th>
                 </tr></thead>
                 <tbody>
                   {sortedYardRows.length === 0
-                    ? <tr><td colSpan={6} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No in-yard equipment available</td></tr>
+                    ? <tr><td colSpan={9} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>{live.containerMessage || 'No containers available'}</td></tr>
                     : sortedYardRows.map((row) => (
-                      <tr key={row.entryTicket || row.equipmentNo}>
-                        <td>{row.equipmentNo}</td><td>{row.entryTicket}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.customer}</td><td>{row.location}</td>
+                      <tr key={row.container || row.entryET} className={row.conditionColor === 'yellow' ? 'row-yellow' : ''}>
+                        <td>{row.container}</td>
+                        <td>{row.appointmentTime}</td>
+                        <td>{row.inYard ? 'Yes' : 'No'}</td>
+                        <td><span className={`status ${row.conditionColor === 'yellow' ? 'planned' : row.conditionColor === 'green' ? 'picked' : 'new'}`}>{row.condition}</span></td>
+                        <td>{row.entryET}</td>
+                        <td>{row.status}</td>
+                        <td>{row.assignee}</td>
+                        <td>{row.receipt}</td>
+                        <td>{row.note}</td>
                       </tr>
                     ))}
                 </tbody>

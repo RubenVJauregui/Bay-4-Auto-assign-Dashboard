@@ -82,6 +82,45 @@ async function wmsPost(path, body, token) {
   return res.json();
 }
 
+const CONTAINER_FEED_URL = process.env.CONTAINER_FEED_URL || 'https://contenedores-priti-dashboard-03b000.coolify.item.pub/container-feed.json';
+
+function isEffectivelyClosed(row) {
+  const combined = ((row.receiptStatus || '') + ' ' + (row.note || '')).toUpperCase();
+  const recClosed = combined.includes('RN CLOSED') || combined.includes('RN FORCE_CLOSED') ||
+    (row.receiptStatus || '').toUpperCase().startsWith('CLOSED') ||
+    (row.receiptStatus || '').toUpperCase().startsWith('FORCE_CLOSED');
+  const putClosed = (row.putawayTaskStatus || '').toUpperCase().startsWith('CLOSED') ||
+    (row.putawayTaskStatus || '').toUpperCase().startsWith('FORCE_CLOSED');
+  const recTaskClosed = (row.receivingTaskStatus || '').toUpperCase().startsWith('CLOSED') ||
+    (row.receivingTaskStatus || '').toUpperCase().startsWith('FORCE_CLOSED');
+  if (recTaskClosed && putClosed) return true;
+  if (recClosed && putClosed) return true;
+  return false;
+}
+
+function isExcludedRow(row) {
+  if ((row.color || '').toLowerCase() === 'excluded') return true;
+  if (JSON.stringify(row).includes('EXCLUIDO')) return true;
+  const receipt = (row.receipt || '').toUpperCase();
+  if (receipt.includes('(CLOSED)') || receipt.includes('(FORCE_CLOSED)')) return true;
+  if (isEffectivelyClosed(row)) return true;
+  return false;
+}
+
+function getConditionLabel(row) {
+  const colorLower = (row.color || '').toLowerCase();
+  if (colorLower === 'yellow') return 'Alerta operativa';
+  const inYard = row.inYard === true || (typeof row.inYard === 'string' && row.inYard.toLowerCase().startsWith('s'));
+  const hasRN = !!(row.receipt);
+  if (inYard && hasRN) return 'Arrived with RN';
+  if (inYard && !hasRN) return 'Arrived without RN';
+  return 'Not arrived';
+}
+
+function isInYard(row) {
+  return row.inYard === true || (typeof row.inYard === 'string' && row.inYard.toLowerCase().startsWith('s'));
+}
+
 function computeTimeInYard(checkInTime) {
   if (!checkInTime) return '-';
   const diff = Date.now() - new Date(checkInTime).getTime();
@@ -105,52 +144,39 @@ function formatPT(isoDate) {
 }
 
 app.get('/api/dashboard', async (req, res) => {
-  const token = await getAccessToken();
-  if (!token) {
-    return res.json({
-      success: false,
-      inYardRows: [],
-      orderRows: [],
-      shippingRows: [],
-      error: 'Unable to authenticate with WISE',
-    });
-  }
+  const results = { success: true, inYardRows: [], orderRows: [], shippingRows: [], containerMessage: '' };
 
-  const results = { success: true, inYardRows: [], orderRows: [], shippingRows: [] };
-
-  // Section 1: IN-YARD FULL Equipment (all in-yard for facility, no customer filter)
-  // Prior dashes were caused by using taskEquipmentId/vehicleId/inboundReceiptId fields
-  // that don't exist in the live entry-ticket payload. The actual response has:
-  // trailerNo, containerNo, referenceNo1, id, spotId, dockId, checkInStartTime,
-  // officialWindowCheckInTime, driverArrivedTime, createdWhen, customerIds[]
+  // Section 1: Container feed from Priti dashboard (no WMS auth required)
   try {
-    const body = {
-      currentPage: 1,
-      pageSize: 50,
-      statuses: ['GATE_CHECKED_IN', 'WINDOW_CHECKED_IN', 'DOCK_CHECKED_IN', 'DROPPING_OFF_DELIVERY', 'WAITING'],
-      sortingFields: [{ field: 'checkInStartTime', orderBy: 'DESC' }],
-    };
-    const entryRes = await wmsPost('wms-bam/yms/entry-ticket/search', body, token);
-    if (entryRes.code === 0) {
-      const entries = Array.isArray(entryRes.data) ? entryRes.data : (entryRes.data?.records || []);
-      results.inYardRows = entries.map(e => {
-        const equipNum = e.trailerNo || e.containerNo || e.referenceNo1 || e.id || '';
-        const entryId = e.id || '';
-        const checkTime = e.checkInStartTime || e.officialWindowCheckInTime || e.driverArrivedTime || e.createdWhen || '';
-        const loc = e.spotId || e.dockId || '';
-        const cust = (e.customerIds && e.customerIds.length > 0) ? e.customerIds.join(', ') : 'GURUNANDA, LLC';
-        return {
-          equipmentNo: equipNum,
-          entryTicket: entryId,
-          checkIn: formatPT(checkTime),
-          timeInYard: computeTimeInYard(checkTime),
-          customer: cust,
-          location: loc,
-        };
-      });
+    const feedRes = await fetch(CONTAINER_FEED_URL, { cache: 'no-store' });
+    const feedData = await feedRes.json();
+    const allRows = feedData.rows || [];
+    const message = feedData.message || '';
+    const filtered = allRows.filter(r => !isExcludedRow(r));
+    results.inYardRows = filtered.map(r => ({
+      container: r.container || r.containerNo || '',
+      appointmentTime: r.appointmentTime || r.appointment || '',
+      inYard: isInYard(r),
+      condition: getConditionLabel(r),
+      conditionColor: (r.color || '').toLowerCase() === 'yellow' ? 'yellow' : (isInYard(r) ? 'green' : 'default'),
+      entryET: r.entryTicket || r.et || r.entry || '',
+      status: r.status || r.receiptStatus || '',
+      assignee: r.assignee || r.assigned || '',
+      receipt: r.receipt || r.rn || '',
+      note: r.note || '',
+    }));
+    if (filtered.length === 0 && message) {
+      results.containerMessage = message;
     }
   } catch (err) {
-    console.error('Entry ticket fetch error:', err.message);
+    console.error('Container feed fetch error:', err.message);
+    results.containerMessage = 'Container feed unavailable';
+  }
+
+  // Sections 2 & 3 require WMS auth
+  const token = await getAccessToken();
+  if (!token) {
+    return res.json(results);
   }
 
   // Section 2: PLANNED Outbound Orders (filtered to GURUNANDA customer)
