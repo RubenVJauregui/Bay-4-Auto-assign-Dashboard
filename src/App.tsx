@@ -350,24 +350,35 @@ function App() {
                   <SortableHeader label="Appointment Time" active={s1SortCol === 'appointmentTime'} dir={s1SortCol === 'appointmentTime' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'appointmentTime', setS1SortCol, setS1SortDir)} />
                   <th>En yarda</th>
                   <SortableHeader label="Condition" active={s1SortCol === 'condition'} dir={s1SortCol === 'condition' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'condition', setS1SortCol, setS1SortDir)} />
-                  <th>Entry / ET</th><th>Status</th><th>Assignee</th><th>RN / Receipt</th><th>Note</th>
+                  <th>Entry / ET</th><th>Status</th><th>Assignee</th><th>Dock Door</th><th>RN / Receipt</th><th>Note</th><th>Action</th>
                 </tr></thead>
                 <tbody>
                   {sortedYardRows.length === 0
-                    ? <tr><td colSpan={9} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>{live.containerMessage || 'No containers available'}</td></tr>
-                    : sortedYardRows.map((row) => (
-                      <tr key={row.container || row.entryET} className={row.conditionColor === 'yellow' ? 'row-yellow' : ''}>
-                        <td>{row.container}</td>
-                        <td>{row.appointmentTime}</td>
-                        <td>{row.inYard ? 'Yes' : 'No'}</td>
-                        <td><span className={`status ${row.conditionColor === 'yellow' ? 'planned' : row.conditionColor === 'green' ? 'picked' : 'new'}`}>{row.condition}</span></td>
-                        <td>{row.entryET}</td>
-                        <td>{row.status}</td>
-                        <td>{row.assignee}</td>
-                        <td>{row.receipt}</td>
-                        <td>{row.note}</td>
-                      </tr>
-                    ))}
+                    ? <tr><td colSpan={11} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>{live.containerMessage || 'No containers available'}</td></tr>
+                    : sortedYardRows.map((row) => {
+                      const key = row.container || row.entryET;
+                      const isAssigned = assignedRows.has(key);
+                      return (
+                        <tr key={key} className={`${row.conditionColor === 'yellow' ? 'row-yellow' : ''} ${isAssigned ? 'row-assigned' : ''}`}>
+                          <td>{row.container}</td>
+                          <td>{row.appointmentTime}</td>
+                          <td>{row.inYard ? 'Yes' : 'No'}</td>
+                          <td><span className={`status ${row.conditionColor === 'yellow' ? 'planned' : row.conditionColor === 'green' ? 'picked' : 'new'}`}>{row.condition}</span></td>
+                          <td>{row.entryET}</td>
+                          <td>{row.status}</td>
+                          <td><SelectCell value={row.assignee || '-'} options={['-', ...assigneeNames]} id={`asg-s1-${key}`} /></td>
+                          <td><SelectCell value={'-'} options={locationOptions} id={`dock-s1-${key}`} /></td>
+                          <td>{row.receipt}</td>
+                          <td>{row.note}</td>
+                          <td>
+                            {isAssigned
+                              ? <button className="assign-button assigned" disabled>Assigned</button>
+                              : <button className="assign-button" onClick={() => requestAssign(key, `dock-s1-${key}`, `asg-s1-${key}`)}>Assign</button>
+                            }
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
