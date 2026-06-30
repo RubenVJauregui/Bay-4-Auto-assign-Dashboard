@@ -110,3 +110,5 @@ tr:hover td { background: rgba(49, 91, 214, .08); }
 .kpi-popup-close:hover { border-color: #64748b; color: #e2e8f0; }
 .kpi-popup-scroll { flex: 1; overflow: auto; max-height: 65vh; }
 .row-yellow td { background: rgba(234, 179, 8, 0.08); }
+.assigned-panel-bottom { margin-top: 18px; }
+.assigned-panel-bottom table { width: 100%; table-layout: fixed; }

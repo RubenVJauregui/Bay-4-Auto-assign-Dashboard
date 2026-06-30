@@ -498,23 +498,22 @@ function App() {
           </section>
         </div>
 
-        <aside className="sidebar">
-          <section className="panel assigned-panel">
-            <div className="panel-header"><h2>Assigned Today</h2><button>Refresh</button></div>
-            <p className="assigned-note"><strong>{assignments.length} task{assignments.length !== 1 ? 's' : ''}</strong> Dashboard assigned only</p>
-            <table>
-              <thead><tr><th>Task</th><th>Assignee</th><th>Time</th></tr></thead>
-              <tbody>
-                {assignments.map((a) => (
-                  <tr key={a.task}>
-                    <td>{a.task}</td><td>{a.assignee}</td><td>{a.time}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        </aside>
       </div>
+
+      <section className="panel assigned-panel assigned-panel-bottom">
+        <div className="panel-header"><h2>Assigned Today</h2><button>Refresh</button></div>
+        <p className="assigned-note"><strong>{assignments.length} task{assignments.length !== 1 ? 's' : ''}</strong> Dashboard assigned only</p>
+        <table>
+          <thead><tr><th>Task</th><th>Assignee</th><th>Time</th></tr></thead>
+          <tbody>
+            {assignments.map((a) => (
+              <tr key={a.task}>
+                <td>{a.task}</td><td>{a.assignee}</td><td>{a.time}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
       <section className="panel assignee-panel assignee-panel-bottom">
         <div className="panel-header"><h2>Bay 4 Assignees</h2><span>22 assignees</span></div>
