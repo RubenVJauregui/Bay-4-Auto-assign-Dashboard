@@ -4,6 +4,7 @@ import './style.css';
 
 type KpiPopup = 'inyard' | 'inbounds' | 'planned' | 'older48h' | null;
 type SortDir = 'asc' | 'desc' | null;
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 interface InYardRow { container: string; appointmentTime: string; inYard: boolean; condition: string; conditionColor: string; entryET: string; status: string; assignee: string; receipt: string; note: string; }
 interface OrderRow { id: string; customer: string; status: string; baseQty: number; orderType: string; reference: string; retailerName?: string; shipToName: string; scheduleDate: string; createdTime: string; }
@@ -206,9 +207,12 @@ function App() {
   const [s2SortDir, setS2SortDir] = useState<SortDir>(null);
 
   const [live, setLive] = useState<LiveData>({ inYardRows: [], orderRows: [], shippingRows: [], containerMessage: '', loaded: false });
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [nextRefreshAt, setNextRefreshAt] = useState<number>(() => Date.now() + REFRESH_INTERVAL_MS);
+  const [secondsToRefresh, setSecondsToRefresh] = useState(Math.ceil(REFRESH_INTERVAL_MS / 1000));
 
-  useEffect(() => {
-    fetch('/api/dashboard')
+  const loadDashboard = useCallback(() => {
+    return fetch(`/api/dashboard?ts=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         if (data.success) {
@@ -222,11 +226,35 @@ function App() {
         } else {
           setLive({ inYardRows: [], orderRows: [], shippingRows: [], containerMessage: data.error || '', loaded: true });
         }
+        const now = new Date();
+        setLastRefreshed(now);
+        setNextRefreshAt(now.getTime() + REFRESH_INTERVAL_MS);
       })
       .catch(() => {
         setLive({ inYardRows: [], orderRows: [], shippingRows: [], containerMessage: 'Dashboard unavailable', loaded: true });
+        const now = new Date();
+        setLastRefreshed(now);
+        setNextRefreshAt(now.getTime() + REFRESH_INTERVAL_MS);
       });
   }, []);
+
+  useEffect(() => {
+    loadDashboard();
+    const refreshId = window.setInterval(loadDashboard, REFRESH_INTERVAL_MS);
+    return () => window.clearInterval(refreshId);
+  }, [loadDashboard]);
+
+  useEffect(() => {
+    const countdownId = window.setInterval(() => {
+      setSecondsToRefresh(Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000)));
+    }, 1000);
+    return () => window.clearInterval(countdownId);
+  }, [nextRefreshAt]);
+
+  const lastRefreshedText = lastRefreshed
+    ? lastRefreshed.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+    : 'loading...';
+  const refreshCountdownText = `${Math.floor(secondsToRefresh / 60)}:${String(secondsToRefresh % 60).padStart(2, '0')}`;
 
   const toggleSort = (current: string | null, dir: SortDir, col: string, setCol: (c: string | null) => void, setDir: (d: SortDir) => void) => {
     if (current === col) {
@@ -351,7 +379,7 @@ function App() {
           <button>Autonomous</button>
         </div>
         <div className="action-right">
-          <button>Refresh</button>
+          <button onClick={loadDashboard}>Refresh</button>
           <button>Download CSV</button>
         </div>
       </div>
@@ -362,8 +390,8 @@ function App() {
           <p>Valley View (LT_F1)</p>
         </div>
         <div className="refresh-time">
-          <strong>Last refreshed 6/22/2026, 09:27 AM</strong>
-          <span>refreshing in 3:38</span>
+          <strong>Last refreshed {lastRefreshedText}</strong>
+          <span>refreshing in {refreshCountdownText}</span>
         </div>
       </header>
 
