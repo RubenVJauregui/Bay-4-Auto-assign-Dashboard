@@ -106,10 +106,10 @@ function formatPT(isoDate) {
   } catch { return ''; }
 }
 
-function friendlyRetailer(val) {
-  if (!val) return 'Gurunanda';
-  if (val.startsWith('ORG-')) return 'Gurunanda';
-  return val;
+function friendlyRetailer(retailerValue, order = {}) {
+  if (retailerValue && !String(retailerValue).startsWith('ORG-')) return retailerValue;
+  const shipTo = order.shipToAddress?.name || order.shipToAddress?.storeName || order.destination || order.shipToName || '';
+  return shipTo || retailerValue || '';
 }
 
 app.get('/api/dashboard', async (req, res) => {
@@ -134,10 +134,13 @@ app.get('/api/dashboard', async (req, res) => {
     if (equipRes.code === 0) {
       equipRows = Array.isArray(equipRes.data) ? equipRes.data : (equipRes.data?.records || []);
     }
-    // Server-side filter to GURUNANDA customer since endpoint doesn't reliably support customerId
-    if (CUSTOMER_ID) {
-      equipRows = equipRows.filter(e => e.customerId === CUSTOMER_ID || e.customerName?.toUpperCase().includes('GURUNANDA'));
-    }
+    // Server-side filter to GURUNANDA customer and FULL equipment since the endpoint
+    // can return broader rows even when request filters are supplied.
+    equipRows = equipRows.filter(e => {
+      const isCustomer = !CUSTOMER_ID || e.customerId === CUSTOMER_ID || e.customerName?.toUpperCase().includes('GURUNANDA');
+      const status = String(e.equipmentStatus || e.status || '').toUpperCase();
+      return isCustomer && status === 'FULL';
+    });
 
     // Collect entry IDs for assignee lookup
     const entryIds = equipRows.map(e => e.checkInEntry || e.lastEntryId).filter(Boolean);
@@ -205,7 +208,7 @@ app.get('/api/dashboard', async (req, res) => {
         baseQty: o.itemLineTotalQty || o.totalWeight || 0,
         orderType: o.orderType || 'Regular',
         reference: o.poNo || o.referenceNo || '',
-        retailerName: friendlyRetailer(o.retailerId),
+        retailerName: friendlyRetailer(o.retailerId || o.retailerName, o),
         shipToName: o.shipToAddress?.name || o.shipToAddress?.storeName || o.destination || '',
         scheduleDate: o.appointmentTime || o.scheduleDate || o.createdTime || '',
         createdTime: o.createdTime || '',
