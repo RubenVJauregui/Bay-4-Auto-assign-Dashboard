@@ -132,15 +132,21 @@ app.get('/api/dashboard', async (req, res) => {
     const entryRes = await wmsPost('wms-bam/yms/entry-ticket/search', body, token);
     if (entryRes.code === 0) {
       const entries = Array.isArray(entryRes.data) ? entryRes.data : (entryRes.data?.records || []);
-      results.inYardRows = entries.map(e => ({
-        trailer: e.taskEquipmentId || e.vehicleId || e.entryId || '-',
-        rn: `${e.taskEquipmentId || e.vehicleId || '-'} | ${e.inboundReceiptId || e.receiveTaskId || e.entryId || '-'}`,
-        checkIn: formatPT(e.checkInStartTime || e.windowCheckInTime || e.createdTime),
-        timeInYard: computeTimeInYard(e.checkInStartTime || e.windowCheckInTime || e.createdTime),
-        customer: 'GURUNANDA, LLC',
-        location: e.dropOffLocationId || e.pickUpLocationId || '-',
-        assignee: '-',
-      }));
+      results.inYardRows = entries.map(e => {
+        const trailer = e.trailerNo || e.containerNo || e.taskEquipmentId || e.vehicleId || e.id || '';
+        const receiptId = e.inboundReceiptId || e.receiveTaskId || e.referenceNo1 || e.entryId || e.id || '';
+        const spot = e.spotId || e.dockId || e.dropOffLocationId || e.pickUpLocationId || '';
+        const checkTime = e.checkInStartTime || e.officialWindowCheckInTime || e.driverArrivedTime || e.createdWhen || '';
+        return {
+          trailer: trailer || '—',
+          rn: (trailer || '—') + ' | ' + (receiptId || '—'),
+          checkIn: formatPT(checkTime) || '—',
+          timeInYard: computeTimeInYard(checkTime) || '—',
+          customer: 'GURUNANDA, LLC',
+          location: spot || '—',
+          assignee: '—',
+        };
+      });
     }
   } catch (err) {
     console.error('Entry ticket fetch error:', err.message);
