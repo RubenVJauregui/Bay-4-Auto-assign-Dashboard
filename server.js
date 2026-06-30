@@ -17,7 +17,7 @@ const WISE_SERVICE_PASSWORD = process.env.WISE_SERVICE_PASSWORD || '';
 const TENANT_ID = process.env.TENANT_ID || 'LT';
 const FACILITY_ID = process.env.FACILITY_ID || 'LT_F1';
 const TIMEZONE = process.env.TIMEZONE || 'America/Los_Angeles';
-const CUSTOMER_ID = process.env.CUSTOMER_ID || '';
+const CUSTOMER_ID = process.env.CUSTOMER_ID || 'ORG-655875';
 
 let cachedToken = null;
 let tokenExpiry = 0;
@@ -82,155 +82,165 @@ async function wmsPost(path, body, token) {
   return res.json();
 }
 
-const CONTAINER_FEED_URL = process.env.CONTAINER_FEED_URL || 'https://contenedores-priti-dashboard-03b000.coolify.item.pub/container-feed.json';
-
-function isEffectivelyClosed(row) {
-  const combined = ((row.receiptStatus || '') + ' ' + (row.note || '')).toUpperCase();
-  const recClosed = combined.includes('RN CLOSED') || combined.includes('RN FORCE_CLOSED') ||
-    (row.receiptStatus || '').toUpperCase().startsWith('CLOSED') ||
-    (row.receiptStatus || '').toUpperCase().startsWith('FORCE_CLOSED');
-  const putClosed = (row.putawayTaskStatus || '').toUpperCase().startsWith('CLOSED') ||
-    (row.putawayTaskStatus || '').toUpperCase().startsWith('FORCE_CLOSED');
-  const recTaskClosed = (row.receivingTaskStatus || '').toUpperCase().startsWith('CLOSED') ||
-    (row.receivingTaskStatus || '').toUpperCase().startsWith('FORCE_CLOSED');
-  if (recTaskClosed && putClosed) return true;
-  if (recClosed && putClosed) return true;
-  return false;
-}
-
-function isExcludedRow(row) {
-  if ((row.color || '').toLowerCase() === 'excluded') return true;
-  if (JSON.stringify(row).includes('EXCLUIDO')) return true;
-  const receipt = (row.receipt || '').toUpperCase();
-  if (receipt.includes('(CLOSED)') || receipt.includes('(FORCE_CLOSED)')) return true;
-  if (isEffectivelyClosed(row)) return true;
-  return false;
-}
-
-function getConditionLabel(row) {
-  const colorLower = (row.color || '').toLowerCase();
-  if (colorLower === 'yellow') return 'Alerta operativa';
-  const inYard = row.inYard === true || (typeof row.inYard === 'string' && row.inYard.toLowerCase().startsWith('s'));
-  const hasRN = !!(row.receipt);
-  if (inYard && hasRN) return 'Arrived with RN';
-  if (inYard && !hasRN) return 'Arrived without RN';
-  return 'Not arrived';
-}
-
-function isInYard(row) {
-  return row.inYard === true || (typeof row.inYard === 'string' && row.inYard.toLowerCase().startsWith('s'));
-}
-
 function computeTimeInYard(checkInTime) {
-  if (!checkInTime) return '-';
+  if (!checkInTime) return '';
   const diff = Date.now() - new Date(checkInTime).getTime();
-  if (diff < 0) return '-';
+  if (diff < 0) return '';
   const days = Math.floor(diff / 86400000);
   const hours = Math.floor((diff % 86400000) / 3600000);
   const minutes = Math.floor((diff % 3600000) / 60000);
-  return `${days} Days ${hours} Hours ${minutes} Minutes`;
+  return `${days}d ${hours}h ${minutes}m`;
 }
 
 function formatPT(isoDate) {
-  if (!isoDate) return '-';
-  return new Date(isoDate).toLocaleString('en-US', {
-    timeZone: TIMEZONE,
-    month: '2-digit',
-    day: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  if (!isoDate) return '';
+  try {
+    return new Date(isoDate).toLocaleString('en-US', {
+      timeZone: TIMEZONE,
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch { return ''; }
+}
+
+function friendlyRetailer(val) {
+  if (!val) return 'Gurunanda';
+  if (val.startsWith('ORG-')) return 'Gurunanda';
+  return val;
 }
 
 app.get('/api/dashboard', async (req, res) => {
-  const results = { success: true, inYardRows: [], orderRows: [], shippingRows: [], containerMessage: '' };
+  const results = { success: true, inYardRows: [], orderRows: [], shippingRows: [] };
 
-  // Section 1: Container feed from Priti dashboard (no WMS auth required)
-  try {
-    const feedRes = await fetch(CONTAINER_FEED_URL, { cache: 'no-store' });
-    const feedData = await feedRes.json();
-    const allRows = feedData.rows || [];
-    const message = feedData.message || '';
-    const filtered = allRows.filter(r => !isExcludedRow(r));
-    results.inYardRows = filtered.map(r => ({
-      container: r.container || r.containerNo || '',
-      appointmentTime: r.appointmentTime || r.appointment || '',
-      inYard: isInYard(r),
-      condition: getConditionLabel(r),
-      conditionColor: (r.color || '').toLowerCase() === 'yellow' ? 'yellow' : (isInYard(r) ? 'green' : 'default'),
-      entryET: r.entryTicket || r.et || r.entry || '',
-      status: r.status || r.receiptStatus || '',
-      assignee: r.assignee || r.assigned || '',
-      receipt: r.receipt || r.rn || '',
-      note: r.note || '',
-    }));
-    if (filtered.length === 0 && message) {
-      results.containerMessage = message;
-    }
-  } catch (err) {
-    console.error('Container feed fetch error:', err.message);
-    results.containerMessage = 'Container feed unavailable';
-  }
-
-  // Sections 2 & 3 require WMS auth
   const token = await getAccessToken();
   if (!token) {
-    return res.json(results);
+    return res.json({ ...results, success: false, error: 'Unable to authenticate with WISE' });
   }
 
-  // Section 2: PLANNED Outbound Orders (filtered to GURUNANDA customer)
+  // --- Section 1: In-Yard FULL Equipment via POST /wms-bam/yard/equipment/search ---
+  try {
+    const equipBody = {
+      currentPage: 1,
+      pageSize: 100,
+      locationTypes: ['SPOT', 'DOCK'],
+      statuses: ['FULL'],
+      sortingFields: [{ field: 'gateCheckInTime', orderBy: 'DESC' }],
+    };
+    const equipRes = await wmsPost('wms-bam/yard/equipment/search', equipBody, token);
+    let equipRows = [];
+    if (equipRes.code === 0) {
+      equipRows = Array.isArray(equipRes.data) ? equipRes.data : (equipRes.data?.records || []);
+    }
+    // Server-side filter to GURUNANDA customer since endpoint doesn't reliably support customerId
+    if (CUSTOMER_ID) {
+      equipRows = equipRows.filter(e => e.customerId === CUSTOMER_ID || e.customerName?.toUpperCase().includes('GURUNANDA'));
+    }
+
+    // Collect entry IDs for assignee lookup
+    const entryIds = equipRows.map(e => e.checkInEntry || e.lastEntryId).filter(Boolean);
+
+    // Optional: lookup assignees via load-task if we have entry IDs
+    let assigneeMap = {};
+    if (entryIds.length > 0) {
+      try {
+        const ltBody = {
+          currentPage: 1,
+          pageSize: 100,
+          customerIds: [CUSTOMER_ID],
+          entryIds: entryIds.slice(0, 50),
+        };
+        const ltRes = await wmsPost('wms-bam/outbound/load-task/search-by-paging', ltBody, token);
+        const ltData = ltRes.code === 0 ? (Array.isArray(ltRes.data) ? ltRes.data : ltRes.data?.records || []) : [];
+        for (const lt of ltData) {
+          const eid = lt.entryId || lt.entryTicketId;
+          if (eid) {
+            assigneeMap[eid] = { assignee: lt.assigneeUserName || '', dock: lt.dockName || lt.dockId || '' };
+          }
+        }
+      } catch {}
+    }
+
+    results.inYardRows = equipRows.map(e => {
+      const entryId = e.checkInEntry || e.lastEntryId || '';
+      const ltInfo = assigneeMap[entryId] || {};
+      return {
+        equipmentNo: e.equipmentNo || '',
+        equipmentType: e.equipmentType || '',
+        entryTicket: entryId,
+        checkIn: formatPT(e.gateCheckInTime),
+        gateCheckInTime: e.gateCheckInTime || '',
+        timeInYard: computeTimeInYard(e.gateCheckInTime),
+        customer: 'GURUNANDA, LLC',
+        location: e.locationName || e.locationId || '',
+        status: e.equipmentStatus || e.equipmentOperationStatus || '',
+        carrierName: e.carrierName || '',
+        loadIds: e.loadIds || [],
+        receiptIds: e.receiptIds || [],
+        assignee: ltInfo.assignee || '',
+        dock: ltInfo.dock || '',
+      };
+    });
+  } catch (err) {
+    console.error('Yard equipment fetch error:', err.message);
+  }
+
+  // --- Section 2: PLANNED Outbound Orders ---
   try {
     const body = {
       currentPage: 1,
-      pageSize: 200,
+      pageSize: 100,
       statuses: ['PLANNED'],
       sortingFields: [{ field: 'createdTime', orderBy: 'DESC' }],
     };
-    if (CUSTOMER_ID) {
-      body.customerId = CUSTOMER_ID;
-    }
+    if (CUSTOMER_ID) body.customerId = CUSTOMER_ID;
     const orderRes = await wmsPost('wms-bam/outbound/order/raw-search', body, token);
     if (orderRes.code === 0 && Array.isArray(orderRes.data)) {
-      results.orderRows = orderRes.data.map(o => ({
-        id: o.referenceNo || o.id || '-',
+      results.orderRows = orderRes.data.slice(0, 100).map(o => ({
+        id: o.referenceNo || o.id || '',
         customer: 'GURUNANDA, LLC',
         status: 'Planned',
         baseQty: o.itemLineTotalQty || o.totalWeight || 0,
         orderType: o.orderType || 'Regular',
-        reference: o.poNo || o.referenceNo || '-',
-        retailerName: o.retailerId || 'Gurunanda',
-        shipToName: o.shipToAddress?.name || o.shipToAddress?.storeName || o.destination || '-',
-        scheduleDate: o.appointmentTime || o.scheduleDate || o.createdTime || '-',
-        createdTime: o.createdTime || '-',
+        reference: o.poNo || o.referenceNo || '',
+        retailerName: friendlyRetailer(o.retailerId),
+        shipToName: o.shipToAddress?.name || o.shipToAddress?.storeName || o.destination || '',
+        scheduleDate: o.appointmentTime || o.scheduleDate || o.createdTime || '',
+        createdTime: o.createdTime || '',
       }));
     }
   } catch (err) {
     console.error('Order fetch error:', err.message);
   }
 
-  // Section 3: Outbound Shipping (loads filtered to GURUNANDA customer)
+  // --- Section 3: Outbound Shipping via POST /wms-bam/outbound/load/search-by-paging ---
   try {
     const body = {
       currentPage: 1,
       pageSize: 50,
-      statuses: ['NEW', 'LOADING'],
+      statuses: ['NEW', 'WINDOW_CHECKIN_DONE', 'LOADING', 'LOADED'],
       searchCount: true,
       sortingFields: [{ field: 'createdTime', orderBy: 'DESC' }],
     };
-    if (CUSTOMER_ID) {
-      body.customerIds = [CUSTOMER_ID];
-    }
+    if (CUSTOMER_ID) body.customerIds = [CUSTOMER_ID];
     const loadRes = await wmsPost('wms-bam/outbound/load/search-by-paging', body, token);
     const loadData = loadRes.code === 0 ? (Array.isArray(loadRes.data) ? loadRes.data : loadRes.data?.records || []) : [];
     results.shippingRows = loadData.map(l => ({
-      id: l.loadNo || l.id || '-',
+      id: l.loadNo || l.id || '',
       customer: 'GURUNANDA, LLC',
-      dnStatus: l.status === 'LOADING' ? 'PICKED' : (l.status || 'NEW'),
-      loadStatus: l.status || 'NEW',
-      dock: l.dockId || '-',
-      et: l.trailerNo || l.equipmentNo || '-',
-      assignee: '-',
+      loadStatus: l.status || '',
+      loadType: l.loadType || '',
+      carrierName: l.carrierName || l.carrierId || '',
+      proNo: l.proNo || '',
+      trailerNo: l.trailerNo || l.equipmentNo || '',
+      masterBolNo: l.masterBolNo || '',
+      appointmentTime: formatPT(l.appointmentTime),
+      dock: l.dockId || '',
+      shipTo: l.destination || '',
+      createdTime: l.createdTime || '',
+      assignee: '',
     }));
   } catch (err) {
     console.error('Load fetch error:', err.message);

@@ -6,15 +6,14 @@ type KpiPopup = 'inyard' | 'inbounds' | 'planned' | 'older48h' | null;
 type SortDir = 'asc' | 'desc' | null;
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
-interface InYardRow { container: string; appointmentTime: string; inYard: boolean; condition: string; conditionColor: string; entryET: string; status: string; assignee: string; receipt: string; note: string; }
+interface InYardRow { equipmentNo: string; equipmentType: string; entryTicket: string; checkIn: string; gateCheckInTime: string; timeInYard: string; customer: string; location: string; status: string; carrierName: string; loadIds: string[]; receiptIds: string[]; assignee: string; dock: string; }
 interface OrderRow { id: string; customer: string; status: string; baseQty: number; orderType: string; reference: string; retailerName?: string; shipToName: string; scheduleDate: string; createdTime: string; }
-interface ShippingRow { id: string; customer: string; dnStatus: string; loadStatus: string; dock: string; et: string; assignee: string; }
+interface ShippingRow { id: string; customer: string; loadStatus: string; loadType: string; carrierName: string; proNo: string; trailerNo: string; masterBolNo: string; appointmentTime: string; dock: string; shipTo: string; createdTime: string; assignee: string; }
 
 interface LiveData {
   inYardRows: InYardRow[];
   orderRows: OrderRow[];
   shippingRows: ShippingRow[];
-  containerMessage: string;
   loaded: boolean;
 }
 
@@ -68,6 +67,15 @@ function computeOlder48h(rows: OrderRow[]): OrderRow[] {
   });
 }
 
+function computeOlder48hYard(rows: InYardRow[]): InYardRow[] {
+  const now = Date.now();
+  return rows.filter(r => {
+    if (!r.gateCheckInTime) return false;
+    const checkIn = new Date(r.gateCheckInTime).getTime();
+    return (now - checkIn) >= 48 * 3600000;
+  });
+}
+
 function SortableHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
   const arrow = active ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
   return <th onClick={onClick} style={{ cursor: 'pointer' }}>{label}{arrow}</th>;
@@ -101,21 +109,22 @@ function ConfirmModal({ pending, onCancel, onConfirm }: { pending: PendingAssign
 function KpiDetailPopup({ type, onClose, live }: { type: KpiPopup; onClose: () => void; live: LiveData }) {
   if (!type) return null;
 
-  const older48h = computeOlder48h(live.orderRows);
+  const older48h = computeOlder48hYard(live.inYardRows);
+  const older48hOrders = computeOlder48h(live.orderRows);
   let title = '';
   let content: React.ReactNode = null;
 
   if (type === 'inyard') {
-    title = `In-Yard Containers (${live.inYardRows.filter(r => r.inYard).length})`;
+    title = `In-Yard FULL Equipment (${live.inYardRows.length})`;
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
-          <thead><tr><th>Container</th><th>Appointment Time</th><th>En yarda</th><th>Condition</th><th>Entry / ET</th><th>Status</th><th>RN / Receipt</th></tr></thead>
+          <thead><tr><th>Equipment #</th><th>Type</th><th>Entry Ticket</th><th>Check In</th><th>Time in Yard</th><th>Location</th><th>Status</th><th>Carrier</th></tr></thead>
           <tbody>
-            {live.inYardRows.filter(r => r.inYard).length === 0
-              ? <tr><td colSpan={7} style={{ textAlign: 'center', color: '#64748b' }}>No in-yard containers</td></tr>
-              : live.inYardRows.filter(r => r.inYard).map((row) => (
-                <tr key={row.container || row.entryET}><td>{row.container}</td><td>{row.appointmentTime}</td><td>Yes</td><td>{row.condition}</td><td>{row.entryET}</td><td>{row.status}</td><td>{row.receipt}</td></tr>
+            {live.inYardRows.length === 0
+              ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b' }}>No in-yard FULL equipment for GURUNANDA, LLC</td></tr>
+              : live.inYardRows.map((row) => (
+                <tr key={row.equipmentNo || row.entryTicket}><td>{row.equipmentNo}</td><td>{row.equipmentType}</td><td>{row.entryTicket}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.location}</td><td>{row.status}</td><td>{row.carrierName}</td></tr>
               ))
             }
           </tbody>
@@ -123,16 +132,16 @@ function KpiDetailPopup({ type, onClose, live }: { type: KpiPopup; onClose: () =
       </div>
     );
   } else if (type === 'inbounds') {
-    title = `All Containers (${live.inYardRows.length})`;
+    title = `All In-Yard Equipment (${live.inYardRows.length})`;
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
-          <thead><tr><th>Container</th><th>Appointment Time</th><th>En yarda</th><th>Condition</th><th>Entry / ET</th><th>Status</th><th>Assignee</th><th>RN / Receipt</th><th>Note</th></tr></thead>
+          <thead><tr><th>Equipment #</th><th>Type</th><th>Entry Ticket</th><th>Check In</th><th>Time in Yard</th><th>Location</th><th>Assignee</th><th>Dock</th></tr></thead>
           <tbody>
             {live.inYardRows.length === 0
-              ? <tr><td colSpan={9} style={{ textAlign: 'center', color: '#64748b' }}>No containers available</td></tr>
+              ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b' }}>No equipment available</td></tr>
               : live.inYardRows.map((row) => (
-                <tr key={row.container || row.entryET}><td>{row.container}</td><td>{row.appointmentTime}</td><td>{row.inYard ? 'Yes' : 'No'}</td><td>{row.condition}</td><td>{row.entryET}</td><td>{row.status}</td><td>{row.assignee}</td><td>{row.receipt}</td><td>{row.note}</td></tr>
+                <tr key={row.equipmentNo || row.entryTicket}><td>{row.equipmentNo}</td><td>{row.equipmentType}</td><td>{row.entryTicket}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.location}</td><td>{row.assignee}</td><td>{row.dock}</td></tr>
               ))
             }
           </tbody>
@@ -157,20 +166,17 @@ function KpiDetailPopup({ type, onClose, live }: { type: KpiPopup; onClose: () =
       </div>
     );
   } else if (type === 'older48h') {
-    title = `Older than 48h (${older48h.length})`;
+    title = `Older than 48h (${older48h.length} equipment, ${older48hOrders.length} orders)`;
     content = (
       <div className="table-wrap kpi-popup-scroll">
         <table>
-          <thead><tr><th>Order #</th><th>Customer</th><th>Status</th><th>BASE QTY</th><th>Age</th><th>PO / Reference</th><th>Ship To Name</th><th>Created</th></tr></thead>
+          <thead><tr><th>Equipment #</th><th>Entry Ticket</th><th>Check In</th><th>Time in Yard</th><th>Location</th><th>Status</th></tr></thead>
           <tbody>
             {older48h.length === 0
-              ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b' }}>No orders older than 48h</td></tr>
-              : older48h.map((row) => {
-                const age = Math.floor((Date.now() - new Date(row.createdTime).getTime()) / 86400000);
-                return (
-                  <tr key={row.id}><td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.status}</span></td><td>{row.baseQty}</td><td>{age}d</td><td>{row.reference}</td><td>{row.shipToName}</td><td>{formatScheduleDate(row.createdTime)}</td></tr>
-                );
-              })
+              ? <tr><td colSpan={6} style={{ textAlign: 'center', color: '#64748b' }}>No equipment older than 48h</td></tr>
+              : older48h.map((row) => (
+                <tr key={row.equipmentNo || row.entryTicket}><td>{row.equipmentNo}</td><td>{row.entryTicket}</td><td>{row.checkIn}</td><td>{row.timeInYard}</td><td>{row.location}</td><td>{row.status}</td></tr>
+              ))
             }
           </tbody>
         </table>
@@ -206,7 +212,7 @@ function App() {
   const [s2SortCol, setS2SortCol] = useState<string | null>(null);
   const [s2SortDir, setS2SortDir] = useState<SortDir>(null);
 
-  const [live, setLive] = useState<LiveData>({ inYardRows: [], orderRows: [], shippingRows: [], containerMessage: '', loaded: false });
+  const [live, setLive] = useState<LiveData>({ inYardRows: [], orderRows: [], shippingRows: [],  loaded: false });
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [nextRefreshAt, setNextRefreshAt] = useState<number>(() => Date.now() + REFRESH_INTERVAL_MS);
   const [secondsToRefresh, setSecondsToRefresh] = useState(Math.ceil(REFRESH_INTERVAL_MS / 1000));
@@ -220,18 +226,18 @@ function App() {
             inYardRows: data.inYardRows || [],
             orderRows: data.orderRows || [],
             shippingRows: data.shippingRows || [],
-            containerMessage: data.containerMessage || '',
+            
             loaded: true,
           });
         } else {
-          setLive({ inYardRows: [], orderRows: [], shippingRows: [], containerMessage: data.error || '', loaded: true });
+          setLive({ inYardRows: [], orderRows: [], shippingRows: [],  loaded: true });
         }
         const now = new Date();
         setLastRefreshed(now);
         setNextRefreshAt(now.getTime() + REFRESH_INTERVAL_MS);
       })
       .catch(() => {
-        setLive({ inYardRows: [], orderRows: [], shippingRows: [], containerMessage: 'Dashboard unavailable', loaded: true });
+        setLive({ inYardRows: [], orderRows: [], shippingRows: [],  loaded: true });
         const now = new Date();
         setLastRefreshed(now);
         setNextRefreshAt(now.getTime() + REFRESH_INTERVAL_MS);
@@ -303,7 +309,7 @@ function App() {
       .filter(r => r.assignee && assigneeNames.includes(r.assignee))
       .map(r => ({
         assignee: r.assignee,
-        score: (r.condition === row.condition ? 4 : 0) + (r.inYard === row.inYard ? 2 : 0) + (Boolean(r.receipt) === Boolean(row.receipt) ? 1 : 0),
+        score: (r.status === row.status ? 4 : 0) + (r.equipmentType === row.equipmentType ? 2 : 0) + (r.location === row.location ? 1 : 0),
       }))
       .sort((a, b) => b.score - a.score)
       .map(r => r.assignee);
@@ -322,7 +328,7 @@ function App() {
       .filter(r => r.assignee && assigneeNames.includes(r.assignee))
       .map(r => ({
         assignee: r.assignee,
-        score: (r.customer === row.customer ? 3 : 0) + (r.dock === row.dock ? 2 : 0) + (r.dnStatus === row.dnStatus ? 1 : 0) + (r.loadStatus === row.loadStatus ? 1 : 0),
+        score: (r.customer === row.customer ? 3 : 0) + (r.dock === row.dock ? 2 : 0) + (r.loadStatus === row.loadStatus ? 2 : 0) + (r.loadType === row.loadType ? 1 : 0),
       }))
       .sort((a, b) => b.score - a.score)
       .map(r => r.assignee);
@@ -402,49 +408,49 @@ function App() {
       </div>
 
       <section className="kpi-grid">
-        <button type="button" onClick={() => setKpiPopup('inyard')}><strong>{live.inYardRows.filter(r => r.inYard).length}</strong><span>In-Yard FULL</span></button>
+        <button type="button" onClick={() => setKpiPopup('inyard')}><strong>{live.inYardRows.length}</strong><span>In-Yard FULL</span></button>
         <button type="button" onClick={() => setKpiPopup('inbounds')}><strong>{live.inYardRows.length}</strong><span>Inbound Containers</span></button>
         <button type="button" onClick={() => setKpiPopup('planned')}><strong>{live.orderRows.length}</strong><span>Planned Orders</span></button>
-        <button type="button" onClick={() => setKpiPopup('older48h')}><strong>{computeOlder48h(live.orderRows).length}</strong><span>Older than 48h</span></button>
+        <button type="button" onClick={() => setKpiPopup('older48h')}><strong>{computeOlder48hYard(live.inYardRows).length}</strong><span>Older than 48h</span></button>
       </section>
 
       <div className="content-grid">
         <div className="content-left">
           <section id="section-1" className="panel section-one">
-            <div className="panel-header"><h2>Section 1 - IN-YARD Containers</h2><span>{live.inYardRows.length} containers</span></div>
-            <div className="chip-row"><span>All ({live.inYardRows.length})</span><span>In Yard ({live.inYardRows.filter(r => r.inYard).length})</span></div>
+            <div className="panel-header"><h2>Section 1 - IN-YARD FULL Equipment</h2><span>{live.inYardRows.length} rows</span></div>
+            <div className="chip-row"><span>All ({live.inYardRows.length})</span><span>GURUNANDA, LLC ({live.inYardRows.length})</span></div>
             <div className="table-wrap">
               <table>
                 <thead><tr>
-                  <SortableHeader label="Container" active={s1SortCol === 'container'} dir={s1SortCol === 'container' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'container', setS1SortCol, setS1SortDir)} />
-                  <SortableHeader label="Appointment Time" active={s1SortCol === 'appointmentTime'} dir={s1SortCol === 'appointmentTime' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'appointmentTime', setS1SortCol, setS1SortDir)} />
-                  <th>En yarda</th>
-                  <SortableHeader label="Condition" active={s1SortCol === 'condition'} dir={s1SortCol === 'condition' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'condition', setS1SortCol, setS1SortDir)} />
-                  <th>Entry / ET</th><th>Status</th><th>Assignee</th><th>Dock Door</th><th>RN / Receipt</th><th>Note</th><th>Action</th>
+                  <SortableHeader label="Equipment #" active={s1SortCol === 'equipmentNo'} dir={s1SortCol === 'equipmentNo' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'equipmentNo', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Type" active={s1SortCol === 'equipmentType'} dir={s1SortCol === 'equipmentType' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'equipmentType', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Entry Ticket" active={s1SortCol === 'entryTicket'} dir={s1SortCol === 'entryTicket' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'entryTicket', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Check In" active={s1SortCol === 'checkIn'} dir={s1SortCol === 'checkIn' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'checkIn', setS1SortCol, setS1SortDir)} />
+                  <SortableHeader label="Time in Yard" active={s1SortCol === 'timeInYard'} dir={s1SortCol === 'timeInYard' ? s1SortDir : null} onClick={() => toggleSort(s1SortCol, s1SortDir, 'timeInYard', setS1SortCol, setS1SortDir)} />
+                  <th>Location</th><th>Status</th><th>Carrier</th><th>Assignee</th><th>Dock Door</th><th>Action</th>
                 </tr></thead>
                 <tbody>
                   {sortedYardRows.length === 0
-                    ? <tr><td colSpan={11} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>{live.containerMessage || 'No containers available'}</td></tr>
+                    ? <tr><td colSpan={11} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No in-yard FULL equipment for GURUNANDA, LLC</td></tr>
                     : sortedYardRows.map((row) => {
-                      const key = row.container || row.entryET;
+                      const key = row.equipmentNo || row.entryTicket;
                       const isAssigned = assignedRows.has(key);
-                      const historicalAssignee = historicalAssigneeForSection1(row);
                       return (
-                        <tr key={key} className={`${row.conditionColor === 'yellow' ? 'row-yellow' : ''} ${isAssigned ? 'row-assigned' : ''}`}>
-                          <td>{row.container}</td>
-                          <td>{row.appointmentTime}</td>
-                          <td>{row.inYard ? 'Yes' : 'No'}</td>
-                          <td><span className={`status ${row.conditionColor === 'yellow' ? 'planned' : row.conditionColor === 'green' ? 'picked' : 'new'}`}>{row.condition}</span></td>
-                          <td>{row.entryET}</td>
-                          <td>{row.status}</td>
-                          <td><SelectCell value={historicalAssignee} options={['-', ...assigneeNames]} id={`asg-s1-${key}`} /></td>
-                          <td><SelectCell value={'-'} options={locationOptions} id={`dock-s1-${key}`} /></td>
-                          <td>{row.receipt}</td>
-                          <td>{row.note}</td>
+                        <tr key={key} className={isAssigned ? 'row-assigned' : ''}>
+                          <td>{row.equipmentNo}</td>
+                          <td>{row.equipmentType}</td>
+                          <td>{row.entryTicket}</td>
+                          <td>{row.checkIn}</td>
+                          <td>{row.timeInYard}</td>
+                          <td>{row.location}</td>
+                          <td><span className="status planned">{row.status}</span></td>
+                          <td>{row.carrierName}</td>
+                          <td><SelectCell value={row.assignee || '-'} options={['-', ...assigneeNames]} id={`asg-s1-${key}`} /></td>
+                          <td><SelectCell value={row.dock || '-'} options={locationOptions} id={`dock-s1-${key}`} /></td>
                           <td>
                             {isAssigned
                               ? <button className="assign-button assigned" disabled>Assigned</button>
-                              : <button className="assign-button" onClick={() => requestAssign(key, `dock-s1-${key}`, `asg-s1-${key}`, historicalAssignee)}>Assign</button>
+                              : <button className="assign-button" onClick={() => requestAssign(key, `dock-s1-${key}`, `asg-s1-${key}`)}>Assign</button>
                             }
                           </td>
                         </tr>
@@ -499,17 +505,18 @@ function App() {
             <div className="panel-header"><h2>Section 3 - Outbound Shipping</h2><span>{live.shippingRows.length} rows</span></div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th>DN / Order</th><th>Customer</th><th>DN Status</th><th>Load Status</th><th>Dock</th><th>ET</th><th>Assignee</th><th>Action</th></tr></thead>
+                <thead><tr><th>Load #</th><th>Customer</th><th>Status</th><th>Type</th><th>Carrier</th><th>Trailer / Equip</th><th>PRO #</th><th>Appointment</th><th>Dock</th><th>Assignee</th><th>Action</th></tr></thead>
                 <tbody>
                   {live.shippingRows.length === 0
-                    ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No outbound shipping for GURUNANDA, LLC</td></tr>
+                    ? <tr><td colSpan={11} style={{ textAlign: 'center', color: '#64748b', height: 60 }}>No outbound shipping for GURUNANDA, LLC</td></tr>
                     : live.shippingRows.map((row) => {
                     const isAssigned = assignedRows.has(row.id);
                     const historicalAssignee = historicalAssigneeForShipping(row);
                     return (
                       <tr key={row.id} className={isAssigned ? 'row-assigned' : ''}>
-                        <td>{row.id}</td><td>{row.customer}</td><td><span className="status picked">{row.dnStatus}</span></td><td><span className="status new">{row.loadStatus}</span></td>
-                        <td><SelectCell value={row.dock} options={locationOptions} id={`loc-${row.id}`} /></td><td>{row.et}</td>
+                        <td>{row.id}</td><td>{row.customer}</td><td><span className="status planned">{row.loadStatus}</span></td><td>{row.loadType}</td>
+                        <td>{row.carrierName}</td><td>{row.trailerNo}</td><td>{row.proNo}</td><td>{row.appointmentTime}</td>
+                        <td><SelectCell value={row.dock || '-'} options={locationOptions} id={`loc-${row.id}`} /></td>
                         <td><SelectCell value={historicalAssignee} options={assigneeNames} id={`asg-${row.id}`} /></td>
                         <td>
                           {isAssigned
