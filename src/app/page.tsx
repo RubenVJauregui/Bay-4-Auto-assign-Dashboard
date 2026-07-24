@@ -27,8 +27,19 @@ export default function DashboardPage() {
 
   return (
     <main className="dashboard-shell">
+      {/* Top action buttons */}
+      <div className="top-actions">
+        <div className="action-left">
+          <button>Autonomous</button>
+        </div>
+        <div className="action-right">
+          <button>Refresh</button>
+          <button>Download CSV</button>
+        </div>
+      </div>
+
       {/* Top KPI Cards */}
-      <section className="kpi-grid" style={{ marginTop: 12, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+      <section className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
         <div className="kpi-card"><strong>2</strong><span>In-Yard FULL</span></div>
         <div className="kpi-card"><strong>76</strong><span>Planned Orders</span></div>
       </section>
