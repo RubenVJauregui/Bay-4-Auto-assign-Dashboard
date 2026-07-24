@@ -2,275 +2,270 @@ import {
   doors,
   kpiMetrics,
   assigneeSummaries,
-  allTimeAssigneeSummaries,
-  inboundOutboundMix,
-  scheduleAvailable,
-  scheduledInboundReceived,
-  scheduledInboundOrders,
-  scheduledOutboundLoaded,
-  scheduledOutboundOrders,
-  pctScheduledInboundReceived,
-  pctScheduledOutboundLoaded,
   assignments,
+  type DoorRecord,
+  type AssigneeSummary as AssigneeSummaryType,
+  type TaskRecord,
+  type KpiMetric,
 } from "@/lib/data";
-import KpiCard from "@/components/KpiCard";
-import DoorGrid from "@/components/DoorGrid";
-import AssigneeSummaryList from "@/components/AssigneeSummary";
-import OperationalMetrics from "@/components/OperationalMetrics";
-import AssignmentHistory from "@/components/AssignmentHistory";
 
-const ACCENT_CLASSES = [
-  "text-[#ef4444]",
-  "text-[#22c55e]",
-  "text-[#f59e0b]",
-  "text-[#7c3aed]",
-];
-
-const GAUGE_CLASSES = [
-  "#ef4444",
-  "#22c55e",
-  "#f59e0b",
-  "#7c3aed",
-];
-
-const occupied = doors.filter((d) => d.status === "Occupied").length;
-const reserved = doors.filter((d) => d.status === "Reserved").length;
-const available = doors.filter((d) => d.status === "Available").length;
-const anomalous = doors.filter((d) => d.anomaly).length;
+function formatRefreshed(): string {
+  return new Date().toLocaleString("en-US", {
+    timeZone: "America/Los_Angeles",
+    month: "numeric",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
 
 export default function DashboardPage() {
+  const inYardRows = doors.filter((d: DoorRecord) => d.status === "Occupied" || d.status === "Reserved");
+  const refreshed = formatRefreshed();
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
-      {/* Header */}
-      <header className="border-b border-[#1e1e2a] bg-[#0a0a0f] sticky top-0 z-10">
-        <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
-            <h1 className="text-lg font-bold text-[#f4f4f6] tracking-tight leading-tight">
-              Bay 4 Assignments — Valley View
-            </h1>
-            <p className="text-xs text-[#71717a] tracking-wide">
-              DOCK50–DOCK72 &nbsp;|&nbsp; July 13, 2026 &nbsp;|&nbsp; Last refreshed: Jul 13 15:07 PDT
-            </p>
-          </div>
-          {/* Facility badge */}
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#22c55e]"></span>
-            <span className="text-xs text-[#a1a1aa] font-medium tracking-wide">
-              LT_F1
-            </span>
-          </div>
+    <main className="dashboard-shell">
+      {/* Top action buttons */}
+      <div className="top-actions">
+        <div className="action-left">
+          <button>Auto Suggest</button>
+          <button>Auto Assign All</button>
+          <button>Autonomous</button>
+        </div>
+        <div className="action-right">
+          <button>Refresh</button>
+          <button>Download CSV</button>
+        </div>
+      </div>
+
+      {/* Page header */}
+      <header className="page-header">
+        <div>
+          <h1>Bay 4 Dashboard</h1>
+          <p>Valley View (LT_F1)</p>
+        </div>
+        <div className="refresh-time">
+          <strong>Last refreshed {refreshed}</strong>
+          <span>DOCK50-DOCK72</span>
         </div>
       </header>
 
-      <main className="max-w-[1440px] mx-auto px-6 py-6 flex flex-col gap-6">
-        {/* ── Section: KPI Cards ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-5 w-1 rounded-full bg-[#7c3aed]" />
-            <h2 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-widest">
-              Summary
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {kpiMetrics.map((metric, i) => (
-              <KpiCard
-                key={metric.label}
-                metric={metric}
-                accentClass={ACCENT_CLASSES[i]}
-                gaugeClass={GAUGE_CLASSES[i]}
-              />
-            ))}
-          </div>
-        </section>
+      {/* Info strip */}
+      <div className="info-strip">
+        <span>Fresh WISE data every 5 minutes</span>
+        <span>Auto Suggest holds RNs and orders until Auto Assign is confirmed</span>
+        <span>Auto Assign assigns new tasks only after confirmation</span>
+      </div>
 
-        {/* ── Section: Door Utilization Grid ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-5 w-1 rounded-full bg-[#7c3aed]" />
-            <h2 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-widest">
-              Door Utilization
-            </h2>
-            <span className="text-xs text-[#71717a] ml-auto">
-              23 doors &nbsp;|&nbsp; {occupied} occupied / {reserved} reserved / {available} available / {anomalous} anomalies
-            </span>
+      {/* KPI Cards */}
+      <section className="kpi-grid">
+        {kpiMetrics.map((m: KpiMetric) => (
+          <div className="kpi-card" key={m.label}>
+            <strong>{m.value}</strong>
+            <span>{m.label}</span>
           </div>
-          <DoorGrid doors={doors} />
-        </section>
+        ))}
+      </section>
 
-        {/* ── Section: Operational Metrics ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-5 w-1 rounded-full bg-[#7c3aed]" />
-            <h2 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-widest">
-              Operational Metrics
-            </h2>
-          </div>
-          <OperationalMetrics
-            mix={inboundOutboundMix}
-            scheduleAvailable={scheduleAvailable}
-            scheduledInboundReceived={scheduledInboundReceived}
-            scheduledInboundOrders={scheduledInboundOrders}
-            scheduledOutboundLoaded={scheduledOutboundLoaded}
-            scheduledOutboundOrders={scheduledOutboundOrders}
-            pctInboundReceived={pctScheduledInboundReceived}
-            pctOutboundLoaded={pctScheduledOutboundLoaded}
-          />
-        </section>
-
-        {/* ── Section: Assignments by Assignee ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-5 w-1 rounded-full bg-[#7c3aed]" />
-            <h2 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-widest">
-              Assignments by Assignee
-            </h2>
-            <span className="text-xs text-[#71717a] ml-auto">
-              {assigneeSummaries.reduce((sum, a) => sum + a.taskCount, 0)} active tasks
-            </span>
-          </div>
-          <AssigneeSummaryList summaries={assigneeSummaries} />
-
-          {/* All-time counts */}
-          <div className="mt-3 bg-[#141419] border border-[#1e1e2a] rounded-xl overflow-hidden">
-            <div className="px-5 py-2.5 bg-[#0a0a0f] border-b border-[#1e1e2a]">
-              <span className="text-xs font-semibold text-[#71717a] uppercase tracking-wider">
-                All-Time Assignments (DOCK50–DOCK72)
-              </span>
+      {/* Main content grid */}
+      <div className="content-grid">
+        <div className="content-left">
+          {/* Section 1 - In-Yard FULL Equipment */}
+          <section className="panel section-one">
+            <div className="panel-header">
+              <h2>Section 1 - In-Yard FULL Equipment</h2>
+              <span>{inYardRows.length} rows</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-5 py-3">
-              {allTimeAssigneeSummaries.map((a) => (
-                <div key={a.name} className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-[#a1a1aa] truncate" title={a.name}>{a.name}</span>
-                  <span className="text-sm font-bold text-[#7c3aed] tabular-nums">{a.taskCount}</span>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Equipment #</th>
+                    <th>RN #</th>
+                    <th>Check-in (PT)</th>
+                    <th>Time in Yard</th>
+                    <th>Customer</th>
+                    <th>Location</th>
+                    <th>Assignee</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inYardRows.length === 0 ? (
+                    <tr><td colSpan={8} className="empty-state">No in-yard equipment</td></tr>
+                  ) : (
+                    inYardRows.map((d: DoorRecord) => (
+                      <tr key={d.door}>
+                        <td>{d.door}</td>
+                        <td>{d.taskIds.join(", ") || "-"}</td>
+                        <td>-</td>
+                        <td>{d.duration || "-"}</td>
+                        <td>{d.customer || "-"}</td>
+                        <td>
+                          <select className="control-select" defaultValue={d.door}>
+                            {doors.map((door: DoorRecord) => (
+                              <option key={door.door} value={door.door}>{door.door}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>
+                          <select className="control-select" defaultValue={d.assignee || ""}>
+                            {assigneeSummaries.map((a: AssigneeSummaryType) => (
+                              <option key={a.name} value={a.name}>{a.name}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td><button className="assign-button">Assign</button></td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Section 2 - PLANNED Outbound Orders */}
+          <section className="panel section-two">
+            <div className="panel-header">
+              <h2>Section 2 - PLANNED Outbound Orders</h2>
+              <span>{assignments.length} rows</span>
+            </div>
+            <div className="section-tools">
+              <div className="chip-row">
+                <span>All ({assignments.length})</span>
+                <span>GURUNANDA, LLC ({assignments.filter((a: TaskRecord) => a.customer.includes("GURUNANDA")).length})</span>
+              </div>
+              <input placeholder="Search order, PO, carrier..." />
+            </div>
+            <div className="table-wrap orders-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Assignee</th>
+                    <th>Action</th>
+                    <th>Door</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignments.length === 0 ? (
+                    <tr><td colSpan={6} className="empty-state">No planned orders</td></tr>
+                  ) : (
+                    assignments.map((row: TaskRecord) => (
+                      <tr key={row.taskId}>
+                        <td>{row.taskId}</td>
+                        <td>{row.customer}</td>
+                        <td><span className="status planned">{row.pieces}</span></td>
+                        <td>{row.assignee}</td>
+                        <td><button className="assign-button">Assign</button></td>
+                        <td>{row.door}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Section 3 - Outbound Shipping */}
+          <section className="panel section-three">
+            <div className="panel-header">
+              <h2>Section 3 - Outbound Shipping</h2>
+              <span>{assignments.filter((a: TaskRecord) => a.dns === "LOAD").length} rows</span>
+            </div>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>DN / Order</th>
+                    <th>Customer</th>
+                    <th>DN Status</th>
+                    <th>Load Status</th>
+                    <th>Dock</th>
+                    <th>ET</th>
+                    <th>Assignee</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignments.filter((a: TaskRecord) => a.dns === "LOAD").length === 0 ? (
+                    <tr><td colSpan={8} className="empty-state">No outbound shipments</td></tr>
+                  ) : (
+                    assignments.filter((a: TaskRecord) => a.dns === "LOAD").map((row: TaskRecord) => (
+                      <tr key={row.taskId}>
+                        <td>{row.taskId}</td>
+                        <td>{row.customer}</td>
+                        <td><span className="status picked">IN_PROGRESS</span></td>
+                        <td><span className="status new">LOAD</span></td>
+                        <td>
+                          <select className="control-select" defaultValue={row.door}>
+                            {doors.filter((d: DoorRecord) => d.status !== "Available").map((d: DoorRecord) => (
+                              <option key={d.door} value={d.door}>{d.door}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>-</td>
+                        <td>
+                          <select className="control-select" defaultValue={row.assignee}>
+                            {assigneeSummaries.map((a: AssigneeSummaryType) => (
+                              <option key={a.name} value={a.name}>{a.name}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td><button className="assign-button">Assign</button></td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        {/* Sidebar */}
+        <aside className="sidebar">
+          {/* Assigned Today */}
+          <section className="panel assigned-panel">
+            <div className="panel-header">
+              <h2>Assigned Today</h2>
+              <button>Refresh</button>
+            </div>
+            <p className="assigned-note"><strong>{assignments.length} tasks</strong> Dashboard assigned</p>
+            <table>
+              <thead><tr><th>Task</th><th>Assignee</th><th>Door</th></tr></thead>
+              <tbody>
+                {assignments.slice(0, 5).map((a: TaskRecord) => (
+                  <tr key={a.taskId}>
+                    <td>{a.taskId}</td>
+                    <td>{a.assignee}</td>
+                    <td>{a.door}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          {/* Bay 4 Assignees */}
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Bay 4 Assignees</h2>
+              <span>{assigneeSummaries.length} assignees</span>
+            </div>
+            <div className="assignee-list">
+              {assigneeSummaries.map((a: AssigneeSummaryType) => (
+                <div className="assignee-card" key={a.name}>
+                  <span className="avatar">{a.name.split(" ").map((p: string) => p[0]).join("").slice(0, 2)}</span>
+                  <strong>{a.name}</strong>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* ── Section: Assignment History ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-5 w-1 rounded-full bg-[#7c3aed]" />
-            <h2 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-widest">
-              Assignment History
-            </h2>
-            <span className="text-xs text-[#71717a] ml-auto">
-              {assignments.length} active transactions
-            </span>
-          </div>
-          <AssignmentHistory assignments={assignments} />
-        </section>
-
-        {/* ── Section: "Guru live out / in assign to Arnulfo" ── */}
-        <section>
-          <div className="bg-[#141419] border border-[#1e1e2a] rounded-xl p-5 flex flex-col gap-2">
-            <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
-              Assigned Activity — Bay 4 (GURUNANDA / Live Out &amp; In → Arnulfo)
-            </span>
-
-            {/* No exact match banner */}
-            <div className="bg-[#7c3aed10] border border-[#7c3aed33] rounded-lg px-4 py-3 mt-1">
-              <span className="text-xs text-[#7c3aed] font-semibold">
-                ★ No tasks matched the exact filter &quot;Guru live out / in assign to Arnulfo&quot;
-              </span>
-              <span className="text-xs text-[#a1a1aa] block mt-0.5">
-                ARNULFO MUNGUIA (userId=89) has 3 active tasks in Bay 4 DOCK50–DOCK72 (down from 5).
-                Below is the current Arnulfo assignment snapshot.
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-              {/* Column 1: Arnulfo Bay 4 Tasks */}
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-[#71717a] uppercase tracking-wider">
-                  Arnulfo Active Bay 4 Tasks (3)
-                </span>
-                <span className="text-xs text-[#a1a1aa] mt-1">
-                  <strong>DOCK50:</strong> TASK-5315009 (LOAD NEW, GURUNANDA)
-                </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  <strong>DOCK51:</strong> TASK-5314679 (LOAD IN_PROGRESS, GURUNANDA)
-                </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  <strong>DOCK56:</strong> TASK-5315021 (LOAD IN_PROGRESS, GURUNANDA)
-                </span>
-                <span className="text-xs text-[#71717a] mt-1 italic">
-                  Total: 3 tasks (3 LOAD, 0 RECEIVE). All GURUNANDA.
-                </span>
-              </div>
-
-              {/* Column 2: Full Bay 4 Assignee Breakdown */}
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-[#71717a] uppercase tracking-wider">
-                  Bay 4 Active Assignee Breakdown
-                </span>
-                <span className="text-xs text-[#a1a1aa] mt-1">
-                  <span className="text-[#7c3aed] font-semibold">ARNULFO MUNGUIA:</span> 3 active (3 LOAD — DOCK50,51,56)
-                </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  <span className="text-[#22c55e] font-semibold">RUFINO MUNGUIA:</span> 3 active (1 RECEIVE-IN_PROG + 2 RECEIVE-NEW)
-                </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  <span className="text-[#f59e0b] font-semibold">Nanci Viviana Rosas:</span> 2 active (1 LOAD-NEW DOCK55 + 1 RECEIVE-IN_PROG DOCK51)
-                </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  <span className="text-[#ef4444] font-semibold">DANIEL BELTRAN:</span> 1 active (LOAD IN_PROGRESS — DOCK53)
-                </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  <span className="text-[#f59e0b] font-semibold">daira gonzalez:</span> 1 active (RECEIVE IN_PROGRESS — DOCK50, ~265d aged)
-                </span>
-              </div>
-
-              {/* Column 3: Customer Mix */}
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-[#71717a] uppercase tracking-wider">
-                  Bay 4 Customer Mix &amp; Status
-                </span>
-                <span className="text-xs text-[#a1a1aa] mt-1">
-                  <span className="text-[#7c3aed] font-semibold">GURUNANDA, LLC (ORG-655875):</span> 8 tasks (80% of active)
-                </span>
-                <span className="text-xs text-[#a1a1aa]">
-                  <span className="text-[#22c55e] font-semibold">KARAKA, LLC (ORG-585450):</span> 2 tasks (20% of active)
-                </span>
-                <div className="mt-2 pt-2 border-t border-[#1e1e2a]">
-                  <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Task Status</span>
-                  <span className="text-xs text-[#a1a1aa] block mt-0.5">
-                    5 IN_PROGRESS (50%) / 5 NEW (50%)
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Data Notes ── */}
-        <section>
-          <div className="bg-[#141419] border border-[#1e1e2a] rounded-xl p-5 flex flex-col gap-2">
-            <span className="text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
-              Data Notes
-            </span>
-            <ul className="text-xs text-[#71717a] space-y-1 list-disc list-inside">
-              <li><strong className="text-[#f4f4f6]">4 Occupied / 3 Reserved / 16 Available</strong> — 4 doors have IN_PROGRESS tasks. 3 doors have only NEW tasks (shown as Reserved). 16 doors have no active tasks.</li>
-              <li>Active tasks: <strong className="text-[#7c3aed]">5 outbound (LOAD)</strong> / <strong className="text-[#22c55e]">5 inbound (RECEIVE)</strong> = 10 total. 50% outbound / 50% inbound.</li>
-              <li>7 doors with at least one active task. 30.4% task-based occupancy (7/23).</li>
-              <li><strong className="text-[#22c55e]">★ Key change from 11:17 → 15:07 PDT:</strong> 5 tasks completed since morning refresh. Occupied doors shifted from 7→4. DOCK52, DOCK58, DOCK66, DOCK68 now Available. Caren Cubides, DANIELA GONZALEZ, and Fatima Ponce cleared from Bay 4. ARNULFO dropped from 5→3 tasks.</li>
-              <li><strong className="text-[#f59e0b]">⚠ Aged Anomaly:</strong> TASK-5090739 (RECEIVE IN_PROGRESS at DOCK50, daira gonzalez, GURUNANDA) has been open ~265 days since Oct 2025. Receipt status is CLOSED but task remains IN_PROGRESS.</li>
-              <li><strong className="text-[#ef4444]">⚠ Appointments:</strong> UNAVAILABLE — /wms/appointment/search returned 400 for all parameter combinations. % scheduled inbounds/outbounds cannot be computed.</li>
-              <li><strong className="text-[#7c3aed]">★ Customer mix:</strong> GURUNANDA dominates at 80% (8/10 tasks). KARAKA at 20% (2/10). ORGAIN cleared from Bay 4.</li>
-              <li>All core metrics sourced from live WISE/WMS queries, July 13, 2026 ~15:07 PDT. Per-task assignee mapping resolved via individual load-task and receive-task APIs.</li>
-            </ul>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-[#1e1e2a] bg-[#0a0a0f] mt-2">
-        <div className="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between text-xs text-[#71717a]">
-          <span>Valley View Warehouse — Bay 4 Operations</span>
-          <span>Last refreshed: July 13, 2026 ~15:07 PDT</span>
-        </div>
-      </footer>
-    </div>
+          </section>
+        </aside>
+      </div>
+    </main>
   );
 }
