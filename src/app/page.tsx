@@ -28,11 +28,9 @@ export default function DashboardPage() {
   return (
     <main className="dashboard-shell">
       {/* Top KPI Cards */}
-      <section className="kpi-grid" style={{ marginTop: 12 }}>
+      <section className="kpi-grid" style={{ marginTop: 12, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
         <div className="kpi-card"><strong>2</strong><span>In-Yard FULL</span></div>
-        <div className="kpi-card"><strong>2</strong><span>All Inbounds</span></div>
         <div className="kpi-card"><strong>76</strong><span>Planned Orders</span></div>
-        <div className="kpi-card"><strong>56</strong><span>Older Than 48h</span></div>
       </section>
 
       {/* Page header */}
