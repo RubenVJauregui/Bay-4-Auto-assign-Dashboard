@@ -27,18 +27,13 @@ export default function DashboardPage() {
 
   return (
     <main className="dashboard-shell">
-      {/* Top action buttons */}
-      <div className="top-actions">
-        <div className="action-left">
-          <button>Auto Suggest</button>
-          <button>Auto Assign All</button>
-          <button>Autonomous</button>
-        </div>
-        <div className="action-right">
-          <button>Refresh</button>
-          <button>Download CSV</button>
-        </div>
-      </div>
+      {/* Top KPI Cards */}
+      <section className="kpi-grid" style={{ marginTop: 12 }}>
+        <div className="kpi-card"><strong>2</strong><span>In-Yard FULL</span></div>
+        <div className="kpi-card"><strong>2</strong><span>All Inbounds</span></div>
+        <div className="kpi-card"><strong>76</strong><span>Planned Orders</span></div>
+        <div className="kpi-card"><strong>56</strong><span>Older Than 48h</span></div>
+      </section>
 
       {/* Page header */}
       <header className="page-header">
@@ -51,13 +46,6 @@ export default function DashboardPage() {
           <span>DOCK50-DOCK72</span>
         </div>
       </header>
-
-      {/* Info strip */}
-      <div className="info-strip">
-        <span>Fresh WISE data every 5 minutes</span>
-        <span>Auto Suggest holds RNs and orders until Auto Assign is confirmed</span>
-        <span>Auto Assign assigns new tasks only after confirmation</span>
-      </div>
 
       {/* KPI Cards */}
       <section className="kpi-grid">
