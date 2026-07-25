@@ -23,6 +23,7 @@ function formatRefreshed(): string {
 
 export default function DashboardPage() {
   const inYardRows = doors.filter((d: DoorRecord) => d.status === "Occupied" || d.status === "Reserved");
+  const occupiedDoors = doors.filter((d: DoorRecord) => d.status === "Occupied").length;
   const refreshed = formatRefreshed();
 
   return (
@@ -40,8 +41,8 @@ export default function DashboardPage() {
 
       {/* Top KPI Cards */}
       <section className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-        <div className="kpi-card"><strong>2</strong><span>In-Yard FULL</span></div>
-        <div className="kpi-card"><strong>76</strong><span>Planned Orders</span></div>
+        <div className="kpi-card"><strong>{occupiedDoors}</strong><span>Doors Occupied</span></div>
+        <div className="kpi-card"><strong>{assignments.length}</strong><span>Active Tasks</span></div>
       </section>
 
       {/* Page header */}
