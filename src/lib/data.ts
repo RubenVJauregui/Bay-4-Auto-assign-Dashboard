@@ -2,16 +2,16 @@
  * Bay 4 Assignments — Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50–DOCK72
  *
- * TASK DATA: Refreshed 2026-07-25 ~16:40 UTC (live WMS APIs)
+ * TASK DATA: Refreshed 2026-07-25 ~18:37 UTC (live WMS APIs)
  *   Sources:
- *     - /wms/location/search — door spaceStatus and dockStatus for DOCK50-DOCK72
+ *     - /wms/location/search (names) — door spaceStatus and dockStatus for DOCK50-DOCK72
  *     - /wms-bam/tasks/search — active tasks (IN_PROGRESS + NEW) at Bay 4 dockIds
  *     - Assignee user IDs: 89 = ARNULFO MUNGUIA, 3849 = GABINO CARRASCO,
  *       11769 = DANIELA GONZALEZ, 1932077629981601793 = EFREN SALVADOR
- *     - Customer names: ORG-655875 = GURUNANDA LLC, ORG-746193 = AS EVER ENTERPRISES LLC
- *     - Duration computed from task startTime to now (2026-07-25 09:40 PDT / 16:40 UTC)
+ *     - Customer names: ORG-655875 = GURUNANDA LLC, ORG-746193 = AS EVER ENTERPRISES LLC,
+ *       ORG-585450 = unknown (occupiedCustomer on DOCK70 only)
+ *     - Duration computed from task startTime to now (2026-07-25 11:37 PDT / 18:37 UTC)
  *     - Space occupancy: 16 doors OCCUPIED, 7 EMPTY (from door location API)
- *     - Dock occupancy: 8 doors dockStatus=OCCUPIED, 8 dockStatus=AVAILABLE (space OCCUPIED)
  *     - Active tasks: 4 (2 LOAD outbound + 2 RECEIVE inbound) across 3 doors
  *     - 13 anomaly doors: space occupied but no active task
  *     - Appointment API: UNAVAILABLE (no valid query conditions accepted)
@@ -127,7 +127,7 @@ export const doors: DoorRecord[] = [
     assignee: "GABINO CARRASCO",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5326788", "TASK-5326242"],
-    duration: "12h 13m",
+    duration: "14h 10m",
     anomaly: false,
   },
   {
@@ -136,7 +136,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5326740"],
-    duration: "17h 22m",
+    duration: "19h 20m",
     anomaly: false,
   },
   {
@@ -145,7 +145,7 @@ export const doors: DoorRecord[] = [
     assignee: "EFREN SALVADOR",
     customer: "AS EVER ENTERPRISES, LLC",
     taskIds: ["TASK-5326026"],
-    duration: "25h 28m",
+    duration: "27h 26m",
     anomaly: false,
   },
 
@@ -272,11 +272,6 @@ export const doors: DoorRecord[] = [
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // RESERVED — doors with only NEW tasks (0 doors)
-  // ═══════════════════════════════════════════════════════════════
-  // No NEW/reserved tasks found in Bay 4 DOCK50-DOCK72
-
-  // ═══════════════════════════════════════════════════════════════
   // AVAILABLE — space EMPTY, no active tasks (7 doors)
   // ═══════════════════════════════════════════════════════════════
   { door: "DOCK59", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
@@ -326,7 +321,7 @@ export const kpiMetrics: KpiMetric[] = [
 ];
 
 // Active assignee task counts — Bay 4 DOCK50-DOCK72 only
-// Source: /wms-bam/tasks/search (Jul 25 2026 ~16:35 UTC)
+// Source: /wms-bam/tasks/search (Jul 25 2026 ~18:37 UTC)
 // 4 active tasks: 2 LOAD (outbound) + 2 RECEIVE (inbound)
 export const assigneeSummaries: AssigneeSummary[] = [
   { name: "ARNULFO MUNGUIA", taskCount: 1 },
@@ -376,7 +371,7 @@ export const facilityWideLoadsShipped = 0;
 // Door occupancy duration: available from task startTime
 export const doorDurationsAvailable = true;
 
-// Active task records from fresh WISE data (July 25, 2026 ~16:35 UTC)
+// Active task records from fresh WISE data (July 25, 2026 ~18:37 UTC)
 // 4 active tasks: 2 LOAD (outbound) + 2 RECEIVE (inbound)
 // "Guru live out / in assign to Arnulfo": TASK-5326740 at DOCK52 (LOAD, ARNULFO MUNGUIA, GURUNANDA)
 export const assignments: TaskRecord[] = [
@@ -385,7 +380,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5326788",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (12h 13m)",
+    pieces: "IN_PROGRESS (14h 10m)",
     assignee: "GABINO CARRASCO",
     door: "DOCK51",
   },
@@ -393,7 +388,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5326740",
     dns: "LOAD — Guru → Arnulfo",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (17h 22m)",
+    pieces: "IN_PROGRESS (19h 20m)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK52",
   },
@@ -403,7 +398,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5326242",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (23h 29m)",
+    pieces: "IN_PROGRESS (25h 27m)",
     assignee: "DANIELA GONZALEZ",
     door: "DOCK51",
   },
@@ -411,7 +406,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5326026",
     dns: "RECEIVE",
     customer: "AS EVER ENTERPRISES, LLC",
-    pieces: "IN_PROGRESS (25h 28m)",
+    pieces: "IN_PROGRESS (27h 26m)",
     assignee: "EFREN SALVADOR",
     door: "DOCK55",
   },
