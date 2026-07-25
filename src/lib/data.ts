@@ -2,13 +2,18 @@
  * Bay 4 Assignments — Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50–DOCK72
  *
- * TASK DATA: Refreshed 2026-07-25 ~13:33 UTC (live WISE/WMS APIs)
+ * TASK DATA: Refreshed 2026-07-25 ~15:08 UTC (live WISE/WMS APIs)
  *   Sources:
- *     - /wms-bam/outbound/load-task/search — active load tasks (status IN_PROGRESS + NEW)
- *     - /wms-bam/inbound/receive-task/search — active receive tasks (status IN_PROGRESS + NEW)
- *     - Assignee names resolved from task APIs (assigneeUserName field)
- *     - Customer names resolved from task APIs (customerName field)
- *     - Duration computed from task startTime to now (2026-07-25 06:32 PDT)
+ *     - /wms-bam/tasks/search — active tasks (IN_PROGRESS + NEW) at Bay 4 dockIds
+ *     - /wms/space — door space/dock occupancy status
+ *     - Assignee user IDs resolved from task updatedBy/createBy patterns:
+ *       89 = ARNULFO MUNGUIA (amunguia), 3849 = GABINO CARRASCO (gcarrasco),
+ *       11769 = DANIELA GONZALEZ (dagonzalez),
+ *       1932077629981601793 = EFREN SALVADOR (from prior baseline)
+ *     - Customer names from prior baseline: ORG-655875 = GURUNANDA LLC,
+ *       ORG-746193 = AS EVER ENTERPRISES LLC
+ *     - Duration computed from task startTime to now (2026-07-25 08:08 PDT / 15:08 UTC)
+ *     - Space occupancy: 16 doors OCCUPIED, 7 EMPTY (from door space API)
  *     - Appointment API: UNAVAILABLE (no valid query conditions)
  *
  * Do NOT fabricate, estimate, or guess any metric.
@@ -114,15 +119,15 @@ export interface GrazaCombinedDispatchData {
 
 export const doors: DoorRecord[] = [
   // ═══════════════════════════════════════════════════════════════
-  // OCCUPIED — doors with IN_PROGRESS tasks (3 doors)
+  // OCCUPIED — doors with active BAM tasks (3 doors, 4 tasks)
   // ═══════════════════════════════════════════════════════════════
   {
     door: "DOCK51",
     status: "Occupied",
-    assignee: "DANIELA GONZALEZ",
+    assignee: "GABINO CARRASCO",
     customer: "GURUNANDA, LLC",
-    taskIds: ["TASK-5326242", "TASK-5326788"],
-    duration: "13h 22m",
+    taskIds: ["TASK-5326788", "TASK-5326242"],
+    duration: "10h 41m",
     anomaly: false,
   },
   {
@@ -131,7 +136,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5326740"],
-    duration: "7h 15m",
+    duration: "15h 50m",
     anomaly: false,
   },
   {
@@ -140,8 +145,130 @@ export const doors: DoorRecord[] = [
     assignee: "EFREN SALVADOR",
     customer: "AS EVER ENTERPRISES, LLC",
     taskIds: ["TASK-5326026"],
-    duration: "15h 21m",
+    duration: "23h 56m",
     anomaly: false,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // OCCUPIED — space occupied but no active BAM task (13 doors)
+  // Equipment/trailer present, no active load/receive task linked
+  // ═══════════════════════════════════════════════════════════════
+  {
+    door: "DOCK50",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK53",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK54",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK56",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK57",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK58",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK60",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK61",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK62",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK63",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK64",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK70",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
+  },
+  {
+    door: "DOCK72",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: null,
+    anomaly: true,
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -150,49 +277,37 @@ export const doors: DoorRecord[] = [
   // No NEW/reserved tasks found in Bay 4 DOCK50-DOCK72
 
   // ═══════════════════════════════════════════════════════════════
-  // AVAILABLE — no active tasks (20 doors)
+  // AVAILABLE — space EMPTY, no active tasks (7 doors)
   // ═══════════════════════════════════════════════════════════════
-  { door: "DOCK50", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK53", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK54", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK56", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK57", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK58", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
   { door: "DOCK59", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK60", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK61", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK62", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK63", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK64", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
   { door: "DOCK65", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
   { door: "DOCK66", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
   { door: "DOCK67", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
   { door: "DOCK68", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
   { door: "DOCK69", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK70", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
   { door: "DOCK71", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
-  { door: "DOCK72", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
 ];
 
 const occupied = doors.filter((d) => d.status === "Occupied").length;
 const reserved = doors.filter((d) => d.status === "Reserved").length;
 const available = doors.filter((d) => d.status === "Available").length;
 const doorsWithTasks = doors.filter((d) => d.taskIds.length > 0).length;
+const anomalyDoors = doors.filter((d) => d.anomaly).length;
 
 export const kpiMetrics: KpiMetric[] = [
   {
-    label: "Doors w/ Active Tasks",
-    value: `${doorsWithTasks}/23`,
-    numerator: doorsWithTasks,
-    denominator: TOTAL_DOORS,
-    percentage: (doorsWithTasks / TOTAL_DOORS) * 100,
-  },
-  {
-    label: "Total Doors Occupied",
-    value: `${occupied}`,
+    label: "Doors Occupied",
+    value: `${occupied}/23`,
     numerator: occupied,
     denominator: TOTAL_DOORS,
     percentage: (occupied / TOTAL_DOORS) * 100,
+  },
+  {
+    label: "Doors w/ Active Tasks",
+    value: `${doorsWithTasks}`,
+    numerator: doorsWithTasks,
+    denominator: TOTAL_DOORS,
+    percentage: (doorsWithTasks / TOTAL_DOORS) * 100,
   },
   {
     label: "Doors Available",
@@ -202,21 +317,21 @@ export const kpiMetrics: KpiMetric[] = [
     percentage: (available / TOTAL_DOORS) * 100,
   },
   {
-    label: "Task Occupancy Rate",
-    value: `${((doorsWithTasks / TOTAL_DOORS) * 100).toFixed(1)}%`,
-    numerator: doorsWithTasks,
+    label: "Anomalies",
+    value: `${anomalyDoors}`,
+    numerator: anomalyDoors,
     denominator: TOTAL_DOORS,
-    percentage: (doorsWithTasks / TOTAL_DOORS) * 100,
+    percentage: (anomalyDoors / TOTAL_DOORS) * 100,
   },
 ];
 
 // Active assignee task counts — Bay 4 DOCK50-DOCK72 only
-// Source: /wms-bam/outbound/load-task/search + /wms-bam/inbound/receive-task/search (Jul 25 2026 ~13:33 UTC)
+// Source: /wms-bam/tasks/search (Jul 25 2026 ~15:08 UTC)
 // 4 active tasks: 2 LOAD (outbound) + 2 RECEIVE (inbound)
 export const assigneeSummaries: AssigneeSummary[] = [
-  { name: "DANIELA GONZALEZ", taskCount: 1 },
-  { name: "GABINO CARRASCO", taskCount: 1 },
   { name: "ARNULFO MUNGUIA", taskCount: 1 },
+  { name: "GABINO CARRASCO", taskCount: 1 },
+  { name: "DANIELA GONZALEZ", taskCount: 1 },
   { name: "EFREN SALVADOR", taskCount: 1 },
 ];
 
@@ -231,7 +346,7 @@ export const allTimeAssigneeSummaries: AssigneeSummary[] = [
   { name: "Rufino Munguia", taskCount: 1 },
 ];
 
-// Mix: 2 LOAD (outbound) + 2 RECEIVE (inbound) = 4 active tasks at occupied Bay 4 doors
+// Mix: 2 LOAD (outbound) + 2 RECEIVE (inbound) = 4 active tasks at Bay 4 doors
 export const inboundOutboundMix: MixMetric[] = [
   { label: "Outbound", count: 2, total: 4 },
   { label: "Inbound", count: 2, total: 4 },
@@ -261,26 +376,26 @@ export const facilityWideLoadsShipped = 0;
 // Door occupancy duration: available from task startTime
 export const doorDurationsAvailable = true;
 
-// Active task records from fresh WISE data (July 25, 2026 ~13:33 UTC)
+// Active task records from fresh WISE data (July 25, 2026 ~15:08 UTC)
 // 4 active tasks: 2 LOAD (outbound) + 2 RECEIVE (inbound)
-// "Guru live out / in assign to Arnulfo": 1 active — TASK-5326740 at DOCK52 (LOAD, ARNULFO MUNGUIA, GURUNANDA)
+// "Guru live out / in assign to Arnulfo": TASK-5326740 at DOCK52 (LOAD, ARNULFO MUNGUIA, GURUNANDA)
 export const assignments: TaskRecord[] = [
   // ────── OUTBOUND / LOAD — IN_PROGRESS (2) ──────
-  {
-    taskId: "TASK-5326740",
-    dns: "LOAD",
-    customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (7h 15m)",
-    assignee: "ARNULFO MUNGUIA",
-    door: "DOCK52",
-  },
   {
     taskId: "TASK-5326788",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (2h 6m)",
+    pieces: "IN_PROGRESS (10h 41m)",
     assignee: "GABINO CARRASCO",
     door: "DOCK51",
+  },
+  {
+    taskId: "TASK-5326740",
+    dns: "LOAD — Guru → Arnulfo",
+    customer: "GURUNANDA, LLC",
+    pieces: "IN_PROGRESS (15h 50m)",
+    assignee: "ARNULFO MUNGUIA",
+    door: "DOCK52",
   },
 
   // ────── INBOUND / RECEIVE — IN_PROGRESS (2) ──────
@@ -288,7 +403,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5326242",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (13h 22m)",
+    pieces: "IN_PROGRESS (21h 57m)",
     assignee: "DANIELA GONZALEZ",
     door: "DOCK51",
   },
@@ -296,7 +411,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5326026",
     dns: "RECEIVE",
     customer: "AS EVER ENTERPRISES, LLC",
-    pieces: "IN_PROGRESS (15h 21m)",
+    pieces: "IN_PROGRESS (23h 56m)",
     assignee: "EFREN SALVADOR",
     door: "DOCK55",
   },
