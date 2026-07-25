@@ -2,13 +2,14 @@
  * Bay 4 Assignments — Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50–DOCK72
  *
- * TASK DATA: Refreshed 2026-07-24 ~18:08 PDT (live WISE/WMS APIs)
+ * TASK DATA: Refreshed 2026-07-25 ~01:36 UTC (live WISE/WMS APIs)
  *   Sources:
  *     - /wms-bam/outbound/load-task/search — active load tasks (status IN_PROGRESS + NEW)
  *     - /wms-bam/inbound/receive-task/search — active receive tasks (status IN_PROGRESS + NEW)
- *     - Assignee mapping resolved per-task via load-task + receive-task APIs
- *     - User directory lookup for name resolution (89 = ARNULFO MUNGUIA confirmed)
- *     - Remaining numeric IDs unresolvable in LT_F1 user directory
+ *     - /wms/location/search — door-level occupancy (dockStatus/spaceStatus)
+ *     - Assignee names resolved from task APIs (assigneeUserName field)
+ *     - Customer names resolved from task APIs (customerName field)
+ *     - Appointment API: UNAVAILABLE (no valid query conditions)
  *
  * Do NOT fabricate, estimate, or guess any metric.
  */
@@ -118,10 +119,10 @@ export const doors: DoorRecord[] = [
   {
     door: "DOCK51",
     status: "Occupied",
-    assignee: "User-2053885581368619009",
+    assignee: "Fatima del Rosario Ponce",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5326242"],
-    duration: "<1d",
+    duration: "10h 27m",
     anomaly: false,
   },
   {
@@ -130,34 +131,34 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5326740"],
-    duration: "<1d",
+    duration: "2h 20m",
     anomaly: false,
   },
   {
     door: "DOCK55",
     status: "Occupied",
-    assignee: "User-1932077629981601793",
-    customer: "ORG-746193",
+    assignee: "EFREN SALVADOR",
+    customer: "AS EVER ENTERPRISES, LLC",
     taskIds: ["TASK-5326026"],
-    duration: "<1d",
+    duration: "10h 26m",
     anomaly: false,
   },
   {
     door: "DOCK67",
     status: "Occupied",
-    assignee: "User-11769",
+    assignee: "DANIELA GONZALEZ",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5326351"],
-    duration: "<1d",
+    duration: "6h 18m",
     anomaly: false,
   },
   {
     door: "DOCK69",
     status: "Occupied",
-    assignee: "User-11769",
+    assignee: "DANIELA GONZALEZ",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5326721"],
-    duration: "<1d",
+    duration: "2h 40m",
     anomaly: false,
   },
 
@@ -168,6 +169,9 @@ export const doors: DoorRecord[] = [
 
   // ═══════════════════════════════════════════════════════════════
   // AVAILABLE — no active tasks (18 doors)
+  // Note: DOCK50, DOCK63, DOCK64, DOCK70, DOCK72 show dockStatus=OCCUPIED
+  //   at the location level (occupied by inventory/customer) but have no
+  //   active load or receive tasks.
   // ═══════════════════════════════════════════════════════════════
   { door: "DOCK50", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
   { door: "DOCK53", status: "Available", assignee: null, customer: null, taskIds: [], duration: null, anomaly: false },
@@ -225,16 +229,14 @@ export const kpiMetrics: KpiMetric[] = [
   },
 ];
 
-// Active assignee task counts — based on Bay 4 DOCK50-DOCK72 task-level assignee mapping
-// Source: /wms-bam/outbound/load-task/search + /wms-bam/inbound/receive-task/search (Jul 24 2026)
-// 14 total active tasks: 5 LOAD (outbound) + 9 RECEIVE (inbound)
+// Active assignee task counts — Bay 4 DOCK50-DOCK72 only
+// Source: /wms-bam/outbound/load-task/search + /wms-bam/inbound/receive-task/search (Jul 25 2026)
+// 5 active tasks: 1 LOAD (outbound) + 4 RECEIVE (inbound)
 export const assigneeSummaries: AssigneeSummary[] = [
-  { name: "User-11769", taskCount: 9 },
-  { name: "ARNULFO MUNGUIA", taskCount: 5 },
-  { name: "User-2053885581368619009", taskCount: 4 },
-  { name: "User-1932077596691410945", taskCount: 4 },
-  { name: "User-1932077629981601793", taskCount: 1 },
-  { name: "User-2029638366082560001", taskCount: 1 },
+  { name: "DANIELA GONZALEZ", taskCount: 2 },
+  { name: "ARNULFO MUNGUIA", taskCount: 1 },
+  { name: "Fatima del Rosario Ponce", taskCount: 1 },
+  { name: "EFREN SALVADOR", taskCount: 1 },
 ];
 
 // All-time assignment counts — preserved from prior baseline (Jul 13 2026)
@@ -278,16 +280,16 @@ export const facilityWideLoadsShipped = 0;
 // Door occupancy duration: available from task startTime
 export const doorDurationsAvailable = true;
 
-// Active task records from fresh WISE data (July 24, 2026 ~18:08 PDT)
+// Active task records from fresh WISE data (July 25, 2026 ~01:36 UTC)
 // 5 active tasks: 1 LOAD (outbound) + 4 RECEIVE (inbound)
-// "Guru live out / in assign to Arnulfo": 0 active transactions in Bay 4
+// "Guru live out / in assign to Arnulfo": 1 active — TASK-5326740 at DOCK52 (LOAD, ARNULFO MUNGUIA, GURUNANDA)
 export const assignments: TaskRecord[] = [
   // ────── OUTBOUND / LOAD — IN_PROGRESS (1) ──────
   {
     taskId: "TASK-5326740",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (<1d)",
+    pieces: "IN_PROGRESS (2h 20m)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK52",
   },
@@ -297,32 +299,32 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5326242",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (<1d)",
-    assignee: "User-2053885581368619009",
+    pieces: "IN_PROGRESS (10h 27m)",
+    assignee: "Fatima del Rosario Ponce",
     door: "DOCK51",
   },
   {
     taskId: "TASK-5326026",
     dns: "RECEIVE",
-    customer: "ORG-746193",
-    pieces: "IN_PROGRESS (<1d)",
-    assignee: "User-1932077629981601793",
+    customer: "AS EVER ENTERPRISES, LLC",
+    pieces: "IN_PROGRESS (10h 26m)",
+    assignee: "EFREN SALVADOR",
     door: "DOCK55",
   },
   {
     taskId: "TASK-5326351",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (<1d)",
-    assignee: "User-11769",
+    pieces: "IN_PROGRESS (6h 18m)",
+    assignee: "DANIELA GONZALEZ",
     door: "DOCK67",
   },
   {
     taskId: "TASK-5326721",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS (<1d)",
-    assignee: "User-11769",
+    pieces: "IN_PROGRESS (2h 40m)",
+    assignee: "DANIELA GONZALEZ",
     door: "DOCK69",
   },
 ];
