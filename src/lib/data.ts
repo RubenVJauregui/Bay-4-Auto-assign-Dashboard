@@ -86,6 +86,10 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
   },
 ];
 
+// Pending Orders square: WMS outbound orders for GURUNANDA (ORG-655875) with pending-style statuses IMPORTED + OPEN.
+// Verified current count: IMPORTED 16 + OPEN 1 = 17.
+export const pendingGurunandaOrderCount = 17;
+
 // ─── Graza Dispatch Types (preserved for GrazaDispatchSummary component) ───
 export interface GrazaDispatchRun {
   runLabel: string;

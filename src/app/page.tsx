@@ -3,6 +3,7 @@ import {
   assigneeSummaries,
   assignments,
   inYardFullEquipment,
+  pendingGurunandaOrderCount,
   type DoorRecord,
   type AssigneeSummary as AssigneeSummaryType,
   type TaskRecord,
@@ -41,7 +42,7 @@ export default function DashboardPage() {
       {/* Top KPI Cards */}
       <section className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
         <div className="kpi-card"><strong>{sectionOneRows.length}</strong><span>In Yard Full Trailers</span></div>
-        <div className="kpi-card"><strong>{assignments.length}</strong><span>Planned order</span></div>
+        <div className="kpi-card"><strong>{pendingGurunandaOrderCount}</strong><span>Pending Orders</span></div>
       </section>
 
       {/* Page header */}
