@@ -75,11 +75,13 @@ export default function DashboardPage() {
                     <th>Check-in (PDT)</th>
                     <th>Time in Yard</th>
                     <th>Customer</th>
+                    <th>Assignee</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sectionOneRows.length === 0 ? (
-                    <tr><td colSpan={5} className="empty-state">No in-yard full trailers</td></tr>
+                    <tr><td colSpan={7} className="empty-state">No in-yard full trailers</td></tr>
                   ) : (
                     sectionOneRows.map((row: InYardEquipmentRecord) => (
                       <tr key={`${row.equipmentNo}-${row.entryTicket}`}>
@@ -88,6 +90,15 @@ export default function DashboardPage() {
                         <td>{row.checkInPdt}</td>
                         <td>{row.timeInYard}</td>
                         <td>{row.customer}</td>
+                        <td>
+                          <select className="control-select" defaultValue="">
+                            <option value="">Select assignee</option>
+                            {assigneeSummaries.map((a: AssigneeSummaryType) => (
+                              <option key={a.name} value={a.name}>{a.name}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td><button className="assign-button">Assign</button></td>
                       </tr>
                     ))
                   )}
@@ -130,7 +141,13 @@ export default function DashboardPage() {
                         <td>{row.taskId}</td>
                         <td>{row.customer}</td>
                         <td><span className="status planned">{row.pieces}</span></td>
-                        <td>{row.assignee}</td>
+                        <td>
+                          <select className="control-select" defaultValue={row.assignee}>
+                            {assigneeSummaries.map((a: AssigneeSummaryType) => (
+                              <option key={a.name} value={a.name}>{a.name}</option>
+                            ))}
+                          </select>
+                        </td>
                         <td><button className="assign-button">Assign</button></td>
                         <td>{row.door}</td>
                       </tr>
