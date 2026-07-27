@@ -23,7 +23,6 @@ function formatRefreshed(): string {
 
 export default function DashboardPage() {
   const sectionOneRows = inYardFullEquipment.filter((row: InYardEquipmentRecord) => row.equipmentType === "TRAILER");
-  const occupiedDoors = doors.filter((d: DoorRecord) => d.status === "Occupied").length;
   const refreshed = formatRefreshed();
 
   return (
@@ -41,7 +40,7 @@ export default function DashboardPage() {
 
       {/* Top KPI Cards */}
       <section className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-        <div className="kpi-card"><strong>{occupiedDoors}</strong><span>In Yard Full Trailers</span></div>
+        <div className="kpi-card"><strong>{sectionOneRows.length}</strong><span>In Yard Full Trailers</span></div>
         <div className="kpi-card"><strong>{assignments.length}</strong><span>Planned order</span></div>
       </section>
 
