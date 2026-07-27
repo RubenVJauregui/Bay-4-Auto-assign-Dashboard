@@ -3,10 +3,12 @@ import {
   kpiMetrics,
   assigneeSummaries,
   assignments,
+  inYardFullEquipment,
   type DoorRecord,
   type AssigneeSummary as AssigneeSummaryType,
   type TaskRecord,
   type KpiMetric,
+  type InYardEquipmentRecord,
 } from "@/lib/data";
 
 function formatRefreshed(): string {
@@ -22,7 +24,7 @@ function formatRefreshed(): string {
 }
 
 export default function DashboardPage() {
-  const inYardRows = doors.filter((d: DoorRecord) => d.status === "Occupied" || d.status === "Reserved");
+  const sectionOneRows = inYardFullEquipment.filter((row: InYardEquipmentRecord) => row.equipmentType === "TRAILER");
   const occupiedDoors = doors.filter((d: DoorRecord) => d.status === "Occupied").length;
   const refreshed = formatRefreshed();
 
@@ -74,48 +76,30 @@ export default function DashboardPage() {
           <section className="panel section-one">
             <div className="panel-header">
               <h2>Section 1 - In-Yard FULL Equipment</h2>
-              <span>{inYardRows.length} rows</span>
+              <span>{sectionOneRows.length} rows</span>
             </div>
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>Equipment #</th>
-                    <th>RN #</th>
-                    <th>Check-in (PT)</th>
+                    <th>Entry Ticket</th>
+                    <th>Check-in (PDT)</th>
                     <th>Time in Yard</th>
                     <th>Customer</th>
-                    <th>Location</th>
-                    <th>Assignee</th>
-                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {inYardRows.length === 0 ? (
-                    <tr><td colSpan={8} className="empty-state">No in-yard equipment</td></tr>
+                  {sectionOneRows.length === 0 ? (
+                    <tr><td colSpan={5} className="empty-state">No in-yard full trailers</td></tr>
                   ) : (
-                    inYardRows.map((d: DoorRecord) => (
-                      <tr key={d.door}>
-                        <td>{d.door}</td>
-                        <td>{d.taskIds.join(", ") || "-"}</td>
-                        <td>-</td>
-                        <td>{d.duration || "-"}</td>
-                        <td>{d.customer || "-"}</td>
-                        <td>
-                          <select className="control-select" defaultValue={d.door}>
-                            {doors.map((door: DoorRecord) => (
-                              <option key={door.door} value={door.door}>{door.door}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td>
-                          <select className="control-select" defaultValue={d.assignee || ""}>
-                            {assigneeSummaries.map((a: AssigneeSummaryType) => (
-                              <option key={a.name} value={a.name}>{a.name}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td><button className="assign-button">Assign</button></td>
+                    sectionOneRows.map((row: InYardEquipmentRecord) => (
+                      <tr key={`${row.equipmentNo}-${row.entryTicket}`}>
+                        <td>{row.equipmentNo}</td>
+                        <td>{row.entryTicket}</td>
+                        <td>{row.checkInPdt}</td>
+                        <td>{row.timeInYard}</td>
+                        <td>{row.customer}</td>
                       </tr>
                     ))
                   )}

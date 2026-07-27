@@ -61,7 +61,30 @@ export interface TaskRecord {
   door: string;
 }
 
+export interface InYardEquipmentRecord {
+  equipmentNo: string;
+  entryTicket: string;
+  checkInPdt: string;
+  timeInYard: string;
+  customer: string;
+  equipmentType: "TRAILER";
+}
+
 export const TOTAL_DOORS = 23;
+
+// Section 1 — In-Yard FULL Equipment (trailer-only display)
+// Mapping: Equipment # = equipmentNo; Entry Ticket = checkInEntry / lastEntryId.
+// User-confirmed Section 1 target row from WMS/Yard context.
+export const inYardFullEquipment: InYardEquipmentRecord[] = [
+  {
+    equipmentNo: "MATU2617276",
+    entryTicket: "ET-1128323",
+    checkInPdt: "07/24/2026, 16:40:51",
+    timeInYard: "2 Days 15 Hours 14 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+];
 
 // ─── Graza Dispatch Types (preserved for GrazaDispatchSummary component) ───
 export interface GrazaDispatchRun {
