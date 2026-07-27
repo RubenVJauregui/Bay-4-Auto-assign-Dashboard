@@ -116,18 +116,18 @@ export async function loadPlannedOrders(): Promise<PlannedOrdersResult> {
 
   try {
     const body: Record<string, unknown> = {
+      customerId: CUSTOMER_ID,
+      status: "PLANNED",
       currentPage: 1,
-      pageSize: 200,
-      statuses: ["PLANNED"],
+      pageSize: 100,
       sortingFields: [{ field: "createdTime", orderBy: "DESC" }],
     };
-    if (CUSTOMER_ID) body.customerId = CUSTOMER_ID;
 
-    const orderRes = await wmsPost("wms-bam/outbound/order/raw-search", body, token);
+    const orderRes = await wmsPost("wms-bam/outbound/order/search-by-paging", body, token);
 
     if (orderRes.code === 0) {
       const data = Array.isArray(orderRes.data) ? orderRes.data : (orderRes.data?.records || []);
-      result.totalCount = orderRes.data?.totalCount || orderRes.totalCount || data.length;
+      result.totalCount = orderRes.data?.totalCount ?? orderRes.totalCount ?? data.length;
       result.rows = data.map((o: Record<string, unknown>) => ({
         id: String(o.id || ""),
         referenceNo: String(o.referenceNo || o.soNo || ""),
