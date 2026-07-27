@@ -1,13 +1,11 @@
 import {
   doors,
-  kpiMetrics,
   assigneeSummaries,
   assignments,
   inYardFullEquipment,
   type DoorRecord,
   type AssigneeSummary as AssigneeSummaryType,
   type TaskRecord,
-  type KpiMetric,
   type InYardEquipmentRecord,
 } from "@/lib/data";
 
@@ -58,16 +56,6 @@ export default function DashboardPage() {
           <span>DOCK50-DOCK72</span>
         </div>
       </header>
-
-      {/* KPI Cards */}
-      <section className="kpi-grid">
-        {kpiMetrics.map((m: KpiMetric) => (
-          <div className="kpi-card" key={m.label}>
-            <strong>{m.value}</strong>
-            <span>{m.label}</span>
-          </div>
-        ))}
-      </section>
 
       {/* Main content grid */}
       <div className="content-grid">
@@ -153,59 +141,6 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Section 3 - Outbound Shipping */}
-          <section className="panel section-three">
-            <div className="panel-header">
-              <h2>Section 3 - Outbound Shipping</h2>
-              <span>{assignments.filter((a: TaskRecord) => a.dns === "LOAD").length} rows</span>
-            </div>
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>DN / Order</th>
-                    <th>Customer</th>
-                    <th>DN Status</th>
-                    <th>Load Status</th>
-                    <th>Dock</th>
-                    <th>ET</th>
-                    <th>Assignee</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assignments.filter((a: TaskRecord) => a.dns === "LOAD").length === 0 ? (
-                    <tr><td colSpan={8} className="empty-state">No outbound shipments</td></tr>
-                  ) : (
-                    assignments.filter((a: TaskRecord) => a.dns === "LOAD").map((row: TaskRecord) => (
-                      <tr key={row.taskId}>
-                        <td>{row.taskId}</td>
-                        <td>{row.customer}</td>
-                        <td><span className="status picked">IN_PROGRESS</span></td>
-                        <td><span className="status new">LOAD</span></td>
-                        <td>
-                          <select className="control-select" defaultValue={row.door}>
-                            {doors.filter((d: DoorRecord) => d.status !== "Available").map((d: DoorRecord) => (
-                              <option key={d.door} value={d.door}>{d.door}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td>-</td>
-                        <td>
-                          <select className="control-select" defaultValue={row.assignee}>
-                            {assigneeSummaries.map((a: AssigneeSummaryType) => (
-                              <option key={a.name} value={a.name}>{a.name}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td><button className="assign-button">Assign</button></td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
         </div>
 
         {/* Sidebar */}
