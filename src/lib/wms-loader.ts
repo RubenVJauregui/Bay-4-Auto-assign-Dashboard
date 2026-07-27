@@ -126,7 +126,7 @@ export async function loadPlannedOrders(): Promise<PlannedOrdersResult> {
     const orderRes = await wmsPost("wms-bam/outbound/order/search-by-paging", body, token);
 
     if (orderRes.code === 0) {
-      const data = Array.isArray(orderRes.data) ? orderRes.data : (orderRes.data?.records || []);
+      const data = orderRes.data?.list ?? orderRes.data?.records ?? (Array.isArray(orderRes.data) ? orderRes.data : []);
       result.totalCount = orderRes.data?.totalCount ?? orderRes.totalCount ?? data.length;
       result.rows = data.map((o: Record<string, unknown>) => ({
         id: String(o.id || ""),
