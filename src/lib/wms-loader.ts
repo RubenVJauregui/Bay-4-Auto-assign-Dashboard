@@ -119,7 +119,7 @@ export async function loadPlannedOrders(): Promise<PlannedOrdersResult> {
       customerId: CUSTOMER_ID,
       status: "PLANNED",
       currentPage: 1,
-      pageSize: 100,
+      pageSize: 30,
       sortingFields: [{ field: "createdTime", orderBy: "DESC" }],
     };
 
