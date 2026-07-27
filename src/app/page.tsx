@@ -1,14 +1,14 @@
 import {
   doors,
   assigneeSummaries,
-  assignments,
   inYardFullEquipment,
-  plannedGurunandaOrderCount,
   type DoorRecord,
   type AssigneeSummary as AssigneeSummaryType,
-  type TaskRecord,
   type InYardEquipmentRecord,
 } from "@/lib/data";
+import { loadPlannedOrders, type PlannedOrderRow } from "@/lib/wms-loader";
+
+export const dynamic = "force-dynamic";
 
 function formatRefreshed(): string {
   return new Date().toLocaleString("en-US", {
@@ -22,8 +22,11 @@ function formatRefreshed(): string {
   });
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
   const sectionOneRows = inYardFullEquipment.filter((row: InYardEquipmentRecord) => row.equipmentType === "TRAILER");
+  const plannedResult = await loadPlannedOrders();
+  const plannedOrders: PlannedOrderRow[] = plannedResult.success ? plannedResult.rows : [];
+  const plannedTotalCount = plannedResult.success ? plannedResult.totalCount : 0;
   const refreshed = formatRefreshed();
 
   return (
@@ -42,7 +45,7 @@ export default function DashboardPage() {
       {/* Top KPI Cards */}
       <section className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
         <div className="kpi-card"><strong>{sectionOneRows.length}</strong><span>In Yard Full Trailers</span></div>
-        <div className="kpi-card"><strong>{plannedGurunandaOrderCount}</strong><span>Planned Orders</span></div>
+        <div className="kpi-card"><strong>{plannedTotalCount}</strong><span>Planned Orders</span></div>
       </section>
 
       {/* Page header */}
@@ -111,12 +114,12 @@ export default function DashboardPage() {
           <section className="panel section-two">
             <div className="panel-header">
               <h2>Section 2 - PLANNED Outbound Orders</h2>
-              <span>{assignments.length} rows</span>
+              <span>{plannedOrders.length} rows</span>
             </div>
             <div className="section-tools">
               <div className="chip-row">
-                <span>All ({assignments.length})</span>
-                <span>GURUNANDA, LLC ({assignments.filter((a: TaskRecord) => a.customer.includes("GURUNANDA")).length})</span>
+                <span>All ({plannedOrders.length})</span>
+                <span>GURUNANDA, LLC ({plannedOrders.length})</span>
               </div>
               <input placeholder="Search order, PO, carrier..." />
             </div>
@@ -127,29 +130,38 @@ export default function DashboardPage() {
                     <th>Order #</th>
                     <th>Customer</th>
                     <th>Status</th>
+                    <th>Order Type</th>
+                    <th>PO / Reference</th>
+                    <th>Ship To</th>
+                    <th>Appointment Time</th>
                     <th>Assignee</th>
                     <th>Action</th>
-                    <th>Door</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {assignments.length === 0 ? (
-                    <tr><td colSpan={6} className="empty-state">No planned orders</td></tr>
+                  {!plannedResult.success ? (
+                    <tr><td colSpan={9} className="empty-state">WMS data unavailable — planned orders cannot be displayed</td></tr>
+                  ) : plannedOrders.length === 0 ? (
+                    <tr><td colSpan={9} className="empty-state">No planned orders</td></tr>
                   ) : (
-                    assignments.map((row: TaskRecord) => (
-                      <tr key={row.taskId}>
-                        <td>{row.taskId}</td>
+                    plannedOrders.map((row: PlannedOrderRow) => (
+                      <tr key={row.id}>
+                        <td>{row.referenceNo || row.id}</td>
                         <td>{row.customer}</td>
-                        <td><span className="status planned">{row.pieces}</span></td>
+                        <td><span className="status planned">{row.status}</span></td>
+                        <td>{row.orderType}</td>
+                        <td>{row.poNo}</td>
+                        <td>{row.shipToName}</td>
+                        <td>{row.appointmentTime}</td>
                         <td>
-                          <select className="control-select" defaultValue={row.assignee}>
+                          <select className="control-select" defaultValue="">
+                            <option value="">Select assignee</option>
                             {assigneeSummaries.map((a: AssigneeSummaryType) => (
                               <option key={a.name} value={a.name}>{a.name}</option>
                             ))}
                           </select>
                         </td>
                         <td><button className="assign-button">Assign</button></td>
-                        <td>{row.door}</td>
                       </tr>
                     ))
                   )}
@@ -168,15 +180,15 @@ export default function DashboardPage() {
               <h2>Assigned Today</h2>
               <button>Refresh</button>
             </div>
-            <p className="assigned-note"><strong>{assignments.length} tasks</strong> Dashboard assigned</p>
+            <p className="assigned-note"><strong>{plannedOrders.length} tasks</strong> Dashboard assigned</p>
             <table>
               <thead><tr><th>Task</th><th>Assignee</th><th>Door</th></tr></thead>
               <tbody>
-                {assignments.slice(0, 5).map((a: TaskRecord) => (
-                  <tr key={a.taskId}>
-                    <td>{a.taskId}</td>
-                    <td>{a.assignee}</td>
-                    <td>{a.door}</td>
+                {plannedOrders.slice(0, 5).map((row: PlannedOrderRow) => (
+                  <tr key={row.id}>
+                    <td>{row.referenceNo || row.id}</td>
+                    <td>—</td>
+                    <td>—</td>
                   </tr>
                 ))}
               </tbody>
