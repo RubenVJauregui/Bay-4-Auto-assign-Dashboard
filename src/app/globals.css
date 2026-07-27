@@ -121,7 +121,7 @@ button, select, input { font: inherit; }
 }
 
 .table-wrap { overflow: auto; }
-.orders-scroll { max-height: 430px; }
+.orders-scroll { overflow-x: auto; }
 
 table { width: 100%; border-collapse: collapse; }
 th {
