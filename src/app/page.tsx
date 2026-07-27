@@ -41,8 +41,8 @@ export default function DashboardPage() {
 
       {/* Top KPI Cards */}
       <section className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-        <div className="kpi-card"><strong>{occupiedDoors}</strong><span>Doors Occupied</span></div>
-        <div className="kpi-card"><strong>{assignments.length}</strong><span>Active Tasks</span></div>
+        <div className="kpi-card"><strong>{occupiedDoors}</strong><span>In Yard Full Trailers</span></div>
+        <div className="kpi-card"><strong>{assignments.length}</strong><span>Planned order</span></div>
       </section>
 
       {/* Page header */}

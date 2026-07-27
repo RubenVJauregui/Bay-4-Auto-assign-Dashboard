@@ -291,7 +291,7 @@ const available = doors.filter((d) => d.status === "Available").length;
 
 export const kpiMetrics: KpiMetric[] = [
   {
-    label: "Doors Occupied",
+    label: "In Yard Full Trailers",
     value: `${occupied}/23`,
     numerator: occupied,
     denominator: TOTAL_DOORS,
