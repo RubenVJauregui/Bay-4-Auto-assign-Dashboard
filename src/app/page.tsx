@@ -125,6 +125,16 @@ export default async function DashboardPage() {
                           recommendedUserId={row.recommendedAssignee?.userId ?? ""}
                           recommendedName={row.recommendedAssignee?.name ?? ""}
                           noTaskMessage="No active task found for this equipment."
+                          confirmationDetails={[
+                            { label: "Equipment", value: row.equipmentNo },
+                            { label: "Entry Ticket", value: row.entryTicket },
+                            { label: "Customer", value: row.customer },
+                            {
+                              label: row.assignmentTaskType === "load" ? "Load Task" : "Receive Task",
+                              value: row.assignmentTaskId,
+                            },
+                          ]}
+                          confirmationNote="Confirm to assign the active warehouse task for this equipment."
                         />
                       </tr>
                     ))
@@ -201,6 +211,12 @@ export default async function DashboardPage() {
                           recommendedUserId={row.recommendedAssignee?.userId ?? ""}
                           recommendedName={row.recommendedAssignee?.name ?? ""}
                           noTaskMessage="No active pick task found for this order."
+                          confirmationDetails={[
+                            { label: "Order", value: row.referenceNo || row.id },
+                            { label: "Customer", value: row.customer },
+                            { label: "Pick Task", value: row.assignmentTaskId },
+                          ]}
+                          confirmationNote="Confirm to assign the current pick task for this planned order."
                         />
                       </tr>
                     ))

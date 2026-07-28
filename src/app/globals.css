@@ -179,6 +179,53 @@ tr:hover td { background: rgba(49,91,214,.08); }
 .assignment-feedback.success { color: #66ffc2; }
 .assignment-feedback.error { color: #ff8c9b; }
 
+.assignment-modal-backdrop {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(0,0,0,.62);
+  backdrop-filter: blur(4px);
+  animation: assignment-fade-in .14s ease-out;
+}
+.assignment-modal {
+  width: min(400px, 90vw);
+  padding: 20px 24px;
+  color: #f5f8ff;
+  background: rgba(5,16,38,.98);
+  border: 1px solid #315bd6;
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.65), 0 0 30px rgba(49,91,214,.18);
+  animation: assignment-modal-in .16s ease-out;
+}
+.assignment-modal h3 { margin: 0 0 12px; color: #fff; font-size: 14px; font-weight: 900; }
+.assignment-modal-details { display: flex; flex-direction: column; gap: 7px; }
+.assignment-modal-details p {
+  display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px;
+  margin: 0; color: #8fa7d3; font-size: 11px; line-height: 1.4;
+}
+.assignment-modal-details strong { color: #fff; overflow-wrap: anywhere; }
+.assignment-modal-details .assignment-modal-assignee { color: #66ffc2; }
+.assignment-modal-note {
+  margin: 14px 0 16px; color: #9eb4d8;
+  font-size: 11px; font-weight: 700; line-height: 1.45;
+}
+.assignment-modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.assignment-modal-button {
+  min-width: 76px; height: 30px; padding: 0 14px;
+  color: #fff; border-radius: 4px;
+  font-size: 11px; font-weight: 900; cursor: pointer;
+}
+.assignment-modal-button.secondary { background: #071b45; border: 1px solid #3d69e7; }
+.assignment-modal-button.primary {
+  background: linear-gradient(180deg, #04b96b, #048952);
+  border: 1px solid #46f5a9;
+  box-shadow: 0 0 12px rgba(29,255,153,.2);
+}
+.assignment-modal-button:disabled { cursor: wait; opacity: .68; }
+.assignment-modal-button:focus-visible { outline: 2px solid #9db7ff; outline-offset: 2px; }
+@keyframes assignment-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes assignment-modal-in { from { opacity: 0; transform: translateY(6px) scale(.985); } to { opacity: 1; transform: none; } }
+
 .status {
   display: inline-flex; align-items: center; height: 20px;
   padding: 0 8px; border-radius: 4px; font-size: 10px; font-weight: 900;

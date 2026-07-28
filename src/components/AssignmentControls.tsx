@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type {
   AssigneeOption,
@@ -16,6 +17,8 @@ interface AssignmentControlsProps {
   recommendedUserId: string;
   recommendedName: string;
   noTaskMessage: string;
+  confirmationDetails: Array<{ label: string; value: string }>;
+  confirmationNote: string;
 }
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
@@ -32,6 +35,8 @@ export function AssignmentControls({
   recommendedUserId,
   recommendedName,
   noTaskMessage,
+  confirmationDetails,
+  confirmationNote,
 }: AssignmentControlsProps) {
   const router = useRouter();
   const options = useMemo(() => {
@@ -52,10 +57,26 @@ export function AssignmentControls({
     (option) => normalizedName(option.name) === normalizedName(recommendedName),
   )?.userId || "";
   const [selectedUserId, setSelectedUserId] = useState(resolvedRecommendedUserId);
+  const selectedAssignee = options.find((option) => option.userId === selectedUserId) ?? null;
+  const [isConfirming, setIsConfirming] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
 
-  async function handleAssign() {
+  useEffect(() => {
+    if (!isConfirming) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape" && !isAssigning) setIsConfirming(false);
+    }
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isAssigning, isConfirming]);
+
+  function handleAssign() {
     if (!taskId || !taskType) {
       setFeedback({ tone: "error", message: noTaskMessage });
       return;
@@ -70,8 +91,17 @@ export function AssignmentControls({
       return;
     }
 
-    setIsAssigning(true);
+    if (!selectedAssignee) {
+      setFeedback({ tone: "error", message: "The selected assignee’s WMS ID is unavailable." });
+      return;
+    }
+
     setFeedback(null);
+    setIsConfirming(true);
+  }
+
+  async function handleConfirm() {
+    setIsAssigning(true);
     try {
       const response = await fetch("/api/assign-task", {
         method: "POST",
@@ -93,6 +123,7 @@ export function AssignmentControls({
       setFeedback({ tone: "error", message: "Assignment could not be completed. Refresh and try again." });
     } finally {
       setIsAssigning(false);
+      setIsConfirming(false);
     }
   }
 
@@ -102,7 +133,7 @@ export function AssignmentControls({
         <select
           className="control-select"
           value={selectedUserId}
-          disabled={isAssigning}
+          disabled={isAssigning || isConfirming}
           onChange={(event) => {
             setSelectedUserId(event.target.value);
             setFeedback(null);
@@ -122,7 +153,7 @@ export function AssignmentControls({
         <button
           className="assign-button"
           type="button"
-          disabled={isAssigning}
+          disabled={isAssigning || isConfirming}
           onClick={handleAssign}
         >
           {isAssigning ? "Assigning..." : "Assign"}
@@ -133,6 +164,56 @@ export function AssignmentControls({
           </span>
         ) : null}
       </td>
+      {isConfirming && selectedAssignee ? createPortal(
+        <div
+          className="assignment-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isAssigning) setIsConfirming(false);
+          }}
+        >
+          <div
+            className="assignment-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`assignment-title-${taskId}`}
+          >
+            <h3 id={`assignment-title-${taskId}`}>Confirm Assignment</h3>
+            <div className="assignment-modal-details">
+              {confirmationDetails.map((detail) => (
+                <p key={`${detail.label}-${detail.value}`}>
+                  <span>{detail.label}:</span>
+                  <strong>{detail.value || "—"}</strong>
+                </p>
+              ))}
+              <p>
+                <span>Assign to:</span>
+                <strong className="assignment-modal-assignee">{selectedAssignee.name}</strong>
+              </p>
+            </div>
+            <p className="assignment-modal-note">{confirmationNote}</p>
+            <div className="assignment-modal-actions">
+              <button
+                className="assignment-modal-button secondary"
+                type="button"
+                disabled={isAssigning}
+                onClick={() => setIsConfirming(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="assignment-modal-button primary"
+                type="button"
+                disabled={isAssigning}
+                onClick={handleConfirm}
+              >
+                {isAssigning ? "Assigning..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      ) : null}
     </>
   );
 }
