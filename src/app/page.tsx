@@ -162,9 +162,6 @@ export default async function DashboardPage() {
                 <thead>
                   <tr>
                     <th>Order #</th>
-                    <th>Customer</th>
-                    <th>Status</th>
-                    <th>Order Type</th>
                     <th>PO / Reference</th>
                     <th>Ship To</th>
                     <th>Appointment Time</th>
@@ -174,16 +171,13 @@ export default async function DashboardPage() {
                 </thead>
                 <tbody>
                   {!plannedResult.success ? (
-                    <tr><td colSpan={9} className="empty-state">WMS data unavailable — planned orders cannot be displayed</td></tr>
+                    <tr><td colSpan={6} className="empty-state">WMS data unavailable — planned orders cannot be displayed</td></tr>
                   ) : plannedOrders.length === 0 ? (
-                    <tr><td colSpan={9} className="empty-state">No planned orders</td></tr>
+                    <tr><td colSpan={6} className="empty-state">No planned orders</td></tr>
                   ) : (
                     plannedOrders.map((row: PlannedOrderRow) => (
                       <tr key={row.id}>
                         <td>{row.referenceNo || row.id}</td>
-                        <td>{row.customer}</td>
-                        <td><span className="status planned">{row.status}</span></td>
-                        <td>{row.orderType}</td>
                         <td>{row.poNo}</td>
                         <td>{row.shipToName}</td>
                         <td>{row.appointmentTime}</td>
