@@ -102,8 +102,41 @@ export interface PlannedOrderRow {
 export interface AssigneeRecommendation {
   userId: string;
   name: string;
-  reason: "Current pick task assignment" | "30-day historical pick-task leader";
+  reason:
+    | "Current pick task assignment"
+    | "30-day historical pick-task leader"
+    | "Current load task assignment"
+    | "Current receive task assignment"
+    | "Current receive pre-assignment"
+    | "30-day load history leader"
+    | "30-day receive history leader";
   confidence: "high" | "medium";
+}
+
+type EquipmentDirection = "load" | "receive";
+
+export interface InYardEquipmentRow {
+  equipmentNo: string;
+  entryTicket: string;
+  checkInPdt: string;
+  timeInYard: string;
+  customer: string;
+  equipmentType: "TRAILER";
+  equipmentOperationStatus: string;
+  locationId: string;
+  locationName: string;
+  entryIds: string[];
+  loadIds: string[];
+  receiptIds: string[];
+  orderIds: string[];
+  direction: EquipmentDirection | null;
+  recommendedAssignee: AssigneeRecommendation | null;
+}
+
+export interface InYardEquipmentResult {
+  success: boolean;
+  error: string;
+  rows: InYardEquipmentRow[];
 }
 
 export interface PlannedOrdersResult {
@@ -142,6 +175,15 @@ function stringValue(value: unknown): string {
   return typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
 }
 
+function stringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(stringValue).filter(Boolean);
+}
+
+function uniqueValues(...groups: string[][]): string[] {
+  return Array.from(new Set(groups.flat().filter(Boolean)));
+}
+
 function taskOrderIds(task: Record<string, unknown>): string[] {
   const ids = new Set<string>();
 
@@ -157,6 +199,14 @@ function taskOrderIds(task: Record<string, unknown>): string[] {
       if (!line || typeof line !== "object") return;
       const normalizedId = stringValue((line as Record<string, unknown>).orderId);
       if (normalizedId) ids.add(normalizedId);
+    });
+  }
+
+  if (Array.isArray(task.loads)) {
+    task.loads.forEach((load) => {
+      if (!load || typeof load !== "object") return;
+      const orderIds = (load as Record<string, unknown>).orderIds;
+      stringArray(orderIds).forEach((orderId) => ids.add(orderId));
     });
   }
 
@@ -222,6 +272,18 @@ function topLeader(counts: Map<string, HistoricalLeader>): HistoricalLeader | nu
   return Array.from(counts.values()).sort((left, right) =>
     right.count - left.count || left.name.localeCompare(right.name),
   )[0] ?? null;
+}
+
+function historicalLeader(
+  tasks: Record<string, unknown>[],
+  namesByUserId: Map<string, string>,
+): HistoricalLeader | null {
+  const counts = new Map<string, HistoricalLeader>();
+  tasks.forEach((task) => {
+    const assignment = taskAssignment(task, namesByUserId);
+    if (assignment) incrementLeaderCount(counts, assignment);
+  });
+  return topLeader(counts);
 }
 
 function buildHistoricalEvidence(
@@ -290,6 +352,267 @@ function recommendationForOrder(
     reason: "30-day historical pick-task leader",
     confidence: "medium",
   };
+}
+
+function equipmentDirection(equipment: Record<string, unknown>): EquipmentDirection | null {
+  const operationStatus = stringValue(equipment.equipmentOperationStatus).toLocaleUpperCase();
+  const receiptIds = uniqueValues(
+    stringArray(equipment.receiptIds),
+    [stringValue(equipment.receiptId)],
+  );
+  const loadIds = uniqueValues(
+    stringArray(equipment.loadIds),
+    [stringValue(equipment.loadId)],
+  );
+
+  if (receiptIds.length > 0 || /OFFLOAD|INBOUND|RECEIVE/.test(operationStatus)) return "receive";
+  if (loadIds.length > 0 || /(^|_)(TO_LOAD|LOADING|LOAD_WAITING|OUTBOUND)($|_)/.test(operationStatus)) return "load";
+  return null;
+}
+
+function taskMatchesEquipment(
+  task: Record<string, unknown>,
+  equipment: InYardEquipmentRow,
+  direction: EquipmentDirection,
+): boolean {
+  const taskEntryId = stringValue(task.entryId);
+  if (taskEntryId && equipment.entryIds.includes(taskEntryId)) return true;
+
+  const taskIds = direction === "load"
+    ? uniqueValues(
+      stringArray(task.loadIds),
+      Array.isArray(task.loads)
+        ? task.loads.map((load) => load && typeof load === "object" ? stringValue((load as Record<string, unknown>).id) : "")
+        : [],
+    )
+    : stringArray(task.receiptIds);
+  const equipmentIds = direction === "load" ? equipment.loadIds : equipment.receiptIds;
+  if (taskIds.some((taskId) => equipmentIds.includes(taskId))) return true;
+
+  return direction === "load" && taskOrderIds(task).some((orderId) => equipment.orderIds.includes(orderId));
+}
+
+function currentAssignee(
+  task: Record<string, unknown>,
+  namesByUserId: Map<string, string>,
+): { userId: string; name: string } | null {
+  const userId = stringValue(task.assigneeUserId);
+  const name = stringValue(task.assigneeUserName) || namesByUserId.get(userId) || "";
+  return userId || name ? { userId, name: name || userId } : null;
+}
+
+function preAssignee(
+  task: Record<string, unknown>,
+  namesByUserId: Map<string, string>,
+): { userId: string; name: string } | null {
+  const userId = stringValue(task.preAssigneeUserId);
+  const name = stringValue(task.preAssigneeUserName) || namesByUserId.get(userId) || "";
+  return userId || name ? { userId, name: name || userId } : null;
+}
+
+function recommendationForEquipment(
+  equipment: InYardEquipmentRow,
+  currentLoadTasks: Record<string, unknown>[],
+  currentReceiveTasks: Record<string, unknown>[],
+  namesByUserId: Map<string, string>,
+  loadHistoryLeader: HistoricalLeader | null,
+  receiveHistoryLeader: HistoricalLeader | null,
+): AssigneeRecommendation | null {
+  if (equipment.direction === "load") {
+    const matchingTasks = currentLoadTasks.filter((task) => taskMatchesEquipment(task, equipment, "load"));
+    for (const task of matchingTasks) {
+      const assignment = currentAssignee(task, namesByUserId);
+      if (assignment) {
+        return { ...assignment, reason: "Current load task assignment", confidence: "high" };
+      }
+    }
+
+    return loadHistoryLeader ? {
+      userId: loadHistoryLeader.userId,
+      name: loadHistoryLeader.name,
+      reason: "30-day load history leader",
+      confidence: "medium",
+    } : null;
+  }
+
+  if (equipment.direction === "receive") {
+    const matchingTasks = currentReceiveTasks.filter((task) => taskMatchesEquipment(task, equipment, "receive"));
+    for (const task of matchingTasks) {
+      const assignment = currentAssignee(task, namesByUserId);
+      if (assignment) {
+        return { ...assignment, reason: "Current receive task assignment", confidence: "high" };
+      }
+
+      const preAssignment = preAssignee(task, namesByUserId);
+      if (preAssignment) {
+        return { ...preAssignment, reason: "Current receive pre-assignment", confidence: "high" };
+      }
+    }
+
+    return receiveHistoryLeader ? {
+      userId: receiveHistoryLeader.userId,
+      name: receiveHistoryLeader.name,
+      reason: "30-day receive history leader",
+      confidence: "medium",
+    } : null;
+  }
+
+  return null;
+}
+
+function taskRequestFilters(rows: InYardEquipmentRow[], direction: EquipmentDirection) {
+  const directionRows = rows.filter((row) => row.direction === direction);
+  const filters: Record<string, unknown> = {};
+  const entryIds = uniqueValues(...directionRows.map((row) => row.entryIds));
+  if (entryIds.length > 0) filters.entryIds = entryIds;
+
+  if (direction === "load") {
+    const loadIds = uniqueValues(...directionRows.map((row) => row.loadIds));
+    const orderIds = uniqueValues(...directionRows.map((row) => row.orderIds));
+    if (loadIds.length > 0) filters.loadIds = loadIds;
+    if (orderIds.length > 0) filters.orderIds = orderIds;
+  } else {
+    const receiptIds = uniqueValues(...directionRows.map((row) => row.receiptIds));
+    if (receiptIds.length > 0) filters.receiptIds = receiptIds;
+  }
+
+  return filters;
+}
+
+async function taskSearchRows(
+  path: string,
+  body: Record<string, unknown>,
+  token: string,
+): Promise<Record<string, unknown>[]> {
+  try {
+    const response = await wmsPost(path, body, token);
+    return isSuccessfulResponse(response) ? responseRows(response) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function loadInYardFullEquipment(): Promise<InYardEquipmentResult> {
+  const result: InYardEquipmentResult = { success: false, error: "", rows: [] };
+  const token = await getAccessToken();
+  if (!token) {
+    result.error = "Unable to authenticate with WISE";
+    return result;
+  }
+
+  try {
+    const equipmentResponse = await wmsPost("wms-bam/yard/equipment/search", {
+      statuses: ["FULL"],
+    }, token);
+
+    if (!isSuccessfulResponse(equipmentResponse)) {
+      result.error = equipmentResponse.msg || `WMS returned code ${equipmentResponse.code}`;
+      return result;
+    }
+
+    const equipmentByKey = new Map<string, InYardEquipmentRow>();
+    responseRows(equipmentResponse)
+      .filter((equipment) => stringValue(equipment.customerId) === CUSTOMER_ID)
+      .filter((equipment) => stringValue(equipment.equipmentType).toLocaleUpperCase() === "TRAILER")
+      .filter((equipment) => stringValue(equipment.equipmentStatus).toLocaleUpperCase() === "FULL")
+      .forEach((equipment) => {
+        const equipmentNo = stringValue(equipment.equipmentNo);
+        const entryIds = uniqueValues([
+          stringValue(equipment.checkInEntry),
+          stringValue(equipment.lastEntryId),
+          stringValue(equipment.entryId),
+        ]);
+        const entryTicket = entryIds[0] || "";
+        if (!equipmentNo) return;
+
+        equipmentByKey.set(`${equipmentNo}::${entryTicket}`, {
+          equipmentNo,
+          entryTicket,
+          checkInPdt: formatAppointmentPT(stringValue(equipment.gateCheckInTime)),
+          timeInYard: stringValue(equipment.inYardTime),
+          customer: stringValue(equipment.customerName) || "GURUNANDA, LLC",
+          equipmentType: "TRAILER",
+          equipmentOperationStatus: stringValue(equipment.equipmentOperationStatus),
+          locationId: stringValue(equipment.locationId),
+          locationName: stringValue(equipment.locationName),
+          entryIds,
+          loadIds: uniqueValues(stringArray(equipment.loadIds), [stringValue(equipment.loadId)]),
+          receiptIds: uniqueValues(stringArray(equipment.receiptIds), [stringValue(equipment.receiptId)]),
+          orderIds: uniqueValues(stringArray(equipment.orderIds), [stringValue(equipment.orderId)]),
+          direction: equipmentDirection(equipment),
+          recommendedAssignee: null,
+        });
+      });
+
+    result.rows = Array.from(equipmentByKey.values());
+    if (result.rows.length === 0) {
+      result.success = true;
+      return result;
+    }
+
+    const needsLoadEvidence = result.rows.some((row) => row.direction === "load");
+    const needsReceiveEvidence = result.rows.some((row) => row.direction === "receive");
+    const endTimeFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const endTimeTo = new Date().toISOString();
+    const activeStatuses = ["NEW", "IN_PROGRESS", "EXCEPTION"];
+    const closedStatuses = ["CLOSED", "FORCE_CLOSED"];
+
+    const [currentLoadTasks, currentReceiveTasks, historicalLoadTasks, historicalReceiveTasks] = await Promise.all([
+      needsLoadEvidence ? taskSearchRows("wms-bam/outbound/load-task/search-by-paging", {
+        customerIds: [CUSTOMER_ID],
+        statuses: activeStatuses,
+        ...taskRequestFilters(result.rows, "load"),
+        currentPage: 1,
+        pageSize: 200,
+      }, token) : Promise.resolve([]),
+      needsReceiveEvidence ? taskSearchRows("wms-bam/inbound/receive-task/search-by-paging", {
+        customerIds: [CUSTOMER_ID],
+        statuses: activeStatuses,
+        ...taskRequestFilters(result.rows, "receive"),
+        currentPage: 1,
+        pageSize: 200,
+      }, token) : Promise.resolve([]),
+      needsLoadEvidence ? taskSearchRows("wms-bam/outbound/load-task/search-by-paging", {
+        customerIds: [CUSTOMER_ID],
+        statuses: closedStatuses,
+        endTimeFrom,
+        currentPage: 1,
+        pageSize: 500,
+      }, token) : Promise.resolve([]),
+      needsReceiveEvidence ? taskSearchRows("wms-bam/inbound/receive-task/search-by-paging", {
+        customerIds: [CUSTOMER_ID],
+        statuses: closedStatuses,
+        endTimePeriod: [endTimeFrom, endTimeTo],
+        currentPage: 1,
+        pageSize: 500,
+      }, token) : Promise.resolve([]),
+    ]);
+
+    const namesByUserId = collectDisplayNames([
+      ...currentLoadTasks,
+      ...currentReceiveTasks,
+      ...historicalLoadTasks,
+      ...historicalReceiveTasks,
+    ]);
+    const loadHistoryLeader = historicalLeader(historicalLoadTasks, namesByUserId);
+    const receiveHistoryLeader = historicalLeader(historicalReceiveTasks, namesByUserId);
+    result.rows = result.rows.map((row) => ({
+      ...row,
+      recommendedAssignee: recommendationForEquipment(
+        row,
+        currentLoadTasks,
+        currentReceiveTasks,
+        namesByUserId,
+        loadHistoryLeader,
+        receiveHistoryLeader,
+      ),
+    }));
+    result.success = true;
+  } catch (err: unknown) {
+    result.error = err instanceof Error ? err.message : "Failed to fetch in-yard equipment";
+  }
+
+  return result;
 }
 
 export async function loadPlannedOrders(): Promise<PlannedOrdersResult> {

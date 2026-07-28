@@ -1,13 +1,14 @@
 import {
-  doors,
   assigneeSummaries,
-  inYardFullEquipment,
   plannedGurunandaOrderCount,
-  type DoorRecord,
   type AssigneeSummary as AssigneeSummaryType,
-  type InYardEquipmentRecord,
 } from "@/lib/data";
-import { loadPlannedOrders, type PlannedOrderRow } from "@/lib/wms-loader";
+import {
+  loadInYardFullEquipment,
+  loadPlannedOrders,
+  type InYardEquipmentRow,
+  type PlannedOrderRow,
+} from "@/lib/wms-loader";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,8 @@ function formatRefreshed(): string {
 }
 
 export default async function DashboardPage() {
-  const sectionOneRows = inYardFullEquipment.filter((row: InYardEquipmentRecord) => row.equipmentType === "TRAILER");
+  const sectionOneResult = await loadInYardFullEquipment();
+  const sectionOneRows: InYardEquipmentRow[] = sectionOneResult.success ? sectionOneResult.rows : [];
   const plannedResult = await loadPlannedOrders();
   const plannedOrders: PlannedOrderRow[] = plannedResult.success ? plannedResult.rows : [];
   const plannedTotalCount = plannedResult.success ? plannedResult.totalCount : plannedGurunandaOrderCount;
@@ -86,26 +88,44 @@ export default async function DashboardPage() {
                     <th>Check-in (PDT)</th>
                     <th>Time in Yard</th>
                     <th>Customer</th>
+                    <th>Recommended Assignee</th>
                     <th>Assignee</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sectionOneRows.length === 0 ? (
-                    <tr><td colSpan={7} className="empty-state">No in-yard full trailers</td></tr>
+                  {!sectionOneResult.success ? (
+                    <tr><td colSpan={8} className="empty-state">WMS data unavailable — in-yard equipment cannot be displayed</td></tr>
+                  ) : sectionOneRows.length === 0 ? (
+                    <tr><td colSpan={8} className="empty-state">No in-yard full trailers</td></tr>
                   ) : (
-                    sectionOneRows.map((row: InYardEquipmentRecord) => (
+                    sectionOneRows.map((row: InYardEquipmentRow) => (
                       <tr key={`${row.equipmentNo}-${row.entryTicket}`}>
                         <td>{row.equipmentNo}</td>
                         <td>{row.entryTicket}</td>
                         <td>{row.checkInPdt}</td>
                         <td>{row.timeInYard}</td>
                         <td>{row.customer}</td>
+                        <td className="recommendation-cell">
+                          {row.recommendedAssignee ? (
+                            <div className="recommendation">
+                              <strong>{row.recommendedAssignee.name}</strong>
+                              <span>
+                                <em className={`confidence ${row.recommendedAssignee.confidence}`}>
+                                  {row.recommendedAssignee.confidence}
+                                </em>
+                                {row.recommendedAssignee.reason}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="recommendation-unavailable">Unavailable</span>
+                          )}
+                        </td>
                         <td>
-                          <select className="control-select" defaultValue="">
+                          <select className="control-select" defaultValue={row.recommendedAssignee?.name ?? ""}>
                             <option value="">Select assignee</option>
-                            {assigneeSummaries.map((a: AssigneeSummaryType) => (
-                              <option key={a.name} value={a.name}>{a.name}</option>
+                            {assigneeOptions(row.recommendedAssignee?.name ?? "").map((name) => (
+                              <option key={name} value={name}>{name}</option>
                             ))}
                           </select>
                         </td>
