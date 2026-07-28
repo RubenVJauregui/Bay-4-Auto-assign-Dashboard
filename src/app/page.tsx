@@ -2,6 +2,7 @@ import {
   doors,
   assigneeSummaries,
   inYardFullEquipment,
+  plannedGurunandaOrderCount,
   type DoorRecord,
   type AssigneeSummary as AssigneeSummaryType,
   type InYardEquipmentRecord,
@@ -26,7 +27,7 @@ export default async function DashboardPage() {
   const sectionOneRows = inYardFullEquipment.filter((row: InYardEquipmentRecord) => row.equipmentType === "TRAILER");
   const plannedResult = await loadPlannedOrders();
   const plannedOrders: PlannedOrderRow[] = plannedResult.success ? plannedResult.rows : [];
-  const plannedTotalCount = plannedResult.success ? plannedResult.totalCount : 0;
+  const plannedTotalCount = plannedResult.success ? plannedResult.totalCount : plannedGurunandaOrderCount;
   const refreshed = formatRefreshed();
 
   return (
