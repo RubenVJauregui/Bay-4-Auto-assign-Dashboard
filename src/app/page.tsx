@@ -11,6 +11,13 @@ import { loadPlannedOrders, type PlannedOrderRow } from "@/lib/wms-loader";
 
 export const dynamic = "force-dynamic";
 
+function assigneeOptions(recommendedName: string): string[] {
+  return Array.from(new Set([
+    ...assigneeSummaries.map((assignee: AssigneeSummaryType) => assignee.name),
+    recommendedName,
+  ].filter(Boolean)));
+}
+
 function formatRefreshed(): string {
   return new Date().toLocaleString("en-US", {
     timeZone: "America/Los_Angeles",
@@ -135,15 +142,16 @@ export default async function DashboardPage() {
                     <th>PO / Reference</th>
                     <th>Ship To</th>
                     <th>Appointment Time</th>
+                    <th>Recommended Assignee</th>
                     <th>Assignee</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {!plannedResult.success ? (
-                    <tr><td colSpan={9} className="empty-state">WMS data unavailable — planned orders cannot be displayed</td></tr>
+                    <tr><td colSpan={10} className="empty-state">WMS data unavailable — planned orders cannot be displayed</td></tr>
                   ) : plannedOrders.length === 0 ? (
-                    <tr><td colSpan={9} className="empty-state">No planned orders</td></tr>
+                    <tr><td colSpan={10} className="empty-state">No planned orders</td></tr>
                   ) : (
                     plannedOrders.map((row: PlannedOrderRow) => (
                       <tr key={row.id}>
@@ -154,11 +162,26 @@ export default async function DashboardPage() {
                         <td>{row.poNo}</td>
                         <td>{row.shipToName}</td>
                         <td>{row.appointmentTime}</td>
+                        <td className="recommendation-cell">
+                          {row.recommendedAssignee ? (
+                            <div className="recommendation">
+                              <strong>{row.recommendedAssignee.name}</strong>
+                              <span>
+                                <em className={`confidence ${row.recommendedAssignee.confidence}`}>
+                                  {row.recommendedAssignee.confidence}
+                                </em>
+                                {row.recommendedAssignee.reason}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="recommendation-unavailable">Unavailable</span>
+                          )}
+                        </td>
                         <td>
-                          <select className="control-select" defaultValue="">
+                          <select className="control-select" defaultValue={row.recommendedAssignee?.name ?? ""}>
                             <option value="">Select assignee</option>
-                            {assigneeSummaries.map((a: AssigneeSummaryType) => (
-                              <option key={a.name} value={a.name}>{a.name}</option>
+                            {assigneeOptions(row.recommendedAssignee?.name ?? "").map((name) => (
+                              <option key={name} value={name}>{name}</option>
                             ))}
                           </select>
                         </td>

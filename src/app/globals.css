@@ -144,6 +144,22 @@ tr:hover td { background: rgba(49,91,214,.08); }
 }
 .section-one .control-select { width: 150px; }
 
+.recommendation-cell { min-width: 225px; white-space: normal; }
+.recommendation { display: flex; flex-direction: column; gap: 3px; padding: 5px 0; }
+.recommendation strong { color: #fff; font-size: 10px; letter-spacing: .01em; }
+.recommendation span {
+  display: flex; align-items: center; gap: 6px;
+  color: #8fa7d3; font-size: 9px; font-weight: 700;
+}
+.confidence {
+  display: inline-flex; align-items: center; height: 16px;
+  padding: 0 6px; border-radius: 999px;
+  font-size: 8px; font-style: normal; font-weight: 900; text-transform: uppercase;
+}
+.confidence.high { color: #66ffc2; background: rgba(4,185,107,.2); border: 1px solid rgba(70,245,169,.42); }
+.confidence.medium { color: #ffd875; background: rgba(216,153,30,.16); border: 1px solid rgba(255,204,92,.38); }
+.recommendation-unavailable { color: #7085aa; font-size: 9px; font-weight: 700; }
+
 .assign-button {
   color: #fff;
   background: linear-gradient(180deg, #04b96b, #048952);
