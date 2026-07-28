@@ -9,15 +9,11 @@ import {
   type InYardEquipmentRow,
   type PlannedOrderRow,
 } from "@/lib/wms-loader";
+import { AssignmentControls } from "@/components/AssignmentControls";
 
 export const dynamic = "force-dynamic";
 
-function assigneeOptions(recommendedName: string): string[] {
-  return Array.from(new Set([
-    ...assigneeSummaries.map((assignee: AssigneeSummaryType) => assignee.name),
-    recommendedName,
-  ].filter(Boolean)));
-}
+const staticAssigneeNames = assigneeSummaries.map((assignee: AssigneeSummaryType) => assignee.name);
 
 function formatRefreshed(): string {
   return new Date().toLocaleString("en-US", {
@@ -121,15 +117,15 @@ export default async function DashboardPage() {
                             <span className="recommendation-unavailable">Unavailable</span>
                           )}
                         </td>
-                        <td>
-                          <select className="control-select" defaultValue={row.recommendedAssignee?.name ?? ""}>
-                            <option value="">Select assignee</option>
-                            {assigneeOptions(row.recommendedAssignee?.name ?? "").map((name) => (
-                              <option key={name} value={name}>{name}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td><button className="assign-button">Assign</button></td>
+                        <AssignmentControls
+                          taskId={row.assignmentTaskId}
+                          taskType={row.assignmentTaskType}
+                          assigneeOptions={sectionOneResult.assigneeOptions}
+                          staticAssigneeNames={staticAssigneeNames}
+                          recommendedUserId={row.recommendedAssignee?.userId ?? ""}
+                          recommendedName={row.recommendedAssignee?.name ?? ""}
+                          noTaskMessage="No active task found for this equipment."
+                        />
                       </tr>
                     ))
                   )}
@@ -197,15 +193,15 @@ export default async function DashboardPage() {
                             <span className="recommendation-unavailable">Unavailable</span>
                           )}
                         </td>
-                        <td>
-                          <select className="control-select" defaultValue={row.recommendedAssignee?.name ?? ""}>
-                            <option value="">Select assignee</option>
-                            {assigneeOptions(row.recommendedAssignee?.name ?? "").map((name) => (
-                              <option key={name} value={name}>{name}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td><button className="assign-button">Assign</button></td>
+                        <AssignmentControls
+                          taskId={row.assignmentTaskId}
+                          taskType="pick"
+                          assigneeOptions={plannedResult.assigneeOptions}
+                          staticAssigneeNames={staticAssigneeNames}
+                          recommendedUserId={row.recommendedAssignee?.userId ?? ""}
+                          recommendedName={row.recommendedAssignee?.name ?? ""}
+                          noTaskMessage="No active pick task found for this order."
+                        />
                       </tr>
                     ))
                   )}

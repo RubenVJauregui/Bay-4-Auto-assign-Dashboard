@@ -1,3 +1,9 @@
+import type {
+  AssigneeOption,
+  AssignmentRequest,
+  AssignmentResponse,
+} from "@/lib/assignment-types";
+
 const WMS_API_BASE_URL = process.env.WMS_API_BASE_URL || "https://unis.item.com/api";
 const WISE_SERVICE_USERNAME = process.env.WISE_SERVICE_USERNAME || "";
 const WISE_SERVICE_PASSWORD = process.env.WISE_SERVICE_PASSWORD || "";
@@ -60,13 +66,22 @@ function wmsHeaders(token: string) {
   };
 }
 
-async function wmsPost(path: string, body: Record<string, unknown>, token: string) {
+async function wmsRequest(
+  method: "POST" | "PUT",
+  path: string,
+  body: Record<string, unknown>,
+  token: string,
+) {
   const res = await fetch(`${WMS_API_BASE_URL}/${path}`, {
-    method: "POST",
+    method,
     headers: wmsHeaders(token),
     body: JSON.stringify(body),
   });
   return res.json();
+}
+
+async function wmsPost(path: string, body: Record<string, unknown>, token: string) {
+  return wmsRequest("POST", path, body, token);
 }
 
 function formatAppointmentPT(isoDate: string | null): string {
@@ -97,6 +112,7 @@ export interface PlannedOrderRow {
   appointmentTime: string;
   createdTime: string;
   recommendedAssignee: AssigneeRecommendation | null;
+  assignmentTaskId: string;
 }
 
 export interface AssigneeRecommendation {
@@ -131,12 +147,15 @@ export interface InYardEquipmentRow {
   orderIds: string[];
   direction: EquipmentDirection | null;
   recommendedAssignee: AssigneeRecommendation | null;
+  assignmentTaskId: string;
+  assignmentTaskType: EquipmentDirection | null;
 }
 
 export interface InYardEquipmentResult {
   success: boolean;
   error: string;
   rows: InYardEquipmentRow[];
+  assigneeOptions: AssigneeOption[];
 }
 
 export interface PlannedOrdersResult {
@@ -144,6 +163,7 @@ export interface PlannedOrdersResult {
   error: string;
   totalCount: number;
   rows: PlannedOrderRow[];
+  assigneeOptions: AssigneeOption[];
 }
 
 interface HistoricalLeader {
@@ -234,6 +254,27 @@ function collectDisplayNames(tasks: Record<string, unknown>[]): Map<string, stri
   });
 
   return namesByUserId;
+}
+
+function collectAssigneeOptions(
+  tasks: Record<string, unknown>[],
+  namesByUserId: Map<string, string>,
+): AssigneeOption[] {
+  const optionsByUserId = new Map<string, AssigneeOption>();
+
+  tasks.forEach((task) => {
+    const candidates = [
+      [stringValue(task.assigneeUserId), stringValue(task.assigneeUserName)],
+      [stringValue(task.preAssigneeUserId), stringValue(task.preAssigneeUserName)],
+    ];
+
+    candidates.forEach(([userId, taskName]) => {
+      const name = taskName || namesByUserId.get(userId) || "";
+      if (userId && name) optionsByUserId.set(userId, { userId, name });
+    });
+  });
+
+  return Array.from(optionsByUserId.values()).sort((left, right) => left.name.localeCompare(right.name));
 }
 
 function taskAssignment(
@@ -354,6 +395,19 @@ function recommendationForOrder(
   };
 }
 
+function pickTaskIdForOrder(orderId: string, currentTasks: Record<string, unknown>[]): string {
+  const matchingTasks = currentTasks.filter((task) => taskOrderIds(task).includes(orderId));
+  const matchingTask = matchingTasks.find((task) =>
+    Boolean(
+      stringValue(task.assigneeUserId)
+      || stringValue(task.assigneeUserName)
+      || stringValue(task.preAssigneeUserId)
+      || stringValue(task.preAssigneeUserName),
+    ),
+  ) ?? matchingTasks[0];
+  return matchingTask ? stringValue(matchingTask.id) : "";
+}
+
 function equipmentDirection(equipment: Record<string, unknown>): EquipmentDirection | null {
   const operationStatus = stringValue(equipment.equipmentOperationStatus).toLocaleUpperCase();
   const receiptIds = uniqueValues(
@@ -390,6 +444,24 @@ function taskMatchesEquipment(
   if (taskIds.some((taskId) => equipmentIds.includes(taskId))) return true;
 
   return direction === "load" && taskOrderIds(task).some((orderId) => equipment.orderIds.includes(orderId));
+}
+
+function linkedEquipmentTask(
+  equipment: InYardEquipmentRow,
+  currentLoadTasks: Record<string, unknown>[],
+  currentReceiveTasks: Record<string, unknown>[],
+): { taskId: string; taskType: EquipmentDirection } | null {
+  if (!equipment.direction) return null;
+  const tasks = equipment.direction === "load" ? currentLoadTasks : currentReceiveTasks;
+  const matchingTasks = tasks.filter((task) => taskMatchesEquipment(task, equipment, equipment.direction as EquipmentDirection));
+  const matchingTask = matchingTasks.find((task) => {
+    const hasCurrentAssignment = Boolean(stringValue(task.assigneeUserId) || stringValue(task.assigneeUserName));
+    const hasReceivePreAssignment = equipment.direction === "receive"
+      && Boolean(stringValue(task.preAssigneeUserId) || stringValue(task.preAssigneeUserName));
+    return hasCurrentAssignment || hasReceivePreAssignment;
+  }) ?? matchingTasks[0];
+  const taskId = matchingTask ? stringValue(matchingTask.id) : "";
+  return taskId ? { taskId, taskType: equipment.direction } : null;
 }
 
 function currentAssignee(
@@ -493,7 +565,7 @@ async function taskSearchRows(
 }
 
 export async function loadInYardFullEquipment(): Promise<InYardEquipmentResult> {
-  const result: InYardEquipmentResult = { success: false, error: "", rows: [] };
+  const result: InYardEquipmentResult = { success: false, error: "", rows: [], assigneeOptions: [] };
   const token = await getAccessToken();
   if (!token) {
     result.error = "Unable to authenticate with WISE";
@@ -541,6 +613,8 @@ export async function loadInYardFullEquipment(): Promise<InYardEquipmentResult> 
           orderIds: uniqueValues(stringArray(equipment.orderIds), [stringValue(equipment.orderId)]),
           direction: equipmentDirection(equipment),
           recommendedAssignee: null,
+          assignmentTaskId: "",
+          assignmentTaskType: null,
         });
       });
 
@@ -596,17 +670,28 @@ export async function loadInYardFullEquipment(): Promise<InYardEquipmentResult> 
     ]);
     const loadHistoryLeader = historicalLeader(historicalLoadTasks, namesByUserId);
     const receiveHistoryLeader = historicalLeader(historicalReceiveTasks, namesByUserId);
-    result.rows = result.rows.map((row) => ({
-      ...row,
-      recommendedAssignee: recommendationForEquipment(
-        row,
-        currentLoadTasks,
-        currentReceiveTasks,
-        namesByUserId,
-        loadHistoryLeader,
-        receiveHistoryLeader,
-      ),
-    }));
+    result.assigneeOptions = collectAssigneeOptions([
+      ...currentLoadTasks,
+      ...currentReceiveTasks,
+      ...historicalLoadTasks,
+      ...historicalReceiveTasks,
+    ], namesByUserId);
+    result.rows = result.rows.map((row) => {
+      const linkedTask = linkedEquipmentTask(row, currentLoadTasks, currentReceiveTasks);
+      return {
+        ...row,
+        recommendedAssignee: recommendationForEquipment(
+          row,
+          currentLoadTasks,
+          currentReceiveTasks,
+          namesByUserId,
+          loadHistoryLeader,
+          receiveHistoryLeader,
+        ),
+        assignmentTaskId: linkedTask?.taskId ?? "",
+        assignmentTaskType: linkedTask?.taskType ?? null,
+      };
+    });
     result.success = true;
   } catch (err: unknown) {
     result.error = err instanceof Error ? err.message : "Failed to fetch in-yard equipment";
@@ -616,7 +701,13 @@ export async function loadInYardFullEquipment(): Promise<InYardEquipmentResult> 
 }
 
 export async function loadPlannedOrders(): Promise<PlannedOrdersResult> {
-  const result: PlannedOrdersResult = { success: false, error: "", totalCount: 0, rows: [] };
+  const result: PlannedOrdersResult = {
+    success: false,
+    error: "",
+    totalCount: 0,
+    rows: [],
+    assigneeOptions: [],
+  };
 
   const token = await getAccessToken();
   if (!token) {
@@ -650,6 +741,7 @@ export async function loadPlannedOrders(): Promise<PlannedOrdersResult> {
         appointmentTime: formatAppointmentPT(String(o.appointmentTime || o.scheduleDate || o.createdTime || "")),
         createdTime: String(o.createdTime || ""),
         recommendedAssignee: null,
+        assignmentTaskId: "",
       }));
 
       const orderIds = result.rows.map((order) => order.id).filter(Boolean);
@@ -681,6 +773,7 @@ export async function loadPlannedOrders(): Promise<PlannedOrdersResult> {
         const historicalTasks = historicalTaskResponse ? responseRows(historicalTaskResponse) : [];
         const namesByUserId = collectDisplayNames([...currentTasks, ...historicalTasks]);
         const historicalEvidence = buildHistoricalEvidence(historicalTasks, namesByUserId);
+        result.assigneeOptions = collectAssigneeOptions([...currentTasks, ...historicalTasks], namesByUserId);
 
         result.rows = result.rows.map((order) => ({
           ...order,
@@ -690,6 +783,7 @@ export async function loadPlannedOrders(): Promise<PlannedOrdersResult> {
             namesByUserId,
             historicalEvidence,
           ),
+          assignmentTaskId: pickTaskIdForOrder(order.id, currentTasks),
         }));
       }
 
@@ -702,4 +796,53 @@ export async function loadPlannedOrders(): Promise<PlannedOrdersResult> {
   }
 
   return result;
+}
+
+export async function assignWmsTask(request: AssignmentRequest): Promise<AssignmentResponse> {
+  const taskId = stringValue(request.taskId);
+  const assigneeUserId = stringValue(request.assigneeUserId);
+  if (!taskId || !assigneeUserId) {
+    return { success: false, message: "Select an available assignee and try again." };
+  }
+
+  const token = await getAccessToken();
+  if (!token) {
+    return { success: false, message: "Warehouse assignment service is unavailable." };
+  }
+
+  try {
+    let response: Record<string, unknown>;
+    if (request.taskType === "pick") {
+      response = await wmsRequest("POST", "wms/outbound/pick-task/batch-assignment", {
+        taskIds: [taskId],
+        assigneeUserId,
+        includesTaskSteps: true,
+      }, token);
+    } else if (request.taskType === "load") {
+      response = await wmsRequest("POST", `wms/outbound/load-task/${encodeURIComponent(taskId)}`, {
+        id: taskId,
+        assigneeUserId,
+      }, token);
+    } else {
+      response = await wmsRequest("PUT", "wms/inbound/receive-task", {
+        id: taskId,
+        assigneeUserId,
+        applyAssigneeToAllTaskSteps: true,
+      }, token);
+    }
+
+    if (isSuccessfulResponse(response)) {
+      return { success: true, message: "Assignment saved." };
+    }
+
+    console.error("WMS assignment rejected", {
+      taskType: request.taskType,
+      code: response.code,
+      message: response.msg,
+    });
+    return { success: false, message: "Assignment could not be completed. Refresh and try again." };
+  } catch (err: unknown) {
+    console.error("WMS assignment error", err instanceof Error ? err.message : err);
+    return { success: false, message: "Assignment could not be completed. Refresh and try again." };
+  }
 }
