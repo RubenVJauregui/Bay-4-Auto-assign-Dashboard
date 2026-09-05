@@ -2,40 +2,47 @@
  * Bay 4 Assignments — Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50–DOCK72
  *
- * TASK DATA: Refreshed 2026-09-05 ~8:42a PT (live WMS APIs)
+ * TASK DATA: Refreshed 2026-09-05 ~2:23p PT (live WMS APIs)
  *   Sources:
  *     - /wms-bam/wms-location/search — exactlyNames for all 23 doors
  *       (fresh dockStatus, spaceStatus, occupiedCustomerIds per door)
  *     - /wms-bam/outbound/load-task/search-by-paging — NEW/IN_PROGRESS/EXCEPTION
- *       GURUNANDA load tasks (facility-wide; 6 at Bay 4 doors)
+ *       GURUNANDA load tasks (facility-wide 13; 6 at Bay 4 doors)
  *     - /wms-bam/inbound/receive-task/search-by-paging — NEW/IN_PROGRESS/EXCEPTION
- *       GURUNANDA receive tasks (facility-wide; 2 at Bay 4 doors)
+ *       GURUNANDA receive tasks (facility-wide 11; 2 at Bay 4 doors)
  *     - /wms-bam/yard/equipment/search — FULL TRAILERS for GURUNANDA only
+ *       (full-scope live result: 39 FULL trailers for ORG-655875)
  *     - /wms-bam/outbound/order/search-by-paging — GURUNANDA orders,
  *       scheduleDate = 2026-09-05 (0 scheduled — Saturday, no outbound dock schedule)
  *     - /wms-bam/inbound/receipt/search-by-paging — GURUNANDA receipts,
  *       appointmentTime = 2026-09-05 (1 scheduled: RN-5010097 IMPORTED 02:00a PT)
  *
- *   Key changes from prior refresh (9/4 ~2:31p PT → 9/5 ~8:42a PT):
- *     - Active Bay 4 GURUNANDA tasks: 11 → 8 (6 LOAD + 2 RECEIVE) on 5 doors
- *       (DOCK50, DOCK51, DOCK53, DOCK54, DOCK67). DOCK57/58/60/63 LOAD & RECEIVE
- *       tasks from 9/4 closed overnight (their loaded trailers now staged in yard).
- *     - Bay 4 doors occupied: 19/23 → 23/23. DOCK62/65/67/68 (the four previously
- *       available doors) all now report dock or space occupancy (updated ~00:10-00:14 PT).
- *       No door is fully free (dock AVAILABLE + space EMPTY) at this pull.
+ *   Key changes from prior refresh (9/5 ~8:42a PT → 9/5 ~2:23p PT):
+ *     - Bay 4 GURUNANDA active tasks UNCHANGED: 8 (6 LOAD + 2 RECEIVE) on 5 doors
+ *       (DOCK50, DOCK51, DOCK53, DOCK54, DOCK67). Same assignees, same statuses;
+ *       elapsed durations grew ~5.4h (quiet Saturday midday). Arnulfo still holds
+ *       5 live-out LOAD tasks; no task closed or was assigned since 8:42a.
+ *     - Bay 4 doors occupied: 23/23 — UNCHANGED. dockStatus/spaceStatus and door
+ *       entry tickets are identical to the 8:42a pull (location rows last updated
+ *       9/4 16:xx – 9/5 00:14 PT; no Bay-4 dock/space movement since midnight).
+ *     - In-yard FULL GURUNANDA trailers (full-scope live pull): 39 — the 13 staged
+ *       9/4 (shown at 8:42a) remain FULL and are still listed; the live search also
+ *       returns 26 longer-staged FULL trailers (gate check-ins 8/7–9/3; loads closed
+ *       SHIPPED 8/27–9/3; several with FORCE_CLOSED shuttle/internal-move exceptions,
+ *       parked at DOCK67/DOCK68/DOCK52/DOCK70/DOCK2 per equipment records). All 26
+ *       were already FULL before the 8:42a pull, so the 13 → 39 increase reflects
+ *       full-scope capture of the same source, not new activity: 0 GURUNANDA gate
+ *       check-ins on 9/5 (none since 9/4 14:56 PT) and no new FULL trailers since
+ *       8:42a. Recommend physical yard verification for units in yard > 2 days.
  *     - "Guru live out": 5 GURUNANDA LOAD tasks on ARNULFO MUNGUIA
  *       (DOCK50 TASK-5360206 since 9/3 3:58p PT; DOCK51 TASK-5359541 since 9/3 10:28a PT;
- *        DOCK53 TASK-5361270 since 9/4 4:18p PT — NEW since last refresh, trlr 53400CT;
- *        DOCK54 TASK-5360934 since 9/4 1:17p PT; DOCK54 TASK-5338695 STALE — load SHIPPED 8/10)
+ *        DOCK53 TASK-5361270 since 9/4 4:18p PT — trlr 53400CT, 5 loads: 1 LOADED + 4 LOADING;
+ *        DOCK54 TASK-5360934 since 9/4 1:17p PT — trlr 53602, 8 loads LOADED;
+ *        DOCK54 TASK-5338695 STALE — load SHIPPED 8/10)
  *     - "Guru live in": NO active RECEIVE task for Arnulfo at Bay 4. Bay-4 receives are
- *       RUFINO MUNGUIA (DOCK53 NEW — RN-191921 ctn 53722, queued, container not at dock),
- *       daira gonzalez (DOCK50 STALE ~10.5 months).
- *     - Closed since 9/4 2:31p: LOAD TASK-5361104 (DOCK57), TASK-5361093 (DOCK58),
- *       TASK-5361043 (DOCK60); RECEIVE TASK-5360958 (DOCK63). Their trailers 715569,
- *       155477 etc. are FULL_AFTER_LOADED in the yard (Section 1).
- *     - In-yard FULL GURUNANDA trailers: 2 → 13 (loaded outbound trailers staged
- *       overnight awaiting dispatch; TRAILER-only display, containers excluded).
- *     - Planned GURUNANDA orders: all-time PLANNED 152; scheduleDate 9/5 PLANNED 0.
+ *       RUFINO MUNGUIA (DOCK53 NEW — RN-191921 ctn 53722 IMPORTED, queued, container not at dock),
+ *       daira gonzalez (DOCK50 STALE ~10.5 months — RN-5002143 closed 10/22/25, task never closed).
+ *     - Planned GURUNANDA orders: all-time PLANNED 152 (unchanged); scheduleDate 9/5 PLANNED 0.
  *     - % scheduled outbounds loaded (9/5): none scheduled (scheduleDate 9/5 = 0 orders).
  *     - % scheduled inbounds received (9/5): 0 CLOSED of 1 scheduled (RN-5010097) = 0.0%.
  *
@@ -94,18 +101,25 @@ export interface InYardEquipmentRecord {
 export const TOTAL_DOORS = 23;
 
 // ─── Section 1 — In-Yard FULL Equipment (TRAILER-only display) ───
-// Fresh from /wms-bam/yard/equipment/search (Sep 5 2026 ~8:42a PT).
+// Fresh from /wms-bam/yard/equipment/search (Sep 5 2026 ~2:23p PT).
 // Filtered to equipmentType=TRAILER, equipmentStatus=FULL, customer ORG-655875.
-// RESULT: 13 FULL GURUNANDA trailers (all FULL_AFTER_LOADED — loaded outbound
-// trailers staged in yard awaiting dispatch, many from 9/4 evening close-outs).
-// Containers excluded (TRAILER-only display). LE0986's EMPTY inbound row
-// (ET-1149038) is excluded; only its FULL loaded row is listed.
+// RESULT: 39 FULL GURUNANDA trailers (full-scope live result, newest gate check-in
+// first). 13 were staged on 9/4 (loaded outbound close-outs — the set shown in the
+// 8:42a refresh; still FULL, in-yard now +~5.4h). The remaining 26 are longer-staged
+// FULL trailers (gate check-ins 8/7–9/3; loads closed SHIPPED 8/27–9/3) returned by
+// the same search — several carry FORCE_CLOSED shuttle/internal-move exceptions
+// (53166@DOCK67, 53782@DOCK68, 53734@DOCK52, 53211@DOCK70 UNKNOWN op, 53280,
+// 53401CT 28d, etc.) and should be verified physically. 53176/53737/53694 are
+// FULL_TO_OFFLOAD (inbound-loaded staging), 53211 has UNKNOWN operation status.
+// Containers/VEHICLEs/CHASSIS excluded (TRAILER-only display). No GURUNANDA gate
+// check-ins on 9/5 — zero new FULL trailers since the 8:42a pull.
 export const inYardFullEquipment: InYardEquipmentRecord[] = [
+  // ── Staged 2026-09-04 (loaded outbound close-outs; shown in prior refresh) — 13 ──
   {
     equipmentNo: "488598",
     entryTicket: "ET-1149209",
     checkInPdt: "09/04/2026, 02:56 PM",
-    timeInYard: "0 Days 17 Hours 46 Minutes",
+    timeInYard: "0 Days 23 Hours 26 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -113,7 +127,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "715569",
     entryTicket: "ET-1149152",
     checkInPdt: "09/04/2026, 02:01 PM",
-    timeInYard: "0 Days 18 Hours 41 Minutes",
+    timeInYard: "1 Days 0 Hours 21 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -121,7 +135,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "155477",
     entryTicket: "ET-1149128",
     checkInPdt: "09/04/2026, 01:32 PM",
-    timeInYard: "0 Days 19 Hours 11 Minutes",
+    timeInYard: "1 Days 0 Hours 51 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -129,7 +143,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "LE0986",
     entryTicket: "ET-1149072",
     checkInPdt: "09/04/2026, 12:35 PM",
-    timeInYard: "0 Days 20 Hours 7 Minutes",
+    timeInYard: "1 Days 1 Hours 47 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -137,7 +151,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "2504",
     entryTicket: "ET-1149057",
     checkInPdt: "09/04/2026, 12:23 PM",
-    timeInYard: "0 Days 20 Hours 19 Minutes",
+    timeInYard: "1 Days 2 Hours 0 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -145,7 +159,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "5380",
     entryTicket: "ET-1149041",
     checkInPdt: "09/04/2026, 12:03 PM",
-    timeInYard: "0 Days 20 Hours 39 Minutes",
+    timeInYard: "1 Days 2 Hours 19 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -153,7 +167,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "U5376",
     entryTicket: "ET-1149040",
     checkInPdt: "09/04/2026, 12:02 PM",
-    timeInYard: "0 Days 20 Hours 41 Minutes",
+    timeInYard: "1 Days 2 Hours 21 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -161,7 +175,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "5381",
     entryTicket: "ET-1148982",
     checkInPdt: "09/04/2026, 11:07 AM",
-    timeInYard: "0 Days 21 Hours 36 Minutes",
+    timeInYard: "1 Days 3 Hours 16 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -169,7 +183,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "W84599",
     entryTicket: "ET-1148952",
     checkInPdt: "09/04/2026, 10:33 AM",
-    timeInYard: "0 Days 22 Hours 10 Minutes",
+    timeInYard: "1 Days 3 Hours 50 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -177,7 +191,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "175068",
     entryTicket: "ET-1148904",
     checkInPdt: "09/04/2026, 09:57 AM",
-    timeInYard: "0 Days 22 Hours 45 Minutes",
+    timeInYard: "1 Days 4 Hours 25 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -185,7 +199,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "166167",
     entryTicket: "ET-1148898",
     checkInPdt: "09/04/2026, 09:48 AM",
-    timeInYard: "0 Days 22 Hours 55 Minutes",
+    timeInYard: "1 Days 4 Hours 35 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -193,7 +207,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "6523",
     entryTicket: "ET-1148862",
     checkInPdt: "09/04/2026, 09:21 AM",
-    timeInYard: "0 Days 23 Hours 22 Minutes",
+    timeInYard: "1 Days 5 Hours 2 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
   },
@@ -201,17 +215,228 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [
     equipmentNo: "516579",
     entryTicket: "ET-1148852",
     checkInPdt: "09/04/2026, 09:10 AM",
-    timeInYard: "0 Days 23 Hours 32 Minutes",
+    timeInYard: "1 Days 5 Hours 12 Minutes",
     customer: "GURUNANDA, LLC",
     equipmentType: "TRAILER",
+  },
+
+  // ── Longer-staged FULL trailers (gate check-ins 9/3–9/1) — returned by full-scope search ──
+  {
+    equipmentNo: "480060",
+    entryTicket: "ET-1148472",
+    checkInPdt: "09/03/2026, 03:43 PM",
+    timeInYard: "1 Days 22 Hours 40 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "X6652",
+    entryTicket: "ET-1148418",
+    checkInPdt: "09/03/2026, 02:18 PM",
+    timeInYard: "2 Days 0 Hours 5 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "1957",
+    entryTicket: "ET-1148385",
+    checkInPdt: "09/03/2026, 01:22 PM",
+    timeInYard: "2 Days 1 Hours 0 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "292",
+    entryTicket: "ET-1148362",
+    checkInPdt: "09/03/2026, 12:48 PM",
+    timeInYard: "2 Days 1 Hours 34 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "HV2700123",
+    entryTicket: "ET-1148282",
+    checkInPdt: "09/03/2026, 11:24 AM",
+    timeInYard: "2 Days 2 Hours 58 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "200391",
+    entryTicket: "ET-1148265",
+    checkInPdt: "09/03/2026, 10:51 AM",
+    timeInYard: "2 Days 3 Hours 32 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "172440",
+    entryTicket: "ET-1148238",
+    checkInPdt: "09/03/2026, 10:25 AM",
+    timeInYard: "2 Days 3 Hours 57 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "53176",
+    entryTicket: "ET-1147997",
+    checkInPdt: "09/03/2026, 12:22 AM",
+    timeInYard: "2 Days 14 Hours 0 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER", // FULL_TO_OFFLOAD (inbound-loaded staging)
+  },
+  {
+    equipmentNo: "53782",
+    entryTicket: "ET-1147936",
+    checkInPdt: "09/02/2026, 09:05 PM",
+    timeInYard: "2 Days 17 Hours 18 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER", // parked at DOCK68 per equipment record (shuttle FORCE_CLOSED)
+  },
+  {
+    equipmentNo: "53737",
+    entryTicket: "ET-1147909",
+    checkInPdt: "09/02/2026, 07:52 PM",
+    timeInYard: "2 Days 18 Hours 30 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER", // FULL_TO_OFFLOAD (inbound-loaded staging); shuttle NEW
+  },
+  {
+    equipmentNo: "53477",
+    entryTicket: "ET-1147815",
+    checkInPdt: "09/02/2026, 03:46 PM",
+    timeInYard: "2 Days 22 Hours 37 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "LE2209",
+    entryTicket: "ET-1147805",
+    checkInPdt: "09/02/2026, 03:34 PM",
+    timeInYard: "2 Days 22 Hours 48 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "HGIU646662",
+    entryTicket: "ET-1147714",
+    checkInPdt: "09/02/2026, 01:47 PM",
+    timeInYard: "3 Days 0 Hours 35 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "V571096",
+    entryTicket: "ET-1147700",
+    checkInPdt: "09/02/2026, 01:14 PM",
+    timeInYard: "3 Days 1 Hours 9 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "XPOU422077",
+    entryTicket: "ET-1147673",
+    checkInPdt: "09/02/2026, 12:47 PM",
+    timeInYard: "3 Days 1 Hours 35 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "233235",
+    entryTicket: "ET-1147445",
+    checkInPdt: "09/02/2026, 09:04 AM",
+    timeInYard: "3 Days 5 Hours 19 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "PTLZ262272",
+    entryTicket: "ET-1147424",
+    checkInPdt: "09/02/2026, 08:40 AM",
+    timeInYard: "3 Days 5 Hours 43 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "U43361",
+    entryTicket: "ET-1147387",
+    checkInPdt: "09/02/2026, 08:11 AM",
+    timeInYard: "3 Days 6 Hours 12 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "53694",
+    entryTicket: "ET-1147273",
+    checkInPdt: "09/02/2026, 01:35 AM",
+    timeInYard: "3 Days 12 Hours 48 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER", // FULL_TO_OFFLOAD (inbound-loaded staging)
+  },
+  {
+    equipmentNo: "53232",
+    entryTicket: "ET-1147268",
+    checkInPdt: "09/02/2026, 01:32 AM",
+    timeInYard: "3 Days 12 Hours 51 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "53166",
+    entryTicket: "ET-1147168",
+    checkInPdt: "09/01/2026, 09:03 PM",
+    timeInYard: "3 Days 17 Hours 19 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER", // parked at DOCK67 per equipment record (shuttle FORCE_CLOSED)
+  },
+  {
+    equipmentNo: "53734",
+    entryTicket: "ET-1144811",
+    checkInPdt: "08/27/2026, 08:59 PM",
+    timeInYard: "8 Days 17 Hours 24 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER", // parked at DOCK52 per equipment record (shuttle FORCE_CLOSED)
+  },
+  {
+    equipmentNo: "5301",
+    entryTicket: "ET-1144539",
+    checkInPdt: "08/27/2026, 12:53 PM",
+    timeInYard: "9 Days 1 Hours 30 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER", // parked at DOCK2 per equipment record
+  },
+  {
+    equipmentNo: "53211",
+    entryTicket: "ET-1143488",
+    checkInPdt: "08/26/2026, 12:50 AM",
+    timeInYard: "10 Days 13 Hours 33 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER", // op status UNKNOWN; parked at DOCK70 per equipment record
+  },
+  {
+    equipmentNo: "53280",
+    entryTicket: "ET-1141880",
+    checkInPdt: "08/21/2026, 04:51 PM",
+    timeInYard: "14 Days 21 Hours 32 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER",
+  },
+  {
+    equipmentNo: "53401CT",
+    entryTicket: "ET-1135113",
+    checkInPdt: "08/07/2026, 08:08 PM",
+    timeInYard: "28 Days 18 Hours 14 Minutes",
+    customer: "GURUNANDA, LLC",
+    equipmentType: "TRAILER", // oldest FULL unit; verify physically (last loads SHIPPED 9/2)
   },
 ];
 
 // Planned Orders context: WMS outbound orders for GURUNANDA (ORG-655875).
-// All-time PLANNED: 152 (live totalCount at 9/5 ~8:42a PT). Today's (2026-09-05)
-// scheduleDate PLANNED: 0 (Saturday — no outbound orders scheduled on 9/5).
-// Fallback value used when the live loader is unavailable.
-export const plannedGurunandaOrderCount = 0;
+// All-time PLANNED: 152 (live totalCount at 9/5 ~2:23p PT — unchanged from 8:42a).
+// Today's (2026-09-05) scheduleDate PLANNED: 0 (Saturday — no outbound orders
+// scheduled on 9/5). plannedGurunandaOrderCount = all-time PLANNED totalCount
+// (fallback mirroring the live loader's status=PLANNED query semantics).
+export const plannedGurunandaOrderCount = 152;
 
 // ─── Graza Dispatch Types (preserved for GrazaDispatchSummary component) ───
 export interface GrazaDispatchRun {
@@ -279,7 +504,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA / daira gonzalez",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5360206", "TASK-5090739"],
-    duration: "LOAD ~40.7h since 9/3 3:58p PT · RECEIVE STALE ~10.5mo",
+    duration: "LOAD ~46.4h since 9/3 3:58p PT · RECEIVE STALE ~10.5mo",
     anomaly: true, // TASK-5090739 (RECEIVE) started Oct 21 2025 — RN-5002143 closed 10/22/25, task never closed
   },
   {
@@ -288,7 +513,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5359541"],
-    duration: "~46.2h since 9/3 10:28a PT (load LOADED, task open)",
+    duration: "~51.9h since 9/3 10:28a PT (load LOADED, task open)",
     anomaly: false,
   },
   {
@@ -297,7 +522,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA (LOAD) / RUFINO MUNGUIA (RECEIVE queued)",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5361270", "TASK-5360939"],
-    duration: "LOAD ~16.4h since 9/4 4:18p PT (trlr 53400CT) · RECEIVE RN-191921 ctn 53722 queued, not at dock",
+    duration: "LOAD ~22.1h since 9/4 4:18p PT (trlr 53400CT, 5 loads) · RECEIVE RN-191921 ctn 53722 queued, not at dock",
     anomaly: false,
   },
   {
@@ -306,7 +531,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5360934", "TASK-5338695"],
-    duration: "LOAD ~19.4h since 9/4 1:17p PT · TASK-5338695 STALE ~26d (load SHIPPED 8/10)",
+    duration: "LOAD ~25.1h since 9/4 1:17p PT (trlr 53602, 8 loads LOADED) · TASK-5338695 STALE ~26d (load SHIPPED 8/10)",
     anomaly: true, // TASK-5338695 ended Aug 10 (load SHIPPED) but status never closed
   },
   {
@@ -315,7 +540,7 @@ export const doors: DoorRecord[] = [
     assignee: "JEROME ARANDA",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5359531"],
-    duration: "LOAD NEW (appt 9/8 9:00a) · truck not on dock; dock holds other equipment",
+    duration: "LOAD NEW (appt 9/8 9:00a) · truck not on dock; dock occupied by staged equipment (FULL trlr 53166 per yard)",
     anomaly: false,
   },
 
@@ -337,7 +562,7 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock free, loaded trailer 715569 staged at space (ET-1149152)",
+    duration: "No active task · dock free, FULL trailer 715569 staged at space (ET-1149152)",
     anomaly: false,
   },
   {
@@ -404,7 +629,7 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock and space occupied (devan ET-1149038 9/4; space staging)",
+    duration: "No active task · dock and space occupied (devan ET-1149038 9/4; FULL trlr 53734 staged per yard)",
     anomaly: false,
   },
   {
@@ -458,7 +683,7 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock occupied, space empty (was Available 9/4 2:31p PT)",
+    duration: "No active task · dock occupied, space empty (FULL trlr 53782 staged at dock per yard)",
     anomaly: false,
   },
   {
@@ -476,7 +701,7 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock occupied, space empty",
+    duration: "No active task · dock occupied, space empty (staged equipment per yard)",
     anomaly: false,
   },
   {
@@ -528,7 +753,7 @@ export const kpiMetrics: KpiMetric[] = [
 
 // Bay 4 active task counts by assignee
 // Source: /wms-bam/outbound/load-task/search-by-paging + /wms-bam/inbound/receive-task/search-by-paging
-// (Sep 5 2026 ~8:42a PT). 8 active-status tasks at Bay 4 doors: 6 LOAD + 2 RECEIVE.
+// (Sep 5 2026 ~2:23p PT). 8 active-status tasks at Bay 4 doors: 6 LOAD + 2 RECEIVE.
 // ARNULFO MUNGUIA: 5 LOAD (DOCK50, DOCK51, DOCK53, DOCK54 x2 — incl. stale TASK-5338695)
 // JEROME ARANDA: 1 LOAD (DOCK67 NEW, appt 9/8 — truck not on dock)
 // RUFINO MUNGUIA: 1 RECEIVE (DOCK53 NEW, queued — RN-191921 ctn 53722)
@@ -566,7 +791,7 @@ export const activeInboundOutboundMix: MixMetric[] = [
 
 // ─── Schedule Data (2026-09-05, Saturday) ───
 // % scheduled inbounds received TODAY: 0 CLOSED of 1 scheduled (appointmentTime = 9/5) = 0.0%
-//   (1 scheduled: RN-5010097 IMPORTED appt 02:00a PT — not yet received)
+//   (1 scheduled: RN-5010097 IMPORTED appt 02:00a PT, ctn EMCU8832724 — not yet received)
 // % scheduled outbounds loaded TODAY: 0 SHIPPED of 0 scheduled (scheduleDate = 9/5) = no
 //   outbound orders scheduled for Saturday 9/5
 // All-time PLANNED (GURUNANDA): 152
@@ -587,7 +812,7 @@ export const facilityWideLoadsShipped = 0;
 // Door occupancy duration: available from task startTime and space updatedTime
 export const doorDurationsAvailable = true;
 
-// All Bay 4 active task records (DOCK50-DOCK72, Sep 5 2026 ~8:42a PT)
+// All Bay 4 active task records (DOCK50-DOCK72, Sep 5 2026 ~2:23p PT)
 // 8 tasks total: 6 LOAD + 2 RECEIVE
 // All GURUNANDA, LLC. Two are stale-anomaly tasks (TASK-5338695, TASK-5090739).
 export const assignments: TaskRecord[] = [
@@ -596,7 +821,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5360206",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · ~40.7h since 9/3 3:58p PT",
+    pieces: "IN_PROGRESS · ~46.4h since 9/3 3:58p PT (trlr 53397)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK50",
   },
@@ -604,7 +829,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5359541",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · ~46.2h since 9/3 10:28a PT (load LOADED, task open)",
+    pieces: "IN_PROGRESS · ~51.9h since 9/3 10:28a PT (load LOADED, task open)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK51",
   },
@@ -612,7 +837,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5361270",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · ~16.4h since 9/4 4:18p PT (trlr 53400CT, 5 loads)",
+    pieces: "IN_PROGRESS · ~22.1h since 9/4 4:18p PT (trlr 53400CT, 5 loads: 1 LOADED + 4 LOADING)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK53",
   },
@@ -620,7 +845,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5360934",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · ~19.4h since 9/4 1:17p PT (8 loads)",
+    pieces: "IN_PROGRESS · ~25.1h since 9/4 1:17p PT (trlr 53602, 8 loads LOADED)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK54",
   },
@@ -646,7 +871,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5360939",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "NEW since 9/4 12:34p PT · RN-191921, ctn 53722 (queued)",
+    pieces: "NEW since 9/4 12:34p PT · RN-191921, ctn 53722 (queued, container not at dock)",
     assignee: "RUFINO MUNGUIA",
     door: "DOCK53",
   },
