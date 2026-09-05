@@ -107,32 +107,6 @@ export interface InYardEquipmentRecord {
 export const TOTAL_DOORS = 23;
 
 // ─── Section 1 — In-Yard FULL Equipment (TRAILER-only display) ───
-// Fresh from /wms-bam/yard/equipment/search (Sep 5 2026 ~2:23p PT).
-// Filtered to equipmentType=TRAILER, equipmentStatus=FULL, customer ORG-655875.
-// RESULT: 39 FULL GURUNANDA trailers (full-scope live result, newest gate check-in
-// first). 13 were staged on 9/4 (loaded outbound close-outs — the set shown in the
-// 8:42a refresh; still FULL, in-yard now +~5.4h). The remaining 26 are longer-staged
-// FULL trailers (gate check-ins 8/7–9/3; loads closed SHIPPED 8/27–9/3) returned by
-// the same search — several carry FORCE_CLOSED shuttle/internal-move exceptions
-// (53166@DOCK67, 53782@DOCK68, 53734@DOCK52, 53211@DOCK70 UNKNOWN op, 53280,
-// 53401CT 28d, etc.) and should be verified physically. 53176/53737/53694 are
-// FULL_TO_OFFLOAD (inbound-loaded staging), 53211 has UNKNOWN operation status.
-// Containers/VEHICLEs/CHASSIS excluded (TRAILER-only display). No GURUNANDA gate
-// check-ins on 9/5 — zero new FULL trailers since the 8:42a pull.
-// ─── Section 1 — In-Yard FULL Equipment (TRAILER-only display) ───
-// Fresh from /wms-bam/yard/equipment/search (Sep 5 2026 ~3:57p PT).
-// Filtered to equipmentType=TRAILER, equipmentStatus=FULL, customer ORG-655875.
-// RESULT: 39 FULL GURUNANDA trailers (full-scope live result, newest gate check-in
-// first) — UNCHANGED composition vs the 2:23p pull: same 13 staged on 9/4 (loaded
-// outbound close-outs) plus the same 26 longer-staged FULL trailers (gate check-ins
-// 8/7–9/3; loads closed SHIPPED 8/27–9/3). Several carry FORCE_CLOSED shuttle/
-// internal-move exceptions (53166@DOCK67, 53782@DOCK68, 53734@DOCK52,
-// 53211@DOCK70 UNKNOWN op, 53280, 53401CT 29d, etc.) and should be verified
-// physically. 53176/53737/53694 are FULL_TO_OFFLOAD (inbound-loaded staging),
-// 53211 has UNKNOWN operation status. Containers/VEHICLEs/CHASSIS excluded
-// (TRAILER-only display). 0 GURUNANDA gate check-ins on 9/5 — zero new FULL
-// trailers since the 2:23p pull.
-// ─── Section 1 — In-Yard FULL Equipment (TRAILER-only display) ───
 // Fresh from /wms-bam/yard/equipment/search (Sep 5 2026 ~3:57p PT).
 // Filtered to equipmentType=TRAILER, equipmentStatus=FULL, customer ORG-655875.
 // RESULT: 39 FULL GURUNANDA trailers (full-scope live result, newest gate check-in
@@ -845,12 +819,6 @@ export const facilityWideLoadsShipped = 0;
 // Door occupancy duration: available from task startTime and space updatedTime
 export const doorDurationsAvailable = true;
 
-// All Bay 4 active task records (DOCK50-DOCK72, Sep 5 2026 ~2:23p PT)
-// 8 tasks total: 6 LOAD + 2 RECEIVE
-// All GURUNANDA, LLC. Two are stale-anomaly tasks (TASK-5338695, TASK-5090739).
-// All Bay 4 active task records (DOCK50-DOCK72, Sep 5 2026 ~3:57p PT)
-// 8 tasks total: 6 LOAD + 2 RECEIVE
-// All GURUNANDA, LLC. Two are stale-anomaly tasks (TASK-5338695, TASK-5090739).
 // All Bay 4 active task records (DOCK50-DOCK72, Sep 5 2026 ~3:57p PT)
 // 8 tasks total: 6 LOAD + 2 RECEIVE
 // All GURUNANDA, LLC. Two are stale-anomaly tasks (TASK-5338695, TASK-5090739).
