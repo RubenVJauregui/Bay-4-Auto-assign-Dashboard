@@ -104,7 +104,7 @@ export default function OperationalMetrics({
               —
             </span>
             <span className="text-xs text-[#71717a]">
-              UNAVAILABLE — BAM endpoints returning SQL errors
+              NOT COMPUTABLE — 0 receipts scheduled today (denominator is zero)
             </span>
           </>
         )}
@@ -130,7 +130,7 @@ export default function OperationalMetrics({
               —
             </span>
             <span className="text-xs text-[#71717a]">
-              UNAVAILABLE — BAM endpoints returning SQL errors
+              NOT COMPUTABLE — 0 orders scheduled today (denominator is zero)
             </span>
           </>
         )}
