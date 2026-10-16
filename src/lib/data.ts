@@ -2,41 +2,39 @@
  * Bay 4 Assignments - Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50-DOCK72
  *
- * DATA REFRESHED: 2026-09-26 ~7:56a PT (live WISE / WMS-BAM APIs)
+ * DATA REFRESHED: 2026-10-16 ~3:45p PT (live WISE / WMS-BAM APIs)
  *   Sources:
  *     - /wms-bam/wms-location/search - exactlyNames for all 23 doors
  *       (fresh dockStatus, spaceStatus, occupiedCustomerIds, updatedTime per door)
  *     - /wms-bam/outbound/load-task/search-by-paging - NEW/IN_PROGRESS/EXCEPTION
- *       GURUNANDA load tasks (facility-wide 11; 4 at Bay 4 doors)
+ *       GURUNANDA load tasks (facility-wide 15; 6 at Bay 4 doors)
  *     - /wms-bam/inbound/receive-task/search-by-paging - NEW/IN_PROGRESS/EXCEPTION
- *       GURUNANDA receive tasks (facility-wide 13; 4 at Bay 4 doors)
+ *       GURUNANDA receive tasks (facility-wide 19; 6 at Bay 4 doors)
  *     - /wms-bam/inbound/receipt/search-by-paging - GURUNANDA receipts,
- *       appointmentTime = 2026-09-26 (0 scheduled). Filter verified working:
- *       9/24 = 7, 9/25 = 11, 9/28 = 8 receipts.
+ *       appointmentTimeFrom/To = 2026-10-16 -> 7 scheduled (7 rows returned).
  *     - /wms-bam/outbound/order/search-by-paging - GURUNANDA orders,
- *       scheduleDate = 2026-09-26 -> 0 rows, so the outbound percentage is
- *       NOT COMPUTABLE (filter verified working: 9/25 = 39 orders).
- *   NOTE: /wms-bam/dashboard/dock-door-status/search-by-paging STILL returns
- *   HTTP 500 (re-checked this pull); door state was read from wms-location/search,
- *   the same two status fields the dashboard already uses.
+ *       scheduleDatePeriod = 2026-10-16 -> 109 scheduled (109 rows returned).
+ *   NOTE: /wms-bam/dashboard/dock-door-status/search-by-paging is not used; door
+ *   state is read from wms-location/search (dockStatus + spaceStatus), the same
+ *   two status fields the dashboard already uses.
  *
- *   Key changes from the prior refresh (9/19 ~3:58p PT -> 9/26 ~7:56a PT):
- *     - Bay 4 GURUNANDA active tasks: 8 (4 LOAD + 4 RECEIVE) on 6 doors
- *       (DOCK50, DOCK51, DOCK53, DOCK54, DOCK56, DOCK69).
+ *   Key changes from the prior refresh (9/26 ~7:56a PT -> 10/16 ~3:45p PT):
+ *     - Bay 4 GURUNANDA active tasks: 12 (6 LOAD + 6 RECEIVE) on 8 doors
+ *       (DOCK50, DOCK52, DOCK54, DOCK55, DOCK57, DOCK62, DOCK65, DOCK69).
  *     - Task "Guru live out / in assign to Arnulfo" resolves to ARNULFO MUNGUIA
- *       (userId 89) GURUNANDA Bay-4 load work: TASK-5376774 (DOCK50) and the
- *       stale TASK-5338695 (DOCK54). No WMS record is literally named
- *       "Guru live out / in assign to Arnulfo", and Arnulfo holds no Bay-4
- *       RECEIVE task at this pull. Both of his tasks are PRE_LOAD (not LIVE_LOAD).
- *     - Bay 4 doors occupied: 18/23 (derived) - plus 3 RESERVED (DOCK51, DOCK52,
- *       DOCK65) and 2 available (DOCK59, DOCK64). Raw dockStatus=OCCUPIED = 14/23.
- *     - Stale anomalies STILL OPEN: TASK-5338695 (DOCK54, LOAD ended 8/10/26),
- *       TASK-5090739 (DOCK50, RECEIVE ended 10/22/25) - IN_PROGRESS past end time.
- *     - "% scheduled inbounds received" (9/26): NOT COMPUTABLE - 0 receipts
- *       carry appointmentTime = 2026-09-26 (denominator zero).
- *     - "% scheduled outbounds loaded" (9/26): NOT COMPUTABLE - 0 orders carry
- *       scheduleDate = 2026-09-26 (denominator zero).
- *     - Inbound/outbound mix: 4 RECEIVE / 4 LOAD of 8 active Bay-4 tasks.
+ *       GURUNANDA Bay-4 load work: 3 LOAD tasks at this pull - TASK-5396650
+ *       (DOCK54), TASK-5395520 (DOCK52) and the stale TASK-5338695 (DOCK54).
+ *       No WMS record is literally named "Guru live out / in assign to Arnulfo",
+ *       and Arnulfo holds no Bay-4 RECEIVE task at this pull.
+ *     - Bay 4 doors occupied: 18/23 (derived) - plus 2 RESERVED (DOCK50, DOCK51)
+ *       and 3 available (DOCK63, DOCK67, DOCK70). Raw dockStatus=OCCUPIED = 13/23.
+ *     - Stale anomalies STILL OPEN: TASK-5338695 (DOCK54, LOAD started 8/7/26),
+ *       TASK-5090739 (DOCK50, RECEIVE started 10/21/25) - IN_PROGRESS past end time.
+ *     - "% scheduled inbounds received" (10/16): COMPUTABLE - 1 received of
+ *       7 scheduled = 14.3% (received = receipt has receivedTime / status CLOSED).
+ *     - "% scheduled outbounds loaded" (10/16): COMPUTABLE - 64 loaded of
+ *       109 scheduled = 58.7% (loaded = order status LOADED or SHIPPED).
+ *     - Inbound/outbound mix: 6 RECEIVE / 6 LOAD of 12 active Bay-4 tasks.
  *     - Door occupancy duration is available only where a task with a startTime
  *       sits on the door; WMS has no occupancy-start field for task-less doors,
  *       so none is derived for them.
@@ -46,7 +44,8 @@
  *   (out of scope of the request); they remain the previously carried values.
  *
  * Do NOT fabricate, estimate, or guess any metric.
- */export type DoorStatus = "Occupied" | "Reserved" | "Available";
+ */
+export type DoorStatus = "Occupied" | "Reserved" | "Available";
 
 export interface DoorRecord {
   door: string;
@@ -98,13 +97,13 @@ export interface InYardEquipmentRecord {
 export const TOTAL_DOORS = 23;
 
 // ─── Section 1 — In-Yard FULL Equipment (TRAILER-only display) ───
-// NOT re-pulled in the 9/26 refresh (out of scope of the request). The array is
+// NOT re-pulled in the 10/16 refresh (out of scope of the request). The array is
 // left empty rather than carrying a stale result; Section 1 renders live from the
 // WMS loader, so the dashboard still shows current data.
 export const inYardFullEquipment: InYardEquipmentRecord[] = [];
 
 // Planned Orders context: WMS outbound orders for GURUNANDA (ORG-655875).
-// FALLBACK ONLY - not re-pulled in the 9/26 refresh. Last live totalCount was 209
+// FALLBACK ONLY - not re-pulled in the 10/16 refresh. Last live totalCount was 209
 // at the 9/11 pull. The dashboard shows the live loader count when it succeeds.
 export const plannedGurunandaOrderCount = 209;
 
@@ -166,7 +165,7 @@ export interface GrazaCombinedDispatchData {
 
 
 // =====================================================================
-// DOOR UTILIZATION - DOCK50-DOCK72 (23 doors), live as of 9/26 ~7:56a PT
+// DOOR UTILIZATION - DOCK50-DOCK72 (23 doors), live as of 10/16 ~3:45p PT
 //
 // Door status rule (kept identical to the dashboard's 3-value enum):
 //   Reserved  = dockStatus RESERVED
@@ -177,74 +176,74 @@ export interface GrazaCombinedDispatchData {
 export const doors: DoorRecord[] = [
   {
     door: "DOCK50",
-    status: "Occupied",
-    assignee: "ARNULFO MUNGUIA (LOAD) / daira gonzalez (RECEIVE)",
+    status: "Reserved",
+    assignee: "daira gonzalez (RECEIVE)",
     customer: "GURUNANDA, LLC",
-    taskIds: ["TASK-5376774", "TASK-5090739"],
-    duration: "LOAD ~40.4h since 9/24 3:32p PT (ET-1159768, PRE_LOAD, seal A51840, 2 loads) · RECEIVE STALE since 10/21/25 1:21p PT (ended 10/22/25 10:42a, RN-5002143 CLOSED, task never closed)",
-    anomaly: true, // TASK-5090739 started 10/21/25; receipt closed 10/22/25 but task never closed
+    taskIds: ["TASK-5090739"],
+    duration: "RECEIVE STALE started 10/21/25 1:21p PT, never closed (TASK-5090739, ET-1027622, RN-5002143 CLOSED) · dock RESERVED, space occupied (row updated 10/16 1:01p PT)",
+    anomaly: true, // TASK-5090739 started 10/21/25; receipt closed but task never closed
   },
   {
     door: "DOCK51",
     status: "Reserved",
-    assignee: "DANIEL BELTRAN (LOAD)",
-    customer: "GURUNANDA, LLC",
-    taskIds: ["TASK-5377571"],
-    duration: "LOAD ~20.0h since 9/25 11:55a PT (ET-1160320, PRE_LOAD, 3 loads) · dock RESERVED, space occupied (row updated 9/26 4:45a PT)",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: "No active task · dock RESERVED, space occupied (row updated 10/16 2:36p PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
     door: "DOCK52",
-    status: "Reserved",
-    assignee: null,
-    customer: null,
-    taskIds: [],
-    duration: "No active task · dock RESERVED, space occupied (row updated 9/25 3:18p PT) · no occupancy-start field in WMS",
+    status: "Occupied",
+    assignee: "SEBASTIAN GONZALEZ (LOAD) / ARNULFO MUNGUIA (LOAD)",
+    customer: "GURUNANDA, LLC",
+    taskIds: ["TASK-5395520", "TASK-5396564"],
+    duration: "LOAD ~27.3h since 10/15 12:27p PT (TASK-5395520, ARNULFO MUNGUIA, ET-1170320, 4 loads) · LOAD ~0.9h since 10/16 2:52p PT (TASK-5396564, SEBASTIAN GONZALEZ, ET-1171063, 5 loads)",
     anomaly: false,
   },
   {
     door: "DOCK53",
     status: "Occupied",
-    assignee: "DANIEL BELTRAN (LOAD)",
-    customer: "GURUNANDA, LLC",
-    taskIds: ["TASK-5377822"],
-    duration: "LOAD ~16.8h since 9/25 3:08p PT (ET-1160445, PRE_LOAD, 7 loads)",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: "No active task · dock AVAILABLE, space occupied (row updated 10/16 2:44p PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
     door: "DOCK54",
     status: "Occupied",
-    assignee: "ARNULFO MUNGUIA (LOAD x1 stale) / RUFINO MUNGUIA (RECEIVE)",
+    assignee: "ARNULFO MUNGUIA (LOAD x2 - one STALE)",
     customer: "GURUNANDA, LLC",
-    taskIds: ["TASK-5338695", "TASK-5377435"],
-    duration: "LOAD STALE started 8/7/26 4:29p PT, ended 8/10/26 9:27a, never closed · RECEIVE ~21.8h since 9/25 10:06a PT (RN-192747 IN_PROGRESS)",
-    anomaly: true, // TASK-5338695 ended 8/10/26 but is still IN_PROGRESS
+    taskIds: ["TASK-5338695", "TASK-5396650"],
+    duration: "LOAD STALE started 8/7/26 4:29p PT, never closed (TASK-5338695, ET-1135033, 1 load) · LOAD ~0.5h since 10/16 3:15p PT (TASK-5396650, ET-1171109, 2 loads)",
+    anomaly: true, // TASK-5338695 started 8/7/26 but is still IN_PROGRESS
   },
   {
     door: "DOCK55",
     status: "Occupied",
-    assignee: null,
-    customer: null,
-    taskIds: [],
-    duration: "No active task · dock AVAILABLE, space occupied (row updated 9/25 3:41p PT) · no occupancy-start field in WMS",
+    assignee: "DANIEL BELTRAN (LOAD) / JEROME ARANDA (RECEIVE)",
+    customer: "GURUNANDA, LLC",
+    taskIds: ["TASK-5396432", "TASK-5396612"],
+    duration: "LOAD ~0.9h since 10/16 2:49p PT (TASK-5396612, DANIEL BELTRAN, ET-1171087, 1 load) · RECEIVE ~3.5h since 10/16 12:16p PT (TASK-5396432, JEROME ARANDA, RN-194171 IN_PROGRESS)",
     anomaly: false,
   },
   {
     door: "DOCK56",
     status: "Occupied",
-    assignee: "RUFINO MUNGUIA (RECEIVE)",
-    customer: "GURUNANDA, LLC",
-    taskIds: ["TASK-5377454"],
-    duration: "RECEIVE NEW · created 9/25 (RN-192748 IMPORTED) - task has no startTime, so no duration basis · dock AVAILABLE, space occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: "No active task · dock AVAILABLE, space occupied (row updated 10/16 12:28p PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
     door: "DOCK57",
     status: "Occupied",
-    assignee: null,
-    customer: null,
-    taskIds: [],
-    duration: "No active task · dock and space occupied (row updated 9/25 12:38p PT) · no occupancy-start field in WMS",
+    assignee: "JESUS ESPINOZA (LOAD)",
+    customer: "GURUNANDA, LLC",
+    taskIds: ["TASK-5394996"],
+    duration: "LOAD ~41.1h since 10/14 10:40p PT (TASK-5394996, JESUS ESPINOZA, ET-1169956, 1 load)",
     anomaly: false,
   },
   {
@@ -253,16 +252,16 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock and space occupied (row updated 9/25 8:41p PT) · no occupancy-start field in WMS",
+    duration: "No active task · dock AVAILABLE, space occupied (row updated 10/16 11:56a PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
     door: "DOCK59",
-    status: "Available",
+    status: "Occupied",
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock and space free - available",
+    duration: "No active task · dock occupied, space empty (row updated 10/16 8:54a PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
@@ -271,7 +270,7 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: "GURUNANDA, LLC",
     taskIds: [],
-    duration: "No active task · dock AVAILABLE, space occupied (row updated 9/25 3:08p PT) · occupiedCustomerIds ORG-655875 · no occupancy-start field in WMS",
+    duration: "No active task · dock and space occupied (row updated 10/15 9:00p PT) · occupiedCustomerIds ORG-655875 · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
@@ -280,43 +279,43 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock occupied, space empty (row updated 9/26 12:19a PT) · no occupancy-start field in WMS",
+    duration: "No active task · dock AVAILABLE, space occupied (row updated 10/16 11:16a PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
     door: "DOCK62",
     status: "Occupied",
-    assignee: null,
-    customer: null,
-    taskIds: [],
-    duration: "No active task · dock AVAILABLE, space occupied (row updated 9/24 12:45p PT) · no occupancy-start field in WMS",
+    assignee: "JORGE ARMANDO DUENAS (RECEIVE)",
+    customer: "GURUNANDA, LLC",
+    taskIds: ["TASK-5393820"],
+    duration: "RECEIVE ~71.7h since 10/13 4:01p PT (TASK-5393820, JORGE ARMANDO DUENAS, RN-5010896 IN_PROGRESS) · dock occupied, space empty",
     anomaly: false,
   },
   {
     door: "DOCK63",
-    status: "Occupied",
-    assignee: null,
-    customer: null,
-    taskIds: [],
-    duration: "No active task · dock and space occupied (row updated 9/26 12:20a PT) · no occupancy-start field in WMS",
-    anomaly: false,
-  },
-  {
-    door: "DOCK64",
     status: "Available",
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock and space free - available",
+    duration: "No active task · dock and space free - available (row updated 10/16 10:11a PT)",
+    anomaly: false,
+  },
+  {
+    door: "DOCK64",
+    status: "Occupied",
+    assignee: null,
+    customer: null,
+    taskIds: [],
+    duration: "No active task · dock occupied, space empty (row updated 10/15 8:59p PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
     door: "DOCK65",
-    status: "Reserved",
-    assignee: null,
-    customer: null,
-    taskIds: [],
-    duration: "No active task · dock RESERVED, space occupied (row updated 9/25 12:38p PT) · no occupancy-start field in WMS",
+    status: "Occupied",
+    assignee: "Jorge Antonio Franco (RECEIVE)",
+    customer: "GURUNANDA, LLC",
+    taskIds: ["TASK-5394671"],
+    duration: "RECEIVE ~50.3h since 10/14 1:27p PT (TASK-5394671, Jorge Antonio Franco, RN-5010808 IN_PROGRESS) · dock occupied, space empty",
     anomaly: false,
   },
   {
@@ -325,16 +324,16 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock occupied, space empty (row updated 9/26 12:19a PT) · no occupancy-start field in WMS",
+    duration: "No active task · dock occupied, space empty (row updated 10/15 8:59p PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
     door: "DOCK67",
-    status: "Occupied",
+    status: "Available",
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock occupied, space empty (row updated 9/26 12:19a PT) · no occupancy-start field in WMS",
+    duration: "No active task · dock and space free - available (row updated 10/16 9:29a PT)",
     anomaly: false,
   },
   {
@@ -343,25 +342,25 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock occupied, space empty (row updated 9/26 12:18a PT) · no occupancy-start field in WMS",
+    duration: "No active task · dock occupied, space empty (row updated 10/15 8:58p PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
     door: "DOCK69",
     status: "Occupied",
-    assignee: "Jorge Antonio Franco (RECEIVE)",
+    assignee: "DANIELA GONZALEZ (RECEIVE) / Jorge Antonio Franco (RECEIVE)",
     customer: "GURUNANDA, LLC",
-    taskIds: ["TASK-5377286"],
-    duration: "RECEIVE ~23.3h since 9/25 8:38a PT (RN-5010438 IN_PROGRESS) · dock occupied, space empty",
+    taskIds: ["TASK-5381972", "TASK-5395821"],
+    duration: "RECEIVE NEW · created 10/15 9:47p PT (TASK-5395821, DANIELA GONZALEZ, RN-5010923) - task has no startTime, so no duration basis · RECEIVE NEW · created 9/30 10:46a PT (TASK-5381972, Jorge Antonio Franco, RN-5010583) - task has no startTime, so no duration basis · dock occupied, space empty",
     anomaly: false,
   },
   {
     door: "DOCK70",
-    status: "Occupied",
+    status: "Available",
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock occupied, space empty (row updated 9/26 12:18a PT) · no occupancy-start field in WMS",
+    duration: "No active task · dock and space free - available (row updated 10/16 8:54a PT)",
     anomaly: false,
   },
   {
@@ -370,7 +369,7 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock occupied, space empty (row updated 9/26 12:18a PT) · no occupancy-start field in WMS",
+    duration: "No active task · dock occupied, space empty (row updated 10/15 8:58p PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
@@ -379,16 +378,16 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock and space occupied (row updated 9/26 12:17a PT) · no occupancy-start field in WMS",
+    duration: "No active task · dock occupied, space empty (row updated 10/15 8:57p PT) · no occupancy-start field in WMS",
     anomaly: false,
   },
 ];
 
 const occupied = doors.filter((d) => d.status === "Occupied").length;   // 18
-const reserved = doors.filter((d) => d.status === "Reserved").length;   // 3
-const doorsWithTasks = doors.filter((d) => d.taskIds.length > 0).length; // 6
+const reserved = doors.filter((d) => d.status === "Reserved").length;   // 2
+const doorsWithTasks = doors.filter((d) => d.taskIds.length > 0).length; // 8
 const anomalyDoors = doors.filter((d) => d.anomaly).length;             // 2
-const available = doors.filter((d) => d.status === "Available").length; // 2
+const available = doors.filter((d) => d.status === "Available").length; // 3
 
 export const kpiMetrics: KpiMetric[] = [
   {
@@ -421,28 +420,36 @@ export const kpiMetrics: KpiMetric[] = [
   },
 ];
 
-// Reserved doors are surfaced via the DoorGrid legend (DOCK51, DOCK52, DOCK65).
+// Reserved doors are surfaced via the DoorGrid legend (DOCK50, DOCK51).
 export const reservedDoorCount = reserved;
 
 // Bay 4 active task counts by assignee
 // Source: /wms-bam/outbound/load-task/search-by-paging + /wms-bam/inbound/receive-task/search-by-paging
-// (Sep 26 2026 ~7:56a PT). 8 active-status tasks at Bay 4 doors: 4 LOAD + 4 RECEIVE.
-// DANIEL BELTRAN: 2 LOAD (DOCK53, DOCK51)
-// ARNULFO MUNGUIA: 2 LOAD (DOCK50, DOCK54 - DOCK54 one is stale)
-// RUFINO MUNGUIA: 2 RECEIVE (DOCK56, DOCK54)
-// Jorge Antonio Franco: 1 RECEIVE (DOCK69)
+// (Oct 16 2026 ~3:45p PT). 12 active-status tasks at Bay 4 doors: 6 LOAD + 6 RECEIVE.
+// ARNULFO MUNGUIA: 3 LOAD (DOCK52, DOCK54 x2 - DOCK54 TASK-5338695 is stale)
+// Jorge Antonio Franco: 2 RECEIVE (DOCK65, DOCK69)
+// DANIEL BELTRAN: 1 LOAD (DOCK55)
+// SEBASTIAN GONZALEZ: 1 LOAD (DOCK52)
+// JESUS ESPINOZA: 1 LOAD (DOCK57)
+// JEROME ARANDA: 1 RECEIVE (DOCK55)
+// DANIELA GONZALEZ: 1 RECEIVE (DOCK69)
+// JORGE ARMANDO DUENAS: 1 RECEIVE (DOCK62)
 // daira gonzalez: 1 RECEIVE (DOCK50, STALE)
 // All assignee names resolved from WMS task payloads (assigneeUserName).
 export const assigneeSummaries: AssigneeSummary[] = [
-  { name: "DANIEL BELTRAN", taskCount: 2 },
-  { name: "ARNULFO MUNGUIA", taskCount: 2 },
-  { name: "RUFINO MUNGUIA", taskCount: 2 },
-  { name: "Jorge Antonio Franco", taskCount: 1 },
+  { name: "ARNULFO MUNGUIA", taskCount: 3 },
+  { name: "Jorge Antonio Franco", taskCount: 2 },
+  { name: "DANIEL BELTRAN", taskCount: 1 },
+  { name: "DANIELA GONZALEZ", taskCount: 1 },
+  { name: "JEROME ARANDA", taskCount: 1 },
+  { name: "JESUS ESPINOZA", taskCount: 1 },
+  { name: "JORGE ARMANDO DUENAS", taskCount: 1 },
+  { name: "SEBASTIAN GONZALEZ", taskCount: 1 },
   { name: "daira gonzalez", taskCount: 1 },
 ];
 
 // All-time assignment counts - preserved from prior baseline (Jul 13 2026).
-// NOT re-pulled in this refresh (out of scope of the 9/26 request); carried
+// NOT re-pulled in this refresh (out of scope of the 10/16 request); carried
 // forward unchanged rather than estimated.
 export const allTimeAssigneeSummaries: AssigneeSummary[] = [
   { name: "Arnulfo Munguia (89)", taskCount: 110 },
@@ -454,37 +461,42 @@ export const allTimeAssigneeSummaries: AssigneeSummary[] = [
   { name: "Rufino Munguia", taskCount: 1 },
 ];
 
-// Mix: 4 LOAD + 4 RECEIVE = 8 active Bay-4 GURUNANDA tasks
+// Mix: 6 LOAD + 6 RECEIVE = 12 active Bay-4 GURUNANDA tasks
 export const inboundOutboundMix: MixMetric[] = [
-  { label: "Inbound (RECEIVE)", count: 4, total: 8 },
-  { label: "Outbound (LOAD)", count: 4, total: 8 },
+  { label: "Inbound (RECEIVE)", count: 6, total: 12 },
+  { label: "Outbound (LOAD)", count: 6, total: 12 },
 ];
 
 // Active inbound/outbound mix at Bay 4 doors
 export const activeInboundOutboundMix: MixMetric[] = [
-  { label: "Outbound", count: 4, total: 8 },
-  { label: "Inbound", count: 4, total: 8 },
+  { label: "Outbound", count: 6, total: 12 },
+  { label: "Inbound", count: 6, total: 12 },
 ];
 
-// --- Schedule Data (2026-09-26, Saturday) ---
-// % scheduled inbounds received TODAY: NOT COMPUTABLE - 0 GURUNANDA receipts carry
-//   appointmentTime = 2026-09-26 (denominator is zero, so the percentage is
-//   undefined and must NOT be rendered as 0%). The date filter was verified to
-//   work on adjacent days (9/24 = 7, 9/25 = 11, 9/28 = 8 receipts).
-// % scheduled outbounds loaded TODAY: NOT COMPUTABLE - 0 GURUNANDA orders carry
-//   scheduleDate = 2026-09-26 (the scheduleDatePeriod query returned 0 rows), so
-//   the denominator is zero and the percentage is undefined. It must NOT be
-//   rendered as 0%. The filter was verified to work on 9/25 (39 orders).
-export const scheduleAvailable = false;             // inbound denominator is zero -> not computable
-export const outboundScheduleAvailable = false;     // outbound denominator is zero -> not computable
-export const scheduledInboundOrders = 0;            // receipts with appointmentTime = 2026-09-26
-export const scheduledOutboundOrders = 0;           // orders with scheduleDate = 2026-09-26
-export const scheduledInboundReceived = 0;          // no scheduled set -> nothing received
-export const scheduledOutboundLoaded = 0;           // no scheduled set -> nothing loaded
-export const pctScheduledInboundReceived = 0;       // 0 / 0 = undefined - gated by scheduleAvailable
-export const pctScheduledOutboundLoaded = 0;        // 0 / 0 = undefined - gated by outboundScheduleAvailable
+// --- Schedule Data (2026-10-16, Friday) ---
+// % scheduled inbounds received TODAY: COMPUTABLE - 7 GURUNANDA receipts carry
+//   appointmentTime = 2026-10-16 (appointmentTimeFrom/To query). 1 has been
+//   received (received = receipt-level receivedTime set / status CLOSED:
+//   RN-5010939 CLOSED, receivedTime 10/16 2:06p PT). Of the other 6: RN-194171 is
+//   IN_PROGRESS (receivedStartTime 10/16 12:16p PT but no receivedTime) and 5 are
+//   IMPORTED (not started). If in-progress reception is counted as received the
+//   numerator would be 2/7 = 28.6%; the stricter completed-receipt rule (1/7) is used.
+// % scheduled outbounds loaded TODAY: COMPUTABLE - 109 GURUNANDA orders carry
+//   scheduleDate = 2026-10-16 (scheduleDatePeriod query). 64 have been loaded
+//   (loaded = order status LOADED or SHIPPED: 15 LOADED + 49 SHIPPED). The
+//   remaining 45 are PICKED (34), PLANNED (9) or PACKED (2). loadedTime is not
+//   populated on these records, so current status is the evidence used.
+export const scheduleAvailable = true;              // inbound denominator is 7 -> computable
+export const outboundScheduleAvailable = true;      // outbound denominator is 109 -> computable
+export const scheduledInboundOrders = 7;            // receipts with appointmentTime = 2026-10-16
+export const scheduledOutboundOrders = 109;         // orders with scheduleDate = 2026-10-16
+export const scheduledInboundReceived = 1;          // receipts received (receivedTime / CLOSED)
+export const scheduledOutboundLoaded = 64;          // orders with status LOADED or SHIPPED
+export const pctScheduledInboundReceived = 14.3;    // 1 / 7
+export const pctScheduledOutboundLoaded = 58.7;     // 64 / 109
 
-// Facility-wide appointment context - unavailable
+// Facility-wide appointment context - unavailable (GURUNANDA-scoped query only;
+// no all-customer facility-wide appointment totals were pulled for this refresh).
 export const facilityWideReceiptsCreated = 0;
 export const facilityWideReceiptsReceived = 0;
 export const facilityWideLoadsCreated = 0;
@@ -494,74 +506,106 @@ export const facilityWideLoadsShipped = 0;
 // door; unavailable for task-less doors (no occupancy-start field in WMS)
 export const doorDurationsAvailable = true;
 
-// All Bay 4 active task records (DOCK50-DOCK72, Sep 26 2026 ~7:56a PT)
-// 8 tasks total: 4 LOAD + 4 RECEIVE. All GURUNANDA, LLC.
+// All Bay 4 active task records (DOCK50-DOCK72, Oct 16 2026 ~3:45p PT)
+// 12 tasks total: 6 LOAD + 6 RECEIVE. All GURUNANDA, LLC.
 // Two are stale-anomaly tasks (TASK-5338695, TASK-5090739).
 export const assignments: TaskRecord[] = [
-  // ------ OUTBOUND / LOAD (4) ------
+  // ------ OUTBOUND / LOAD (6) ------
   {
-    taskId: "TASK-5376774",
+    taskId: "TASK-5395520",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · ~40.4h since 9/24 3:32p PT (ARNULFO MUNGUIA; ET-1159768, PRE_LOAD, seal A51840, 2 loads)",
+    pieces: "IN_PROGRESS · ~27.3h since 10/15 12:27p PT (ARNULFO MUNGUIA; ET-1170320, 4 loads)",
     assignee: "ARNULFO MUNGUIA",
-    door: "DOCK50",
+    door: "DOCK52",
   },
   {
-    taskId: "TASK-5377571",
+    taskId: "TASK-5396564",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · ~20.0h since 9/25 11:55a PT (DANIEL BELTRAN; ET-1160320, PRE_LOAD, 3 loads)",
-    assignee: "DANIEL BELTRAN",
-    door: "DOCK51",
-  },
-  {
-    taskId: "TASK-5377822",
-    dns: "LOAD",
-    customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · ~16.8h since 9/25 3:08p PT (DANIEL BELTRAN; ET-1160445, PRE_LOAD, 7 loads)",
-    assignee: "DANIEL BELTRAN",
-    door: "DOCK53",
+    pieces: "IN_PROGRESS · ~0.9h since 10/16 2:52p PT (SEBASTIAN GONZALEZ; ET-1171063, 5 loads)",
+    assignee: "SEBASTIAN GONZALEZ",
+    door: "DOCK52",
   },
   {
     taskId: "TASK-5338695",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · STALE (started 8/7/26 4:29p PT, ended 8/10/26 9:27a but never closed; ET-1135033, seal 25079976, 1 load)",
+    pieces: "IN_PROGRESS · STALE (started 8/7/26 4:29p PT but never closed; ARNULFO MUNGUIA, ET-1135033, 1 load)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK54",
   },
+  {
+    taskId: "TASK-5396650",
+    dns: "LOAD",
+    customer: "GURUNANDA, LLC",
+    pieces: "IN_PROGRESS · ~0.5h since 10/16 3:15p PT (ARNULFO MUNGUIA; ET-1171109, 2 loads)",
+    assignee: "ARNULFO MUNGUIA",
+    door: "DOCK54",
+  },
+  {
+    taskId: "TASK-5396612",
+    dns: "LOAD",
+    customer: "GURUNANDA, LLC",
+    pieces: "IN_PROGRESS · ~0.9h since 10/16 2:49p PT (DANIEL BELTRAN; ET-1171087, 1 load)",
+    assignee: "DANIEL BELTRAN",
+    door: "DOCK55",
+  },
+  {
+    taskId: "TASK-5394996",
+    dns: "LOAD",
+    customer: "GURUNANDA, LLC",
+    pieces: "IN_PROGRESS · ~41.1h since 10/14 10:40p PT (JESUS ESPINOZA; ET-1169956, 1 load)",
+    assignee: "JESUS ESPINOZA",
+    door: "DOCK57",
+  },
 
-  // ------ INBOUND / RECEIVE (4) ------
+  // ------ INBOUND / RECEIVE (6) ------
   {
     taskId: "TASK-5090739",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · STALE (started 10/21/25 1:21p PT, ended 10/22/25 10:42a but never closed; RN-5002143 CLOSED)",
+    pieces: "IN_PROGRESS · STALE (started 10/21/25 1:21p PT but never closed; daira gonzalez, RN-5002143 CLOSED)",
     assignee: "daira gonzalez",
     door: "DOCK50",
   },
   {
-    taskId: "TASK-5377435",
+    taskId: "TASK-5396432",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · ~21.8h since 9/25 10:06a PT (RUFINO MUNGUIA; RN-192747 IN_PROGRESS)",
-    assignee: "RUFINO MUNGUIA",
-    door: "DOCK54",
+    pieces: "IN_PROGRESS · ~3.5h since 10/16 12:16p PT (JEROME ARANDA; RN-194171 IN_PROGRESS)",
+    assignee: "JEROME ARANDA",
+    door: "DOCK55",
   },
   {
-    taskId: "TASK-5377454",
+    taskId: "TASK-5393820",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "NEW · created 9/25 (RUFINO MUNGUIA; RN-192748 IMPORTED; task has no startTime)",
-    assignee: "RUFINO MUNGUIA",
-    door: "DOCK56",
+    pieces: "IN_PROGRESS · ~71.7h since 10/13 4:01p PT (JORGE ARMANDO DUENAS; RN-5010896 IN_PROGRESS)",
+    assignee: "JORGE ARMANDO DUENAS",
+    door: "DOCK62",
   },
   {
-    taskId: "TASK-5377286",
+    taskId: "TASK-5394671",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · ~23.3h since 9/25 8:38a PT (Jorge Antonio Franco; RN-5010438 IN_PROGRESS)",
+    pieces: "IN_PROGRESS · ~50.3h since 10/14 1:27p PT (Jorge Antonio Franco; RN-5010808 IN_PROGRESS)",
+    assignee: "Jorge Antonio Franco",
+    door: "DOCK65",
+  },
+  {
+    taskId: "TASK-5395821",
+    dns: "RECEIVE",
+    customer: "GURUNANDA, LLC",
+    pieces: "NEW · created 10/15 9:47p PT (DANIELA GONZALEZ; RN-5010923; task has no startTime)",
+    assignee: "DANIELA GONZALEZ",
+    door: "DOCK69",
+  },
+  {
+    taskId: "TASK-5381972",
+    dns: "RECEIVE",
+    customer: "GURUNANDA, LLC",
+    pieces: "NEW · created 9/30 10:46a PT (Jorge Antonio Franco; RN-5010583; task has no startTime)",
     assignee: "Jorge Antonio Franco",
     door: "DOCK69",
   },
