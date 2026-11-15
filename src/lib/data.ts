@@ -2,12 +2,12 @@
  * Bay 4 Assignments - Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50-DOCK72
  *
- * DATA REFRESHED: 2026-11-15 6:57a PT (live WISE / WMS-BAM APIs)
+ * DATA REFRESHED: 2026-11-15 9:45a PT (live WISE / WMS-BAM APIs)
  *   Every value below was re-read live at this pull; nothing was carried over.
  *   All reads use item-time-zone America/Los_Angeles. WISE returns the
  *   dock/task/receipt/order timestamps as naive facility wall-clock values, so
  *   the strings below are already PT and no UTC->PT shift is applied.
- *   Durations are measured to the 2026-11-15 6:57a PT pull reference.
+ *   Durations are measured to the 2026-11-15 9:45a PT pull reference.
  *
  *   SOURCES USED AT THIS PULL:
  *     - POST /wms-bam/wms-location/search, body {exactlyNames:[DOCK50..DOCK72]}
@@ -16,11 +16,12 @@
  *       entryId, updatedTime). Door rows are used for "Door Utilization".
  *     - POST /wms-bam/outbound/load-task/search-by-paging
  *       statuses [NEW, IN_PROGRESS, EXCEPTION], facility-wide (NO customer
- *       filter) -> totalCount 39, all 39 read; 4 of them sit on Bay-4 dockNames.
+ *       filter) -> totalCount 39, all 39 read; all 4 of them that sit on Bay-4
+ *       dockNames are GURUNANDA load tasks.
  *     - POST /wms-bam/inbound/receive-task/search-by-paging
  *       statuses [NEW, IN_PROGRESS, EXCEPTION], facility-wide (NO customer
- *       filter) -> totalCount 83, all 83 read; 7 of them sit on Bay-4 dockNames
- *       (8 of the 83 facility-wide receive tasks carry no dockName at all, i.e.
+ *       filter) -> totalCount 88, all 88 read; 7 of them sit on Bay-4 dockNames
+ *       (8 of the 88 facility-wide receive tasks carry no dockName at all, i.e.
  *       not yet docked: TASK-5369902, TASK-5012655, TASK-5009441, TASK-5009440,
  *       TASK-5009439, TASK-5008826, TASK-5008825, TASK-5008824 - none of those 8
  *       is a Bay-4 door).
@@ -40,17 +41,20 @@
  *       11/14 or 11/15 PT.
  *     - POST /wms-bam/inbound/receive-task/search-by-paging
  *       statuses [CLOSED, FORCE_CLOSED], sorted endTime DESC -> totalCount
- *       17,737; the newest 1,500 were read (window back to 10/2 1:19:25p PT).
- *       Exactly 1 receive closure is dated on/after 11/14 PT: TASK-5421052 at
- *       DOCK143 (MANUEL ANTONIO CANAS PALACIOS, ORG-34557), endTime 11/14
- *       12:13:14a PT - NOT a Bay-4 door. Newest Bay-4 receive closure is still
- *       TASK-5420980 at DOCK64 (11/13 9:32:35p PT), so there are 0 Bay-4
- *       receive closures on 11/14 or 11/15.
+ *       17,738; the newest 2,000 were read (window back to 9/21 5:53:34p PT).
+ *       Two receive closures are dated on/after 11/14 PT and neither is a
+ *       Bay-4 door: TASK-5419956 at DOCK24 (DANIELA GONZALEZ, EMBER
+ *       TECHNOLOGIES, INC., ORG-738412) endTime 11/15 8:32:45a PT - the newest
+ *       receive closure facility-wide - and TASK-5421052 at DOCK143 (MANUEL
+ *       ANTONIO CANAS PALACIOS, ALL MARKET INC / VITA COCO, ORG-34557) endTime
+ *       11/14 12:13:14a PT. Newest Bay-4 receive closure is still TASK-5420980
+ *       at DOCK64 (11/13 9:32:35p PT), so there are 0 Bay-4 receive closures on
+ *       11/14 or 11/15.
  *     - POST /wms-bam/outbound/order/search-by-paging
  *       {customerId: ORG-655875, status: PLANNED} -> totalCount 163.
- *     - POST /wms-bam/yard/equipment/search {statuses:["FULL"]} -> 10 rows
- *       facility-wide, 0 of them GURUNANDA ORG-655875 TRAILER FULL, which is
- *       why the live "In Yard Full Trailers" KPI reads 0 this morning.
+ *     - POST /wms-bam/yard/equipment/search {statuses:["FULL"]} -> no
+ *       GURUNANDA ORG-655875 TRAILER FULL row is returned, which is why the
+ *       live "In Yard Full Trailers" KPI reads 0 this morning.
  *
  *   SCOPE NOTE (important, read before comparing to any other snapshot):
  *     The line-level metrics on this dashboard are GURUNANDA-scoped (the same
@@ -88,8 +92,8 @@
  *       dashboard's Occupied count (21) exceeds the raw dockStatus count (15).
  *       That is why "Occupied" is derived as NOT(dock AVAILABLE + space EMPTY)
  *       - see the rule at the top of the `doors` array. No door row has an
- *       updatedTime later than 11/13 10:47:51p PT, i.e. nothing has changed
- *       door state on 11/14 or 11/15.
+ *       updatedTime later than 11/13 10:47:51p PT (DOCK53), i.e. nothing has
+ *       changed door state on 11/14 or 11/15.
  *     - ACTIVE TASKS (GURUNANDA): 10 tasks - 6 RECEIVE / 4 LOAD - at 9
  *       distinct doors. All-customer physical count at the same doors: 11
  *       tasks - 7 RECEIVE / 4 LOAD - at the same 9 doors (DOCK50, DOCK52,
@@ -131,18 +135,19 @@
  *     - Planned GURUNANDA orders: live count 163 at this pull (same value as
  *       the previous refresh).
  *     - Door occupancy duration: available where an active task has a startTime
- *       and has not ended - 7 tasks on 6 doors at this pull (DOCK52 40h58m,
- *       DOCK63 39h15m, DOCK61 35h37m, DOCK53 34h42m, DOCK54 34h10m LOAD +
- *       DOCK54 69h29m KARAKA RECEIVE, DOCK56 33h03m), all measured to
- *       11/15 6:57a PT. WMS has no occupancy-start field for task-less doors
+ *       and has not ended - 7 tasks on 6 doors at this pull (DOCK52 43h47m,
+ *       DOCK63 42h04m, DOCK61 38h26m, DOCK53 37h31m, DOCK54 36h59m LOAD +
+ *       DOCK54 72h17m KARAKA RECEIVE, DOCK56 35h51m), all measured to
+ *       11/15 9:45a PT. WMS has no occupancy-start field for task-less doors
  *       (13 of 23), for the three NEW tasks (DOCK50 TASK-5418313, DOCK58
  *       TASK-5420461, DOCK69 TASK-5381972) or for the one stale task.
  *     - Facility-wide appointment context for the 11/15 PT day (no customerId
  *       filter): receipts scheduled 1 (RN-193516, reference 0382323, PO
  *       61403886, appointment 11:00a PT, ORG-34818 NZXT, status IMPORTED), 0 of
- *       them carrying a receivedStartTime; orders scheduled 3 (1 SHIPPED -
- *       DN-5276748 Mars Food US LLC, 2 COMMIT_BLOCKED - DN-5279329 and
- *       DN-5279324 ZEN BEVERAGE LLC).
+ *       them carrying a receivedStartTime; orders scheduled 6 - 1 SHIPPED
+ *       (DN-5276748 Mars Food US LLC), 3 COMMIT_BLOCKED (DN-5279376,
+ *       DN-5279329, DN-5279324 ZEN BEVERAGE LLC) and 2 IMPORTED (DN-5279480,
+ *       DN-5279479 ZEN BEVERAGE LLC).
  *
  *   NOTE: the in-yard FULL equipment array and the all-time assignee baseline
  *   are outside the scope of this request and were NOT re-stated from WISE into
@@ -205,16 +210,16 @@ export interface InYardEquipmentRecord {
 export const TOTAL_DOORS = 23;
 
 // ─── Section 1 — In-Yard FULL Equipment (TRAILER-only display) ───
-// The live yard query was re-read at this pull ({statuses:["FULL"]} -> 10 rows
-// facility-wide, of which 0 are GURUNANDA ORG-655875 TRAILER FULL), so the KPI
-// legitimately reads 0 this morning. The static array stays empty rather than
-// duplicating the live loader's result; Section 1 renders live from the WMS
-// loader, so the dashboard still shows current data.
+// The live yard query was re-read at this pull ({statuses:["FULL"]} returned no
+// GURUNANDA ORG-655875 TRAILER FULL row), so the KPI legitimately reads 0 this
+// morning. The static array stays empty rather than duplicating the live
+// loader's result; Section 1 renders live from the WMS loader, so the dashboard
+// still shows current data.
 export const inYardFullEquipment: InYardEquipmentRecord[] = [];
 
 // Planned Orders context: WMS outbound orders for GURUNANDA (ORG-655875) at
 // status PLANNED. FALLBACK ONLY - the dashboard shows the live loader count when
-// it succeeds. Live totalCount was 163 at the 11/15 ~6:57a PT pull.
+// it succeeds. Live totalCount was 163 at the 11/15 ~9:45a PT pull.
 export const plannedGurunandaOrderCount = 163;
 
 // --- Graza Dispatch Types (preserved for GrazaDispatchSummary component) ---
@@ -275,7 +280,7 @@ export interface GrazaCombinedDispatchData {
 
 
 // =====================================================================
-// DOOR UTILIZATION - DOCK50-DOCK72 (23 doors), live as of 11/15 ~6:57a PT
+// DOOR UTILIZATION - DOCK50-DOCK72 (23 doors), live as of 11/15 ~9:45a PT
 //
 // All 23 rows come from one /wms-bam/wms-location/search call
 // (exactlyNames DOCK50..DOCK72); every row is category DOCK, type DOCK,
@@ -323,7 +328,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA (LOAD)",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5420648"],
-    duration: "LOAD 40h58m since 11/13 1:58:10p PT (TASK-5420648, ARNULFO MUNGUIA, PRE_LOAD, created 11:57:41a PT, checked in 1:58:20p PT, 8 loads all LOADED, seal A52688 - LOAD-5044527 proNo 50168599, LOAD-5044519, LOAD-5044518 proNo 50168465, LOAD-5044517, LOAD-5044511 proNo 50168053, LOAD-5044504 proNo 50168196, LOAD-5044474 proNo 50168618, LOAD-5044471 proNo 50168489) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds none, entry ET-1182083 (row updated 11/13 1:58:21p PT) · the previous task here closed 11/13 10:06:00a PT (TASK-5419739, ARNULFO MUNGUIA, 7 loads all SHIPPED, seal 25010958); the last receive task to close here was TASK-5417998 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 2:39:35p PT)",
+    duration: "LOAD 43h47m since 11/13 1:58:10p PT (TASK-5420648, ARNULFO MUNGUIA, PRE_LOAD, created 11:57:41a PT, checked in 1:58:20p PT, 8 loads all LOADED, seal A52688 - LOAD-5044527 proNo 50168599, LOAD-5044519, LOAD-5044518 proNo 50168465, LOAD-5044517, LOAD-5044511 proNo 50168053, LOAD-5044504 proNo 50168196, LOAD-5044474 proNo 50168618, LOAD-5044471 proNo 50168489) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds none, entry ET-1182083 (row updated 11/13 1:58:21p PT) · the previous task here closed 11/13 10:06:00a PT (TASK-5419739, ARNULFO MUNGUIA, 7 loads all SHIPPED, seal 25010958); the last receive task to close here was TASK-5417998 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 2:39:35p PT)",
     anomaly: false,
   },
   {
@@ -332,7 +337,7 @@ export const doors: DoorRecord[] = [
     assignee: "EDUARDO MEJIA (LOAD)",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5421041"],
-    duration: "LOAD 34h42m since 11/13 8:14:06p PT (TASK-5421041, EDUARDO MEJIA, PRE_LOAD, created 8:11:47p PT, checked in 8:14:15p PT, 2 loads both LOADED, NO sealNo recorded - LOAD-5044387, LOAD-5044383) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182227 (row updated 11/13 10:47:51p PT) · the previous load task here closed 11/13 12:29:19p PT (TASK-5420577, DANIEL BELTRAN, 1 load SHIPPED, seal 1304041); the newest receive closure here is TASK-5407284 (ARNULFO MUNGUIA, KARAKA, LLC, 10/29 11:01:54a PT)",
+    duration: "LOAD 37h31m since 11/13 8:14:06p PT (TASK-5421041, EDUARDO MEJIA, PRE_LOAD, created 8:11:47p PT, checked in 8:14:15p PT, 2 loads both LOADED, NO sealNo recorded - LOAD-5044387, LOAD-5044383) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182227 (row updated 11/13 10:47:51p PT) · the previous load task here closed 11/13 12:29:19p PT (TASK-5420577, DANIEL BELTRAN, 1 load SHIPPED, seal 1304041); the newest receive closure here is TASK-5407284 (ARNULFO MUNGUIA, KARAKA, LLC, 10/29 11:01:54a PT)",
     anomaly: false,
   },
   {
@@ -341,7 +346,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA (LOAD + KARAKA RECEIVE)",
     customer: "GURUNANDA, LLC + KARAKA, LLC",
     taskIds: ["TASK-5421045", "TASK-5419478"],
-    duration: "TWO open tasks here · LOAD 34h10m since 11/13 8:46:02p PT (TASK-5421045, ARNULFO MUNGUIA, GURUNANDA, PRE_LOAD, created 8:22:44p PT, checked in 8:46:05p PT, 4 loads all LOADED, seal 25010985 - LOAD-5044385 proNo 50162388, LOAD-5044382, LOAD-5044528 proNo 50168563, LOAD-5044388) · RECEIVE 69h29m since 11/12 9:27:55a PT (TASK-5419478, ARNULFO MUNGUIA, KARAKA, LLC - NOT GURUNANDA, so outside the customer-scoped cards, created 11/12 9:07:37a PT, dock-checked-in 9:27:59a PT, entry ET-1181678, RN-195042 at status IN_PROGRESS, receivedStartTime 9:27:55a PT, appointment 11/12 10:00a PT, PO POBOK0432 / reference SPR43963200, container 'UNKNOWN - LCL', carrier AAA COOPER TRANSPORTATION, in-yard 9:07:16a PT) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182229 (row updated 11/13 8:46:05p PT) · the previous load task here closed 11/13 12:15:09p PT (TASK-5419998, ARNULFO MUNGUIA, 1 load SHIPPED, seal 25010957); the last receive task to close here was TASK-5414446 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 7:21:29a PT)",
+    duration: "TWO open tasks here · LOAD 36h59m since 11/13 8:46:02p PT (TASK-5421045, ARNULFO MUNGUIA, GURUNANDA, PRE_LOAD, created 8:22:44p PT, checked in 8:46:05p PT, 4 loads all LOADED, seal 25010985 - LOAD-5044385 proNo 50162388, LOAD-5044382, LOAD-5044528 proNo 50168563, LOAD-5044388) · RECEIVE 72h17m since 11/12 9:27:55a PT (TASK-5419478, ARNULFO MUNGUIA, KARAKA, LLC - NOT GURUNANDA, so outside the customer-scoped cards, created 11/12 9:07:37a PT, dock-checked-in 9:27:59a PT, entry ET-1181678, RN-195042 at status IN_PROGRESS, receivedStartTime 9:27:55a PT, appointment 11/12 10:00a PT, PO POBOK0432 / reference SPR43963200, container 'UNKNOWN - LCL', carrier AAA COOPER TRANSPORTATION, in-yard 9:07:16a PT) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182229 (row updated 11/13 8:46:05p PT) · the previous load task here closed 11/13 12:15:09p PT (TASK-5419998, ARNULFO MUNGUIA, 1 load SHIPPED, seal 25010957); the last receive task to close here was TASK-5414446 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 7:21:29a PT)",
     anomaly: false,
   },
   {
@@ -359,7 +364,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA (LOAD)",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5421056"],
-    duration: "LOAD 33h03m since 11/13 9:53:54p PT (TASK-5421056, ARNULFO MUNGUIA, PRE_LOAD, created 9:53:39p PT, checked in 9:53:57p PT, 2 loads both LOADED, seal 25010981 - LOAD-5044386 proNo 50168054, LOAD-5044384) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182256 (row updated 11/13 9:53:57p PT) · the previous load task here closed 11/13 11:33:43a PT (TASK-5420384, DANIEL BELTRAN, 1 load SHIPPED, seal A52686); the last receive task to close here was TASK-5418081 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 12:11:56p PT)",
+    duration: "LOAD 35h51m since 11/13 9:53:54p PT (TASK-5421056, ARNULFO MUNGUIA, PRE_LOAD, created 9:53:39p PT, checked in 9:53:57p PT, 2 loads both LOADED, seal 25010981 - LOAD-5044386 proNo 50168054, LOAD-5044384) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182256 (row updated 11/13 9:53:57p PT) · the previous load task here closed 11/13 11:33:43a PT (TASK-5420384, DANIEL BELTRAN, 1 load SHIPPED, seal A52686); the last receive task to close here was TASK-5418081 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 12:11:56p PT)",
     anomaly: false,
   },
   {
@@ -404,7 +409,7 @@ export const doors: DoorRecord[] = [
     assignee: "DANIELA GONZALEZ (RECEIVE)",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5421037"],
-    duration: "RECEIVE 35h37m since 11/13 7:19:30p PT (TASK-5421037, DANIELA GONZALEZ, created 7:16:17p PT, dock-checked-in 7:19:32p PT, entry ET-1182218, receipt RN-5011583 at status IN_PROGRESS, receivedStartTime 7:19:30p PT, PO TRHU8394717 / reference B00420740, container TRHU8394717, seal 1746080, carrier WILL CALL, in-yard 7:16:18p PT) · dock OCCUPIED, space EMPTY, occupiedCustomerIds [], entry ET-1182218 (row updated 11/13 7:19:32p PT) · the last load task to close here was TASK-5420400 (BARTOLO RAMIREZ, 11/13 10:56:09a PT, 1 load SHIPPED, seal 1304052); the last receive task to close here was TASK-5414777 (Fatima Ponce, 11/10 7:13:40a PT, GURUNANDA)",
+    duration: "RECEIVE 38h26m since 11/13 7:19:30p PT (TASK-5421037, DANIELA GONZALEZ, created 7:16:17p PT, dock-checked-in 7:19:32p PT, entry ET-1182218, receipt RN-5011583 at status IN_PROGRESS, receivedStartTime 7:19:30p PT, PO TRHU8394717 / reference B00420740, container TRHU8394717, seal 1746080, carrier WILL CALL, in-yard 7:16:18p PT) · dock OCCUPIED, space EMPTY, occupiedCustomerIds [], entry ET-1182218 (row updated 11/13 7:19:32p PT) · the last load task to close here was TASK-5420400 (BARTOLO RAMIREZ, 11/13 10:56:09a PT, 1 load SHIPPED, seal 1304052); the last receive task to close here was TASK-5414777 (Fatima Ponce, 11/10 7:13:40a PT, GURUNANDA)",
     anomaly: false,
   },
   {
@@ -422,7 +427,7 @@ export const doors: DoorRecord[] = [
     assignee: "DANIELA GONZALEZ (RECEIVE)",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5419965"],
-    duration: "RECEIVE 39h15m since 11/13 3:41:26p PT (TASK-5419965, DANIELA GONZALEZ, created 11/12 4:16:44p PT, dock-checked-in 11/13 3:41:36p PT, entry ET-1181840, receipt RN-5011506 at status IN_PROGRESS, receivedStartTime 3:41:26p PT, PO OOCU7729628 / reference B00419648, appointment 11/11 4:00p PT, in-yard 11/12 4:16:44p PT, container OOCU7729628, carrier WILL CALL) · dock OCCUPIED, space EMPTY, occupiedCustomerIds none, entry ET-1181840 (row updated 11/13 3:41:45p PT) · no load task of any customer has closed at this door inside the 2026-10-31 - now window; the newest receive closure here is TASK-5414772 (Fatima Ponce, 11/9 9:56:00a PT, GURUNANDA)",
+    duration: "RECEIVE 42h04m since 11/13 3:41:26p PT (TASK-5419965, DANIELA GONZALEZ, created 11/12 4:16:44p PT, dock-checked-in 11/13 3:41:36p PT, entry ET-1181840, receipt RN-5011506 at status IN_PROGRESS, receivedStartTime 3:41:26p PT, PO OOCU7729628 / reference B00419648, appointment 11/11 4:00p PT, in-yard 11/12 4:16:44p PT, container OOCU7729628, carrier WILL CALL) · dock OCCUPIED, space EMPTY, occupiedCustomerIds none, entry ET-1181840 (row updated 11/13 3:41:45p PT) · no load task of any customer has closed at this door inside the 2026-10-31 - now window; the newest receive closure here is TASK-5414772 (Fatima Ponce, 11/9 9:56:00a PT, GURUNANDA)",
     anomaly: false,
   },
   {
@@ -431,7 +436,7 @@ export const doors: DoorRecord[] = [
     assignee: null,
     customer: null,
     taskIds: [],
-    duration: "No active task · dock AVAILABLE, space OCCUPIED, occupiedCustomerIds none, entry ET-1182176 (row updated 11/13 9:32:32p PT) · the last receive task to close here was TASK-5420980 (DANIELA GONZALEZ, 11/13 9:32:35p PT, GURUNANDA) - the newest receive closure at any Bay-4 door; no load task of any customer has closed at this door inside the 2026-10-31 - now window · no occupancy-start field in WMS",
+    duration: "No active task · dock AVAILABLE, space OCCUPIED, occupiedCustomerIds none, entry ET-1182176 (row updated 11/13 9:32:32p PT) · the last receive task to close here was TASK-5420980 (DANIELA GONZALEZ, 11/13 9:32:35p PT, GURUNANDA) - the newest receive closure at any Bay-4 door, still unchanged at this pull; no load task of any customer has closed at this door inside the 2026-10-31 - now window · no occupancy-start field in WMS",
     anomaly: false,
   },
   {
@@ -550,7 +555,7 @@ export const reservedDoorCount = reserved;
 
 // Bay 4 active task counts by assignee - GURUNANDA scope (the dashboard cards).
 // Source: /wms-bam/outbound/load-task/search-by-paging + /wms-bam/inbound/receive-task/search-by-paging
-// (facility-wide active pulls, matched on dockName to the 23 Bay-4 docks, Nov 15 2026 ~6:57a PT).
+// (facility-wide active pulls, matched on dockName to the 23 Bay-4 docks, Nov 15 2026 ~9:45a PT).
 // 10 active-status tasks at Bay-4 doors: 4 LOAD + 6 RECEIVE, at 9 distinct doors
 // (DOCK50, DOCK52, DOCK53, DOCK54, DOCK56, DOCK58, DOCK61, DOCK63, DOCK69).
 // ARNULFO MUNGUIA: 3 LOAD (DOCK52 TASK-5420648, DOCK54 TASK-5421045, DOCK56
@@ -630,12 +635,13 @@ export const pctScheduledOutboundLoaded = 0.0;      // 0 of 0 - not computable
 // Facility-wide appointment context for the 11/15 PT day, all customers (same
 // two endpoints, no customerId filter): 1 receipt scheduled (RN-193516,
 // reference 0382323, PO 61403886, appointment 11:00a PT, ORG-34818 NZXT, status
-// IMPORTED) of which 0 carry a receivedStartTime; 3 orders scheduled, 1 at
-// status SHIPPED (DN-5276748 Mars Food US LLC) and 2 COMMIT_BLOCKED
-// (DN-5279329, DN-5279324 ZEN BEVERAGE LLC).
+// IMPORTED) of which 0 carry a receivedStartTime; 6 orders scheduled, 1 at
+// status SHIPPED (DN-5276748 Mars Food US LLC), 3 COMMIT_BLOCKED (DN-5279376,
+// DN-5279329, DN-5279324 ZEN BEVERAGE LLC) and 2 IMPORTED (DN-5279480,
+// DN-5279479 ZEN BEVERAGE LLC).
 export const facilityWideReceiptsCreated = 1;
 export const facilityWideReceiptsReceived = 0;
-export const facilityWideLoadsCreated = 3;
+export const facilityWideLoadsCreated = 6;
 export const facilityWideLoadsShipped = 1;
 
 // Door occupancy duration: available from task startTime where a task exists on
@@ -645,14 +651,14 @@ export const facilityWideLoadsShipped = 1;
 // empty Duration column). 13 of 23 doors carry no active task at this pull, 3 of
 // the 11 physical tasks are NEW/not started (DOCK50 TASK-5418313, DOCK58
 // TASK-5420461, DOCK69 TASK-5381972) and 1 is stale (DOCK50 TASK-5090739), so a
-// duration exists for 7 tasks on 6 doors (DOCK52 40h58m from 11/13 1:58:10p PT,
-// DOCK63 39h15m from 11/13 3:41:26p PT, DOCK61 35h37m from 11/13 7:19:30p PT,
-// DOCK53 34h42m from 11/13 8:14:06p PT, DOCK54 34h10m from 11/13 8:46:02p PT +
-// DOCK54 69h29m from 11/12 9:27:55a PT (KARAKA RECEIVE) and DOCK56 33h03m from
-// 11/13 9:53:54p PT - all measured to 11/15 6:57a PT).
+// duration exists for 7 tasks on 6 doors (DOCK52 43h47m from 11/13 1:58:10p PT,
+// DOCK63 42h04m from 11/13 3:41:26p PT, DOCK61 38h26m from 11/13 7:19:30p PT,
+// DOCK53 37h31m from 11/13 8:14:06p PT, DOCK54 36h59m from 11/13 8:46:02p PT +
+// DOCK54 72h17m from 11/12 9:27:55a PT (KARAKA RECEIVE) and DOCK56 35h51m from
+// 11/13 9:53:54p PT - all measured to 11/15 9:45a PT).
 export const doorDurationsAvailable = true;
 
-// All Bay 4 active GURUNANDA task records (DOCK50-DOCK72, Nov 15 2026 ~6:57a PT)
+// All Bay 4 active GURUNANDA task records (DOCK50-DOCK72, Nov 15 2026 ~9:45a PT)
 // 10 tasks total: 4 LOAD + 6 RECEIVE. One is a data anomaly (TASK-5090739 on
 // DOCK50, stale since 2025-10-21). The 11th physical task on those doors -
 // KARAKA, LLC TASK-5419478 at DOCK54 - is deliberately not listed here so this
@@ -685,7 +691,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5421037",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · 35h37m since 11/13 7:19:30p PT (DANIELA GONZALEZ, task created 7:16:17p PT; entry ET-1182218, dock-checked-in 7:19:32p PT, RN-5011583 at status IN_PROGRESS, receivedStartTime 7:19:30p PT, PO TRHU8394717 / reference B00420740, container TRHU8394717, seal 1746080, carrier WILL CALL, in-yard 7:16:18p PT)",
+    pieces: "IN_PROGRESS · 38h26m since 11/13 7:19:30p PT (DANIELA GONZALEZ, task created 7:16:17p PT; entry ET-1182218, dock-checked-in 7:19:32p PT, RN-5011583 at status IN_PROGRESS, receivedStartTime 7:19:30p PT, PO TRHU8394717 / reference B00420740, container TRHU8394717, seal 1746080, carrier WILL CALL, in-yard 7:16:18p PT)",
     assignee: "DANIELA GONZALEZ",
     door: "DOCK61",
   },
@@ -693,7 +699,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5419965",
     dns: "RECEIVE",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · 39h15m since 11/13 3:41:26p PT (DANIELA GONZALEZ, task created 11/12 4:16:44p PT; entry ET-1181840, dock-checked-in 11/13 3:41:36p PT, RN-5011506 at status IN_PROGRESS, receivedStartTime 3:41:26p PT, PO OOCU7729628 / reference B00419648, appointment 11/11 4:00p PT, in-yard 11/12 4:16:44p PT, container OOCU7729628, carrier WILL CALL)",
+    pieces: "IN_PROGRESS · 42h04m since 11/13 3:41:26p PT (DANIELA GONZALEZ, task created 11/12 4:16:44p PT; entry ET-1181840, dock-checked-in 11/13 3:41:36p PT, RN-5011506 at status IN_PROGRESS, receivedStartTime 3:41:26p PT, PO OOCU7729628 / reference B00419648, appointment 11/11 4:00p PT, in-yard 11/12 4:16:44p PT, container OOCU7729628, carrier WILL CALL)",
     assignee: "DANIELA GONZALEZ",
     door: "DOCK63",
   },
@@ -735,7 +741,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5420648",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · 40h58m since 11/13 1:58:10p PT (ARNULFO MUNGUIA, task created 11:57:41a PT, checked in 1:58:20p PT; PRE_LOAD, 8 loads all LOADED, seal A52688 - LOAD-5044527 proNo 50168599, LOAD-5044519, LOAD-5044518 proNo 50168465, LOAD-5044517, LOAD-5044511 proNo 50168053, LOAD-5044504 proNo 50168196, LOAD-5044474 proNo 50168618, LOAD-5044471 proNo 50168489)",
+    pieces: "IN_PROGRESS · 43h47m since 11/13 1:58:10p PT (ARNULFO MUNGUIA, task created 11:57:41a PT, checked in 1:58:20p PT; PRE_LOAD, 8 loads all LOADED, seal A52688 - LOAD-5044527 proNo 50168599, LOAD-5044519, LOAD-5044518 proNo 50168465, LOAD-5044517, LOAD-5044511 proNo 50168053, LOAD-5044504 proNo 50168196, LOAD-5044474 proNo 50168618, LOAD-5044471 proNo 50168489)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK52",
   },
@@ -743,7 +749,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5421041",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · 34h42m since 11/13 8:14:06p PT (EDUARDO MEJIA, task created 8:11:47p PT, checked in 8:14:15p PT; PRE_LOAD, 2 loads both LOADED, NO sealNo recorded - LOAD-5044387, LOAD-5044383)",
+    pieces: "IN_PROGRESS · 37h31m since 11/13 8:14:06p PT (EDUARDO MEJIA, task created 8:11:47p PT, checked in 8:14:15p PT; PRE_LOAD, 2 loads both LOADED, NO sealNo recorded - LOAD-5044387, LOAD-5044383)",
     assignee: "EDUARDO MEJIA",
     door: "DOCK53",
   },
@@ -751,7 +757,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5421045",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · 34h10m since 11/13 8:46:02p PT (ARNULFO MUNGUIA, task created 8:22:44p PT, checked in 8:46:05p PT; PRE_LOAD, 4 loads all LOADED, seal 25010985 - LOAD-5044385 proNo 50162388, LOAD-5044382, LOAD-5044528 proNo 50168563, LOAD-5044388)",
+    pieces: "IN_PROGRESS · 36h59m since 11/13 8:46:02p PT (ARNULFO MUNGUIA, task created 8:22:44p PT, checked in 8:46:05p PT; PRE_LOAD, 4 loads all LOADED, seal 25010985 - LOAD-5044385 proNo 50162388, LOAD-5044382, LOAD-5044528 proNo 50168563, LOAD-5044388)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK54",
   },
@@ -759,7 +765,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5421056",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · 33h03m since 11/13 9:53:54p PT (ARNULFO MUNGUIA, task created 9:53:39p PT, checked in 9:53:57p PT; PRE_LOAD, 2 loads both LOADED, seal 25010981 - LOAD-5044386 proNo 50168054, LOAD-5044384)",
+    pieces: "IN_PROGRESS · 35h51m since 11/13 9:53:54p PT (ARNULFO MUNGUIA, task created 9:53:39p PT, checked in 9:53:57p PT; PRE_LOAD, 2 loads both LOADED, seal 25010981 - LOAD-5044386 proNo 50168054, LOAD-5044384)",
     assignee: "ARNULFO MUNGUIA",
     door: "DOCK56",
   },
