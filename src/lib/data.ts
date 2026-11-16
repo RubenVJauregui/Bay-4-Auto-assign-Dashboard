@@ -2,12 +2,12 @@
  * Bay 4 Assignments - Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50-DOCK72
  *
- * DATA REFRESHED: 2026-11-16 12:22p PT (live WISE / WMS-BAM APIs)
+ * DATA REFRESHED: 2026-11-16 12:26p PT (live WISE / WMS-BAM APIs)
  *   Every value below was re-read live at this pull; nothing was carried over.
  *   All reads use item-time-zone America/Los_Angeles. WISE returns the
  *   dock/task/receipt/order timestamps as naive facility wall-clock values, so
  *   the strings below are already PT and no UTC->PT shift is applied.
- *   Durations are measured to the 2026-11-16 12:22p PT pull reference.
+ *   Durations are measured to the 2026-11-16 12:26p PT pull reference.
  *
  *   SOURCES USED AT THIS PULL:
  *     - POST /wms-bam/wms-location/search, body {exactlyNames:[DOCK50..DOCK72]}
@@ -26,14 +26,14 @@
  *       TASK-5009440, TASK-5009439, TASK-5008826, TASK-5008825,
  *       TASK-5008824) and none of them is a Bay-4 door.
  *     - POST /wms-bam/inbound/receipt/search-by-paging
- *       {customerId: ORG-655875, appointmentTimeFrom "2026-11-16 00:00:00",
- *       appointmentTimeTo "2026-11-16 23:59:59"} -> totalCount 11, all 11 read;
+ *       {customerId: ORG-655875, appointmentTimeFrom "2026-11-16 08:00:00",
+ *       appointmentTimeTo "2026-11-17 07:59:59"} -> totalCount 11, all 11 read;
  *       2 of the 11 carry a receivedStartTime (RN-195674 recvStart 11/16
  *       11:50:24a, RN-5011516 recvStart 11/13 10:20:55a, CLOSED at receivedTime
  *       11/16 8:48:01a).
  *     - POST /wms-bam/outbound/order/search-by-paging
- *       {customerId: ORG-655875, scheduleDatePeriod ["2026-11-16 00:00:00",
- *       "2026-11-16 23:59:59"]} -> totalCount 56, all 56 read; statuses PICKED
+ *       {customerId: ORG-655875, scheduleDatePeriod ["2026-11-16 08:00:00",
+ *       "2026-11-17 07:59:59"]} -> totalCount 56, all 56 read; statuses PICKED
  *       24, SHIPPED 16, PLANNED 8, IMPORTED 7, COMMIT_FAILED 1.
  *     - POST /wms-bam/outbound/load-task/search-by-paging
  *       statuses [CLOSED, FORCE_CLOSED], endTimeFrom "2026-10-31 00:00:00",
@@ -148,16 +148,16 @@
  *     - Total doors occupied: 16 of 23 (plus 3 reserved, 4 available).
  *     - Planned GURUNANDA orders: live count 151 at this pull.
  *     - Door occupancy duration: available where an active task has a startTime
- *       and has not ended - 3 tasks on 2 doors at this pull (DOCK54 98h54m
- *       KARAKA RECEIVE, DOCK54 1h15m KARAKA RECEIVE, DOCK57 17m LOAD), all
- *       measured to 11/16 12:22p PT. WMS has no occupancy-start field for
+ *       and has not ended - 3 tasks on 2 doors at this pull (DOCK54 98h58m
+ *       KARAKA RECEIVE, DOCK54 1h19m KARAKA RECEIVE, DOCK57 21m LOAD), all
+ *       measured to 11/16 12:26p PT. WMS has no occupancy-start field for
  *       task-less doors (18 of 23), for the three NEW GURUNANDA tasks (DOCK50
  *       TASK-5418313, DOCK58 TASK-5420461, DOCK69 TASK-5381972) or for the one
  *       stale task.
  *     - Facility-wide appointment context for the 11/16 PT day (no customerId
- *       filter): receipts scheduled 40, of which 19 carry a receivedStartTime;
- *       orders scheduled 3,356 by totalCount (3,363 rows read across paging
- *       while the day is still filling) of which 1,613 are SHIPPED.
+ *       filter): receipts scheduled 40, of which 20 carry a receivedStartTime;
+ *       orders scheduled 3,365 by totalCount (all 3,365 rows read across
+ *       paging) of which 1,631 are SHIPPED.
  *
  *   NOTE: the in-yard FULL equipment array and the all-time assignee baseline
  *   are outside the scope of this request and were NOT re-stated from WISE into
@@ -231,7 +231,7 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [];
 
 // Planned Orders context: WMS outbound orders for GURUNANDA (ORG-655875) at
 // status PLANNED. FALLBACK ONLY - the dashboard shows the live loader count when
-// it succeeds. Live totalCount was 151 at the 11/16 12:22p PT pull.
+// it succeeds. Live totalCount was 151 at the 11/16 12:26p PT pull (re-verified).
 export const plannedGurunandaOrderCount = 151;
 
 // --- Graza Dispatch Types (preserved for GrazaDispatchSummary component) ---
@@ -292,7 +292,7 @@ export interface GrazaCombinedDispatchData {
 
 
 // =====================================================================
-// DOOR UTILIZATION - DOCK50-DOCK72 (23 doors), live as of 11/16 12:22p PT
+// DOOR UTILIZATION - DOCK50-DOCK72 (23 doors), live as of 11/16 12:26p PT
 //
 // All 23 rows come from one /wms-bam/wms-location/search call
 // (exactlyNames DOCK50..DOCK72); every row is category DOCK, type DOCK,
@@ -361,7 +361,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA (2× KARAKA RECEIVE)",
     customer: "KARAKA, LLC",
     taskIds: ["TASK-5421959", "TASK-5419478"],
-    duration: "TWO open RECEIVE tasks here, both KARAKA, LLC (NOT GURUNANDA, so outside the customer-scoped cards) · RECEIVE 1h15m since 11/16 11:06:28a PT (TASK-5421959, ARNULFO MUNGUIA, created 11/16 10:24:08a PT, dock-checked-in 11:06:30a PT, dockCheckOutTime already stamped 12:02:45p PT while the task still reads IN_PROGRESS; receipts RN-195510 (PO POBOK0460, reference 24695325, appointment 9:00a PT) and RN-195509 (PO POBOK0414, reference 24695315, appointment 8:00a PT), both IN_PROGRESS and both devanned at 12:02:45p PT, container 'UNKNOWN - LCL', carrier RXOI, in-yard 10:23:46a PT, entry ET-1182496, driver RONALD POLANCO POLANCO MORENO) · RECEIVE 98h54m since 11/12 9:27:55a PT (TASK-5419478, ARNULFO MUNGUIA, created 11/12 9:07:37a PT, dock-checked-in 9:27:59a PT, entry ET-1181678, RN-195042 at status IN_PROGRESS, receivedStartTime 9:27:55a PT, PO POBOK0432 / reference SPR43963200, appointment 11/12 10:00a PT, container 'UNKNOWN - LCL', carrier AAA COOPER TRANSPORTATION, in-yard 9:07:16a PT) · dock AVAILABLE, space OCCUPIED, occupiedCustomerIds [], entry ET-1182496 (row updated 11/16 12:02:46p PT) · the load task that was open here at the previous snapshot, TASK-5421045 (ARNULFO MUNGUIA, 4 loads, seal 25010985), CLOSED 11/16 9:26:07a PT with all 4 loads SHIPPED; the last receive task to close before today was TASK-5414446 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 7:21:29a PT)",
+    duration: "TWO open RECEIVE tasks here, both KARAKA, LLC (NOT GURUNANDA, so outside the customer-scoped cards) · RECEIVE 1h19m since 11/16 11:06:28a PT (TASK-5421959, ARNULFO MUNGUIA, created 11/16 10:24:08a PT, dock-checked-in 11:06:30a PT, dockCheckOutTime already stamped 12:02:45p PT while the task still reads IN_PROGRESS; receipts RN-195510 (PO POBOK0460, reference 24695325, appointment 9:00a PT) and RN-195509 (PO POBOK0414, reference 24695315, appointment 8:00a PT), both IN_PROGRESS and both devanned at 12:02:45p PT, container 'UNKNOWN - LCL', carrier RXOI, in-yard 10:23:46a PT, entry ET-1182496, driver RONALD POLANCO POLANCO MORENO) · RECEIVE 98h58m since 11/12 9:27:55a PT (TASK-5419478, ARNULFO MUNGUIA, created 11/12 9:07:37a PT, dock-checked-in 9:27:59a PT, entry ET-1181678, RN-195042 at status IN_PROGRESS, receivedStartTime 9:27:55a PT, PO POBOK0432 / reference SPR43963200, appointment 11/12 10:00a PT, container 'UNKNOWN - LCL', carrier AAA COOPER TRANSPORTATION, in-yard 9:07:16a PT) · dock AVAILABLE, space OCCUPIED, occupiedCustomerIds [], entry ET-1182496 (row updated 11/16 12:02:46p PT) · the load task that was open here at the previous snapshot, TASK-5421045 (ARNULFO MUNGUIA, 4 loads, seal 25010985), CLOSED 11/16 9:26:07a PT with all 4 loads SHIPPED; the last receive task to close before today was TASK-5414446 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 7:21:29a PT)",
     anomaly: false,
   },
   {
@@ -388,7 +388,7 @@ export const doors: DoorRecord[] = [
     assignee: "DANIEL BELTRAN (LOAD)",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5421821"],
-    duration: "LOAD 17m since 11/16 12:04:40p PT (TASK-5421821, DANIEL BELTRAN, IN_PROGRESS, LIVE_LOAD, created 11/16 8:54:39a PT, checked in 12:05:02p PT, 1 load LOAD-5043552 still at status LOADING, proNo 5043552, load appointment 11/6 8:00a PT, carrier ORG-378878, NO sealNo recorded yet) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182416 (row updated 11/16 12:05:02p PT; DOCK58 carries the same entry ET-1182416) · the previous load task here closed 11/13 10:23:09a PT (TASK-5420289, DANIEL BELTRAN, 1 load SHIPPED, seal A52689); the newest receive closure here is TASK-5414098 (Nanci Viviana Rosas, KARAKA, LLC, 11/9 2:14:50p PT)",
+    duration: "LOAD 21m since 11/16 12:04:40p PT (TASK-5421821, DANIEL BELTRAN, IN_PROGRESS, LIVE_LOAD, created 11/16 8:54:39a PT, checked in 12:05:02p PT, 1 load LOAD-5043552 still at status LOADING, proNo 5043552, load appointment 11/6 8:00a PT, carrier ORG-378878, NO sealNo recorded yet) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182416 (row updated 11/16 12:05:02p PT; DOCK58 carries the same entry ET-1182416) · the previous load task here closed 11/13 10:23:09a PT (TASK-5420289, DANIEL BELTRAN, 1 load SHIPPED, seal A52689); the newest receive closure here is TASK-5414098 (Nanci Viviana Rosas, KARAKA, LLC, 11/9 2:14:50p PT)",
     anomaly: false,
   },
   {
@@ -572,7 +572,7 @@ export const reservedDoorCount = reserved;
 
 // Bay 4 active task counts by assignee - GURUNANDA scope (the dashboard cards).
 // Source: /wms-bam/outbound/load-task/search-by-paging + /wms-bam/inbound/receive-task/search-by-paging
-// (facility-wide active pulls, matched on dockName to the 23 Bay-4 docks, Nov 16 2026 12:22p PT).
+// (facility-wide active pulls, matched on dockName to the 23 Bay-4 docks, Nov 16 2026 12:26p PT).
 // 5 active-status tasks at Bay-4 doors: 1 LOAD + 4 RECEIVE, at 4 distinct doors
 // (DOCK50, DOCK57, DOCK58, DOCK69).
 // DANIEL BELTRAN (1932077596691410945): 1 LOAD (DOCK57 TASK-5421821, IN_PROGRESS,
@@ -647,14 +647,19 @@ export const scheduledOutboundLoaded = 16;          // orders at status SHIPPED 
 export const pctScheduledInboundReceived = 18.2;    // 2 of 11
 export const pctScheduledOutboundLoaded = 28.6;     // 16 of 56
 // Facility-wide appointment context for the 11/16 PT day, all customers (same
-// two endpoints, no customerId filter): 40 receipts scheduled, of which 19
-// carry a receivedStartTime; 3,356 orders scheduled by totalCount (3,363 rows
-// read across paging while today's schedule is still filling) of which 1,613
-// are SHIPPED.
+// two endpoints, no customerId filter): 40 receipts scheduled, of which 20
+// carry a receivedStartTime; 3,365 orders scheduled by totalCount (all 3,365
+// read across paging) of which 1,631 are SHIPPED.
+//   TIME-WINDOW NOTE (verified at this pull): /wms-bam/inbound/receipt/search-by-paging
+//   and /wms-bam/outbound/order/search-by-paging compare appointmentTime /
+//   scheduleDate against the RAW stored UTC value, so the America/Los_Angeles
+//   business day must be passed as 2026-11-16 08:00:00 -> 2026-11-17 07:59:59.
+//   Passing 2026-11-16 00:00:00 -> 23:59:59 returns only 7 GURUNANDA receipts
+//   (it silently drops the 4 evening-PT ones stored as 11/17 04:00-07:00 UTC).
 export const facilityWideReceiptsCreated = 40;
-export const facilityWideReceiptsReceived = 19;
-export const facilityWideLoadsCreated = 3356;
-export const facilityWideLoadsShipped = 1613;
+export const facilityWideReceiptsReceived = 20;
+export const facilityWideLoadsCreated = 3365;
+export const facilityWideLoadsShipped = 1631;
 
 // Door occupancy duration: available from task startTime where a task exists on
 // the door, has actually started and has not already ended; unavailable for
@@ -663,12 +668,12 @@ export const facilityWideLoadsShipped = 1613;
 // empty Duration column). 18 of 23 doors carry no active task at this pull, 3 of
 // the 7 physical tasks are NEW/not started (DOCK50 TASK-5418313, DOCK58
 // TASK-5420461, DOCK69 TASK-5381972) and 1 is stale (DOCK50 TASK-5090739), so a
-// duration exists for 3 tasks on 2 doors (DOCK54 98h54m from 11/12 9:27:55a PT
-// KARAKA RECEIVE, DOCK54 1h15m from 11/16 11:06:28a PT KARAKA RECEIVE and
-// DOCK57 17m from 11/16 12:04:40p PT LOAD - all measured to 11/16 12:22p PT).
+// duration exists for 3 tasks on 2 doors (DOCK54 98h58m from 11/12 9:27:55a PT
+// KARAKA RECEIVE, DOCK54 1h19m from 11/16 11:06:28a PT KARAKA RECEIVE and
+// DOCK57 21m from 11/16 12:04:40p PT LOAD - all measured to 11/16 12:26p PT).
 export const doorDurationsAvailable = true;
 
-// All Bay 4 active GURUNANDA task records (DOCK50-DOCK72, Nov 16 2026 12:22p PT)
+// All Bay 4 active GURUNANDA task records (DOCK50-DOCK72, Nov 16 2026 12:26p PT)
 // 5 tasks total: 1 LOAD + 4 RECEIVE. One is a data anomaly (TASK-5090739 on
 // DOCK50, stale since 2025-10-21). The 2 physical tasks on those doors that are
 // NOT GURUNANDA - KARAKA, LLC RECEIVE TASK-5421959 and TASK-5419478, both at
@@ -733,7 +738,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5421821",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · 17m since 11/16 12:04:40p PT (DANIEL BELTRAN, task created 11/16 8:54:39a PT, checked in 12:05:02p PT; LIVE_LOAD, 1 load LOAD-5043552 still at status LOADING, proNo 5043552, load appointment 11/6 8:00a PT, carrier ORG-378878, NO sealNo recorded yet)",
+    pieces: "IN_PROGRESS · 21m since 11/16 12:04:40p PT (DANIEL BELTRAN, task created 11/16 8:54:39a PT, checked in 12:05:02p PT; LIVE_LOAD, 1 load LOAD-5043552 still at status LOADING, proNo 5043552, load appointment 11/6 8:00a PT, carrier ORG-378878, NO sealNo recorded yet)",
     assignee: "DANIEL BELTRAN",
     door: "DOCK57",
   },
