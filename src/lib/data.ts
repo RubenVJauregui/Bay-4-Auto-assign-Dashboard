@@ -7,8 +7,9 @@
  *   (2026-11-16T20:40:45Z = 12:40:45p PT). No value in this file is carried over
  *   from an earlier snapshot. Source counts quoted below were read across the
  *   12:40-12:46p PT pull window and are live; a few of them were still climbing
- *   mid-pull (noted inline where they did). All reads use item-time-zone
- *   America/Los_Angeles.
+ *   mid-pull (noted inline where they did). Reads were made in WISE raw-UTC
+ *   mode (no item-time-zone header) - see QUERY MODE WARNING below before
+ *   re-running any of these queries.
  *
  *   TIMESTAMP SEMANTICS - single authority for this file, verified at this pull:
  *   WISE/WMS-BAM returns task, receipt, order and appointment timestamps as UTC
@@ -21,6 +22,16 @@
  *   10:01:54a). Consequently "the 11/16 PT business day" is the UTC window
  *   2026-11-16 08:00:00 -> 2026-11-17 07:59:59 for every endpoint that filters
  *   on a stored timestamp, and that is the ONLY window used in this file.
+ *   QUERY MODE WARNING - the pull behind these numbers was made WITHOUT the
+ *   item-time-zone header, i.e. the raw-UTC mode documented above. The app's
+ *   own loader (src/lib/wms-loader.ts) DOES send item-time-zone
+ *   America/Los_Angeles, and in that mode the same PT business day is the
+ *   plain calendar window 2026-11-16 00:00:00 -> 2026-11-16 23:59:59.
+ *   Both modes select the same receipt/order set, so the published values
+ *   reproduce either way - but do not pair the PT-day UTC window above with
+ *   the timezone header, or the evening-PT appointments drop out and the
+ *   inbound denominator falls (15 -> 10 receipts). Pick one mode and its
+ *   matching window.
  *   Durations are measured to the 2026-11-16 12:40:45p PT pull reference.
  *
  *   SOURCES USED AT THIS PULL:
