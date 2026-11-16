@@ -2,12 +2,26 @@
  * Bay 4 Assignments - Authoritative Operational Data
  * Valley View Warehouse (LT_F1), DOCK50-DOCK72
  *
- * DATA REFRESHED: 2026-11-16 12:26p PT (live WISE / WMS-BAM APIs)
- *   Every value below was re-read live at this pull; nothing was carried over.
- *   All reads use item-time-zone America/Los_Angeles. WISE returns the
- *   dock/task/receipt/order timestamps as naive facility wall-clock values, so
- *   the strings below are already PT and no UTC->PT shift is applied.
- *   Durations are measured to the 2026-11-16 12:26p PT pull reference.
+ * DATA REFRESHED: 2026-11-16 12:40p PT (live WISE / WMS-BAM APIs)
+ *   Every value below was re-read live at ONE reference
+ *   (2026-11-16T20:40:45Z = 12:40:45p PT). No value in this file is carried over
+ *   from an earlier snapshot. Source counts quoted below were read across the
+ *   12:40-12:46p PT pull window and are live; a few of them were still climbing
+ *   mid-pull (noted inline where they did). All reads use item-time-zone
+ *   America/Los_Angeles.
+ *
+ *   TIMESTAMP SEMANTICS - single authority for this file, verified at this pull:
+ *   WISE/WMS-BAM returns task, receipt, order and appointment timestamps as UTC
+ *   strings with NO offset. They are NOT facility wall-clock. Render PT with a
+ *   real zone conversion: PST = UTC-8 (on/after 2026-11-01), PDT = UTC-7 (before
+ *   2026-11-01). Evidence read at this pull: RN-195674 receivedStartTime
+ *   2026-11-16T19:50:24 = 11:50:24a PT; RN-5011609 appointmentTime
+ *   2026-11-17T01:30:00 = 17:30 PT on 11/16; TASK-5407284 endTime
+ *   2026-10-29T18:01:54 = 11:01:54a PDT (a flat UTC-8 read would wrongly give
+ *   10:01:54a). Consequently "the 11/16 PT business day" is the UTC window
+ *   2026-11-16 08:00:00 -> 2026-11-17 07:59:59 for every endpoint that filters
+ *   on a stored timestamp, and that is the ONLY window used in this file.
+ *   Durations are measured to the 2026-11-16 12:40:45p PT pull reference.
  *
  *   SOURCES USED AT THIS PULL:
  *     - POST /wms-bam/wms-location/search, body {exactlyNames:[DOCK50..DOCK72]}
@@ -16,7 +30,7 @@
  *       entryId, updatedTime). Door rows are used for "Door Utilization".
  *     - POST /wms-bam/outbound/load-task/search-by-paging
  *       statuses [NEW, IN_PROGRESS, EXCEPTION], facility-wide (NO customer
- *       filter) -> totalCount 53, all 53 read; exactly 1 of them sits on a
+ *       filter) -> totalCount 54, all 54 read; exactly 1 of them sits on a
  *       Bay-4 dockName (TASK-5421821, DOCK57, GURUNANDA, IN_PROGRESS).
  *     - POST /wms-bam/inbound/receive-task/search-by-paging
  *       statuses [NEW, IN_PROGRESS, EXCEPTION], facility-wide (NO customer
@@ -26,23 +40,34 @@
  *       TASK-5009440, TASK-5009439, TASK-5008826, TASK-5008825,
  *       TASK-5008824) and none of them is a Bay-4 door.
  *     - POST /wms-bam/inbound/receipt/search-by-paging
- *       {customerId: ORG-655875, appointmentTimeFrom "2026-11-16 08:00:00",
- *       appointmentTimeTo "2026-11-17 07:59:59"} -> totalCount 11, all 11 read;
- *       2 of the 11 carry a receivedStartTime (RN-195674 recvStart 11/16
- *       11:50:24a, RN-5011516 recvStart 11/13 10:20:55a, CLOSED at receivedTime
- *       11/16 8:48:01a).
+ *       {customerId: ORG-655875, statuses [all 7], appointmentTimeFrom
+ *       "2026-11-16 08:00:00", appointmentTimeTo "2026-11-17 07:59:59"}
+ *       -> totalCount 15, all 15 read; 3 of the 15 carry a receivedStartTime
+ *       (RN-195674 recvStart 11/16 11:50:24a, RN-195683 recvStart 11/16
+ *       12:35:06p, RN-5011516 recvStart 11/13 10:20:55a and CLOSED at
+ *       receivedTime 11/16 8:48:01a).
+ *       The naive calendar-day window (2026-11-16 00:00:00 -> 23:59:59) is
+ *       deliberately NOT used: it returns 9 rows and silently drops the 6
+ *       evening-PT appointments stored as 2026-11-17 0x:xx:00 UTC.
  *     - POST /wms-bam/outbound/order/search-by-paging
  *       {customerId: ORG-655875, scheduleDatePeriod ["2026-11-16 08:00:00",
- *       "2026-11-17 07:59:59"]} -> totalCount 56, all 56 read; statuses PICKED
- *       24, SHIPPED 16, PLANNED 8, IMPORTED 7, COMMIT_FAILED 1.
+ *       "2026-11-17 07:59:59"]} -> totalCount 57, all 57 read; statuses PICKED
+ *       24, SHIPPED 16, PLANNED 13, COMMIT_FAILED 2, IMPORTED 1, OPEN 1.
+ *       scheduleDate is date-only and stored at 08:00:00 UTC, so this window and
+ *       the naive calendar-day window return the identical 57; the window choice
+ *       only changes results for receipt appointmentTime.
  *     - POST /wms-bam/outbound/load-task/search-by-paging
  *       statuses [CLOSED, FORCE_CLOSED], endTimeFrom "2026-10-31 00:00:00",
- *       endTimeTo "2026-11-17 23:59:59", sorted endTime DESC -> totalCount 675
- *       (all customers), all 675 read (oldest endTime in the window read set is
- *       11/2 7:48:00a PT). 83 of them are ARNULFO MUNGUIA on GURUNANDA, 73 of
- *       those at Bay-4 doors (his "Assigned Activity" stream). The newest load
- *       closure facility-wide at this pull is 11/16 12:14:33p PT
- *       (TASK-5422007, DOCK171) - i.e. live load closures are flowing today.
+ *       endTimeTo "2026-11-17 23:59:59" -> totalCount 679 (all customers), all
+ *       679 read (oldest endTime in the window is 10/30 4:11:13p PDT). The
+ *       ARNULFO MUNGUIA / GURUNANDA subset is measured by a dedicated query
+ *       instead (customerId ORG-655875 + assigneeUserIds [89,
+ *       1948070158297014318] + the same endTime window) -> totalCount 83, all 83
+ *       read, 73 of them at Bay-4 doors (his "Assigned Activity" stream).
+ *       The newest load closure facility-wide at this pull is 11/16 12:45:19p PT
+ *       (TASK-5422077, DOCK168, VICTOR LOPEZ) - live closures are flowing today.
+ *       NOTE: orderBy/sort are not supported on this endpoint (they null out
+ *       totalCount); sort client-side after reading.
  *     - POST /wms-bam/inbound/receive-task/search-by-paging
  *       statuses [CLOSED, FORCE_CLOSED], sorted endTime DESC -> totalCount
  *       17,772; the newest 2,000 were read (window back to 9/22 10:35:47a PT).
@@ -80,11 +105,11 @@
  *   the previous snapshot published both percentages as NOT COMPUTABLE. Today
  *   (Monday 11/16 PT) both denominators are real and non-zero, so both
  *   percentages are computable again:
- *     % scheduled inbounds received = 2 of 11 (18.2%).
- *     % scheduled outbounds loaded  = 16 of 56 (28.6%).
- *   Re-read live at this pull for comparison: 11/13 = 12 receipts of which 7
- *   carry a receivedStartTime (58.3%) and 32 orders of which 11 are SHIPPED
- *   (34.4%); 11/14 = 0 receipts / 0 orders; 11/15 = 0 receipts / 0 orders.
+ *     % scheduled inbounds received = 3 of 15 (20.0%).
+ *     % scheduled outbounds loaded  = 16 of 57 (28.1%).
+ *   Both fractions are re-read at THIS pull only. No earlier day was re-queried
+ *   for this file, so no 11/13-11/15 figure is restated here - nothing
+ *   unverified is carried forward.
  *
  *   Key state at this pull:
  *     - DOOR STATUS: occupied 16, reserved 3, available 4 (16+3+4 = 23). Only
@@ -131,33 +156,36 @@
  *       stream is therefore reported as ARNULFO MUNGUIA's task assignment
  *       transactions on the GURUNANDA live-out/live-in work, and nothing is
  *       invented: 83 CLOSED load transactions with endTime from 2026-10-31
- *       00:00:00 PT (82 under assigneeUserId 89 + 1 under a second Arnulfo
+ *       00:00:00 UTC (82 under assigneeUserId 89 + 1 under a second Arnulfo
  *       identity, assigneeUserId 1948070158297014318, name rendered
  *       "arnulfo munguia"), 73 at Bay-4 doors, 10 off Bay 4 (DOCK4 2, DOCK5 2,
  *       DOCK7 2, DOCK6 1, DOCK9 1, DOCK10 1, DOCK45 1).
- *       Per-day counts by endTime (PT): 11/16 7, 11/13 8, 11/12 12, 11/11 4,
- *       11/10 10, 11/9 6, 11/6 8, 11/5 4, 11/4 11, 11/3 6, 11/2 7, with no
- *       closures at all on 11/1, 11/7, 11/8, 11/14 or 11/15.
+ *       Per-day counts by endTime (PT), ALL scopes: 11/16 7, 11/13 8, 11/12 12,
+ *       11/11 4, 11/10 10, 11/9 6, 11/6 8, 11/5 4, 11/4 11, 11/3 6, 11/2 7, with
+ *       no closures at all on 11/1, 11/7, 11/8, 11/14 or 11/15 (re-verified
+ *       unchanged at this pull). Only 4 of today's 7 are Bay-4 doors, all
+ *       PRE_LOAD: DOCK52 TASK-5420648 9:18:06a, DOCK54 TASK-5421045 9:26:07a,
+ *       DOCK53 TASK-5421041 9:59:10a, DOCK56 TASK-5421056 11:02:48a.
  *       Newest overall: TASK-5421016 at DOCK10 (started 11/13 6:49:05p PT,
  *       closed 11/16 11:40:39a PT). Newest at a Bay-4 door: DOCK56
  *       TASK-5421056 (started 11/13 9:53:54p PT, closed 11/16 11:02:48a PT,
  *       2 loads both SHIPPED, seal 25010981).
- *     - % scheduled inbounds received (11/16 PT): 2 of 11 = 18.2%.
- *     - % scheduled outbounds loaded (11/16 PT): 16 of 56 = 28.6%.
+ *     - % scheduled inbounds received (11/16 PT): 3 of 15 = 20.0%.
+ *     - % scheduled outbounds loaded (11/16 PT): 16 of 57 = 28.1%.
  *     - Inbound/outbound mix: 4 RECEIVE / 1 LOAD of 5 active GURUNANDA tasks.
  *     - Total doors occupied: 16 of 23 (plus 3 reserved, 4 available).
- *     - Planned GURUNANDA orders: live count 151 at this pull.
+ *     - Planned GURUNANDA orders: live count 164 at this pull.
  *     - Door occupancy duration: available where an active task has a startTime
- *       and has not ended - 3 tasks on 2 doors at this pull (DOCK54 98h58m
- *       KARAKA RECEIVE, DOCK54 1h19m KARAKA RECEIVE, DOCK57 21m LOAD), all
- *       measured to 11/16 12:26p PT. WMS has no occupancy-start field for
+ *       and has not ended - 3 tasks on 2 doors at this pull (DOCK54 99h12m
+ *       KARAKA RECEIVE, DOCK54 1h34m KARAKA RECEIVE, DOCK57 36m LOAD), all
+ *       measured to 11/16 12:40:45p PT. WMS has no occupancy-start field for
  *       task-less doors (18 of 23), for the three NEW GURUNANDA tasks (DOCK50
  *       TASK-5418313, DOCK58 TASK-5420461, DOCK69 TASK-5381972) or for the one
  *       stale task.
- *     - Facility-wide appointment context for the 11/16 PT day (no customerId
- *       filter): receipts scheduled 40, of which 20 carry a receivedStartTime;
- *       orders scheduled 3,365 by totalCount (all 3,365 rows read across
- *       paging) of which 1,631 are SHIPPED.
+ *     - Facility-wide schedule context for the 11/16 PT day (no customerId
+ *       filter, same UTC-derived PT-day window): receipts scheduled 44, of which
+ *       21 carry a receivedStartTime; orders scheduled 3,375 by totalCount, of
+ *       which 1,685 are SHIPPED.
  *
  *   NOTE: the in-yard FULL equipment array and the all-time assignee baseline
  *   are outside the scope of this request and were NOT re-stated from WISE into
@@ -231,8 +259,9 @@ export const inYardFullEquipment: InYardEquipmentRecord[] = [];
 
 // Planned Orders context: WMS outbound orders for GURUNANDA (ORG-655875) at
 // status PLANNED. FALLBACK ONLY - the dashboard shows the live loader count when
-// it succeeds. Live totalCount was 151 at the 11/16 12:26p PT pull (re-verified).
-export const plannedGurunandaOrderCount = 151;
+// it succeeds. Live totalCount was 164 at the 11/16 12:40p PT pull (re-verified;
+// it read 151 at 12:26p - PLANNED GURUNANDA orders climbed by 13 in 14 minutes).
+export const plannedGurunandaOrderCount = 164;
 
 // --- Graza Dispatch Types (preserved for GrazaDispatchSummary component) ---
 export interface GrazaDispatchRun {
@@ -292,7 +321,7 @@ export interface GrazaCombinedDispatchData {
 
 
 // =====================================================================
-// DOOR UTILIZATION - DOCK50-DOCK72 (23 doors), live as of 11/16 12:26p PT
+// DOOR UTILIZATION - DOCK50-DOCK72 (23 doors), live as of 11/16 12:40p PT
 //
 // All 23 rows come from one /wms-bam/wms-location/search call
 // (exactlyNames DOCK50..DOCK72); every row is category DOCK, type DOCK,
@@ -361,7 +390,7 @@ export const doors: DoorRecord[] = [
     assignee: "ARNULFO MUNGUIA (2× KARAKA RECEIVE)",
     customer: "KARAKA, LLC",
     taskIds: ["TASK-5421959", "TASK-5419478"],
-    duration: "TWO open RECEIVE tasks here, both KARAKA, LLC (NOT GURUNANDA, so outside the customer-scoped cards) · RECEIVE 1h19m since 11/16 11:06:28a PT (TASK-5421959, ARNULFO MUNGUIA, created 11/16 10:24:08a PT, dock-checked-in 11:06:30a PT, dockCheckOutTime already stamped 12:02:45p PT while the task still reads IN_PROGRESS; receipts RN-195510 (PO POBOK0460, reference 24695325, appointment 9:00a PT) and RN-195509 (PO POBOK0414, reference 24695315, appointment 8:00a PT), both IN_PROGRESS and both devanned at 12:02:45p PT, container 'UNKNOWN - LCL', carrier RXOI, in-yard 10:23:46a PT, entry ET-1182496, driver RONALD POLANCO POLANCO MORENO) · RECEIVE 98h58m since 11/12 9:27:55a PT (TASK-5419478, ARNULFO MUNGUIA, created 11/12 9:07:37a PT, dock-checked-in 9:27:59a PT, entry ET-1181678, RN-195042 at status IN_PROGRESS, receivedStartTime 9:27:55a PT, PO POBOK0432 / reference SPR43963200, appointment 11/12 10:00a PT, container 'UNKNOWN - LCL', carrier AAA COOPER TRANSPORTATION, in-yard 9:07:16a PT) · dock AVAILABLE, space OCCUPIED, occupiedCustomerIds [], entry ET-1182496 (row updated 11/16 12:02:46p PT) · the load task that was open here at the previous snapshot, TASK-5421045 (ARNULFO MUNGUIA, 4 loads, seal 25010985), CLOSED 11/16 9:26:07a PT with all 4 loads SHIPPED; the last receive task to close before today was TASK-5414446 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 7:21:29a PT)",
+    duration: "TWO open RECEIVE tasks here, both KARAKA, LLC (NOT GURUNANDA, so outside the customer-scoped cards) · RECEIVE 1h34m since 11/16 11:06:28a PT (TASK-5421959, ARNULFO MUNGUIA, created 11/16 10:24:08a PT, dock-checked-in 11:06:30a PT, dockCheckOutTime already stamped 12:02:45p PT while the task still reads IN_PROGRESS; receipts RN-195510 (PO POBOK0460, reference 24695325, appointment 9:00a PT) and RN-195509 (PO POBOK0414, reference 24695315, appointment 8:00a PT), both IN_PROGRESS and both devanned at 12:02:45p PT, container 'UNKNOWN - LCL', carrier RXOI, in-yard 10:23:46a PT, entry ET-1182496, driver RONALD POLANCO POLANCO MORENO) · RECEIVE 99h12m since 11/12 9:27:55a PT (TASK-5419478, ARNULFO MUNGUIA, created 11/12 9:07:37a PT, dock-checked-in 9:27:59a PT, entry ET-1181678, RN-195042 at status IN_PROGRESS, receivedStartTime 9:27:55a PT, PO POBOK0432 / reference SPR43963200, appointment 11/12 10:00a PT, container 'UNKNOWN - LCL', carrier AAA COOPER TRANSPORTATION, in-yard 9:07:16a PT) · dock AVAILABLE, space OCCUPIED, occupiedCustomerIds [], entry ET-1182496 (row updated 11/16 12:02:46p PT) · the load task that was open here at the previous snapshot, TASK-5421045 (ARNULFO MUNGUIA, 4 loads, seal 25010985), CLOSED 11/16 9:26:07a PT with all 4 loads SHIPPED; the last receive task to close before today was TASK-5414446 (Nanci Viviana Rosas, KARAKA, LLC, 11/11 7:21:29a PT)",
     anomaly: false,
   },
   {
@@ -388,7 +417,7 @@ export const doors: DoorRecord[] = [
     assignee: "DANIEL BELTRAN (LOAD)",
     customer: "GURUNANDA, LLC",
     taskIds: ["TASK-5421821"],
-    duration: "LOAD 21m since 11/16 12:04:40p PT (TASK-5421821, DANIEL BELTRAN, IN_PROGRESS, LIVE_LOAD, created 11/16 8:54:39a PT, checked in 12:05:02p PT, 1 load LOAD-5043552 still at status LOADING, proNo 5043552, load appointment 11/6 8:00a PT, carrier ORG-378878, NO sealNo recorded yet) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182416 (row updated 11/16 12:05:02p PT; DOCK58 carries the same entry ET-1182416) · the previous load task here closed 11/13 10:23:09a PT (TASK-5420289, DANIEL BELTRAN, 1 load SHIPPED, seal A52689); the newest receive closure here is TASK-5414098 (Nanci Viviana Rosas, KARAKA, LLC, 11/9 2:14:50p PT)",
+    duration: "LOAD 36m since 11/16 12:04:40p PT (TASK-5421821, DANIEL BELTRAN, IN_PROGRESS, LIVE_LOAD, created 11/16 8:54:39a PT, checked in 12:05:02p PT, 1 load LOAD-5043552 still at status LOADING, proNo 5043552, load appointment 11/6 8:00a PT, carrier ORG-378878, NO sealNo recorded yet) · dock OCCUPIED, space OCCUPIED, occupiedCustomerIds [], entry ET-1182416 (row updated 11/16 12:05:02p PT; DOCK58 carries the same entry ET-1182416) · the previous load task here closed 11/13 10:23:09a PT (TASK-5420289, DANIEL BELTRAN, 1 load SHIPPED, seal A52689); the newest receive closure here is TASK-5414098 (Nanci Viviana Rosas, KARAKA, LLC, 11/9 2:14:50p PT)",
     anomaly: false,
   },
   {
@@ -572,7 +601,7 @@ export const reservedDoorCount = reserved;
 
 // Bay 4 active task counts by assignee - GURUNANDA scope (the dashboard cards).
 // Source: /wms-bam/outbound/load-task/search-by-paging + /wms-bam/inbound/receive-task/search-by-paging
-// (facility-wide active pulls, matched on dockName to the 23 Bay-4 docks, Nov 16 2026 12:26p PT).
+// (facility-wide active pulls, matched on dockName to the 23 Bay-4 docks, Nov 16 2026 12:40p PT).
 // 5 active-status tasks at Bay-4 doors: 1 LOAD + 4 RECEIVE, at 4 distinct doors
 // (DOCK50, DOCK57, DOCK58, DOCK69).
 // DANIEL BELTRAN (1932077596691410945): 1 LOAD (DOCK57 TASK-5421821, IN_PROGRESS,
@@ -623,43 +652,42 @@ export const activeInboundOutboundMix: MixMetric[] = [
 // --- Schedule Data (2026-11-16, Monday) ---
 // GURUNANDA is scheduling again after the 11/14-11/15 weekend, so both
 // percentages are computable at this pull:
-//   % scheduled inbounds received TODAY: 11 GURUNANDA receipts carry an
-//   appointmentTime inside the 11/16 PT business day (query window
-//   appointmentTimeFrom "2026-11-16 00:00:00" -> appointmentTimeTo
-//   "2026-11-16 23:59:59", totalCount 11), of which 2 carry a receivedStartTime
-//   (RN-195674 recvStart 11/16 11:50:24a PT, RN-5011516 recvStart 11/13
-//   10:20:55a PT and CLOSED at receivedTime 11/16 8:48:01a PT) = 2 / 11.
-//   % scheduled outbounds loaded TODAY: 56 GURUNANDA orders carry a scheduleDate
-//   inside the 11/16 PT day (scheduleDatePeriod ["2026-11-16 00:00:00",
-//   "2026-11-16 23:59:59"], totalCount 56) of which 16 are at status SHIPPED
-//   (the other 40 are PICKED 24, PLANNED 8, IMPORTED 7, COMMIT_FAILED 1)
-//   = 16 / 56.
-//   CONTEXT ONLY: re-read live at this refresh, 11/13 reads 12 receipts of
-//   which 7 carry a receivedStartTime (58.3%) and 32 orders of which 11 are
-//   SHIPPED (34.4%); 11/14 and 11/15 read 0 receipts and 0 orders (weekend,
-//   which is why the previous snapshot published both cards as NOT COMPUTABLE).
-export const scheduleAvailable = true;              // 11 GURUNANDA receipts scheduled on 11/16
-export const outboundScheduleAvailable = true;      // 56 GURUNANDA orders scheduled on 11/16
-export const scheduledInboundOrders = 11;           // receipts with appointmentTime in the 11/16 PT day
-export const scheduledOutboundOrders = 56;          // orders with scheduleDate in the 11/16 PT day
-export const scheduledInboundReceived = 2;          // receipts with receivedStartTime in that set
+//   Both percentages use the SAME UTC-derived 11/16 PT business-day window,
+//   2026-11-16 08:00:00 -> 2026-11-17 07:59:59 (see TIMESTAMP SEMANTICS in the
+//   file header; this window is the only one used anywhere in this file):
+//   % scheduled inbounds received TODAY: 15 GURUNANDA receipts carry an
+//   appointmentTime inside that window (totalCount 15, all 15 read), of which
+//   3 carry a receivedStartTime - RN-195674 11/16 11:50:24a, RN-195683 11/16
+//   12:35:06p, and RN-5011516 (receivedStart 11/13 10:20:55a, CLOSED at
+//   receivedTime 11/16 8:48:01a) = 3 / 15 = 20.0%.
+//   % scheduled outbounds loaded TODAY: 57 GURUNANDA orders carry a scheduleDate
+//   inside that window (scheduleDatePeriod ["2026-11-16 08:00:00",
+//   "2026-11-17 07:59:59"], totalCount 57, all 57 read) of which 16 are at
+//   status SHIPPED (the other 41 are PICKED 24, PLANNED 13, COMMIT_FAILED 2,
+//   IMPORTED 1, OPEN 1) = 16 / 57 = 28.1%.
+//   Prior snapshot for comparison (12:26p PT): 2 / 11 = 18.2% and
+//   16 / 56 = 28.6%. The numerator for inbounds moved 2 -> 3 because RN-195683
+//   started receiving at 12:35:06p, and the denominator moved 11 -> 15 because
+//   4 more receipts with a stored appointmentTime inside the PT day arrived
+//   during the afternoon (RN-5011612 + RN-5011581 at 1:00p PT, RN-5011609 at
+//   5:30p PT, RN-5011608 at 9:00p PT).
+export const scheduleAvailable = true;              // 15 GURUNANDA receipts scheduled on 11/16
+export const outboundScheduleAvailable = true;      // 57 GURUNANDA orders scheduled on 11/16
+export const scheduledInboundOrders = 15;           // receipts with appointmentTime in the 11/16 PT day
+export const scheduledOutboundOrders = 57;          // orders with scheduleDate in the 11/16 PT day
+export const scheduledInboundReceived = 3;          // receipts with receivedStartTime in that set
 export const scheduledOutboundLoaded = 16;          // orders at status SHIPPED in that set
-export const pctScheduledInboundReceived = 18.2;    // 2 of 11
-export const pctScheduledOutboundLoaded = 28.6;     // 16 of 56
-// Facility-wide appointment context for the 11/16 PT day, all customers (same
-// two endpoints, no customerId filter): 40 receipts scheduled, of which 20
-// carry a receivedStartTime; 3,365 orders scheduled by totalCount (all 3,365
-// read across paging) of which 1,631 are SHIPPED.
-//   TIME-WINDOW NOTE (verified at this pull): /wms-bam/inbound/receipt/search-by-paging
-//   and /wms-bam/outbound/order/search-by-paging compare appointmentTime /
-//   scheduleDate against the RAW stored UTC value, so the America/Los_Angeles
-//   business day must be passed as 2026-11-16 08:00:00 -> 2026-11-17 07:59:59.
-//   Passing 2026-11-16 00:00:00 -> 23:59:59 returns only 7 GURUNANDA receipts
-//   (it silently drops the 4 evening-PT ones stored as 11/17 04:00-07:00 UTC).
-export const facilityWideReceiptsCreated = 40;
-export const facilityWideReceiptsReceived = 20;
-export const facilityWideLoadsCreated = 3365;
-export const facilityWideLoadsShipped = 1631;
+export const pctScheduledInboundReceived = 20.0;    // 3 of 15
+export const pctScheduledOutboundLoaded = 28.1;     // 16 of 57
+// Facility-wide schedule context for the 11/16 PT day, all customers (same two
+// endpoints, no customerId filter, same UTC-derived PT-day window): 44 receipts
+// scheduled, of which 21 carry a receivedStartTime; 3,375 orders scheduled by
+// totalCount, of which 1,685 are SHIPPED.
+//   (Prior snapshot at 12:26p PT: 40 / 20 receipts and 3,365 / 1,631 orders.)
+export const facilityWideReceiptsCreated = 44;
+export const facilityWideReceiptsReceived = 21;
+export const facilityWideLoadsCreated = 3375;
+export const facilityWideLoadsShipped = 1685;
 
 // Door occupancy duration: available from task startTime where a task exists on
 // the door, has actually started and has not already ended; unavailable for
@@ -668,12 +696,12 @@ export const facilityWideLoadsShipped = 1631;
 // empty Duration column). 18 of 23 doors carry no active task at this pull, 3 of
 // the 7 physical tasks are NEW/not started (DOCK50 TASK-5418313, DOCK58
 // TASK-5420461, DOCK69 TASK-5381972) and 1 is stale (DOCK50 TASK-5090739), so a
-// duration exists for 3 tasks on 2 doors (DOCK54 98h58m from 11/12 9:27:55a PT
-// KARAKA RECEIVE, DOCK54 1h19m from 11/16 11:06:28a PT KARAKA RECEIVE and
-// DOCK57 21m from 11/16 12:04:40p PT LOAD - all measured to 11/16 12:26p PT).
+// duration exists for 3 tasks on 2 doors (DOCK54 99h12m from 11/12 9:27:55a PT
+// KARAKA RECEIVE, DOCK54 1h34m from 11/16 11:06:28a PT KARAKA RECEIVE and
+// DOCK57 36m from 11/16 12:04:40p PT LOAD - all measured to 11/16 12:40:45p PT).
 export const doorDurationsAvailable = true;
 
-// All Bay 4 active GURUNANDA task records (DOCK50-DOCK72, Nov 16 2026 12:26p PT)
+// All Bay 4 active GURUNANDA task records (DOCK50-DOCK72, Nov 16 2026 12:40p PT)
 // 5 tasks total: 1 LOAD + 4 RECEIVE. One is a data anomaly (TASK-5090739 on
 // DOCK50, stale since 2025-10-21). The 2 physical tasks on those doors that are
 // NOT GURUNANDA - KARAKA, LLC RECEIVE TASK-5421959 and TASK-5419478, both at
@@ -682,7 +710,7 @@ export const doorDurationsAvailable = true;
 // door record.
 // "Assigned Activity" stream for task "Guru live out / in assign to Arnulfo":
 // Arnulfo MUNGUIA has 83 CLOSED GURUNANDA load transactions with endTime inside
-// the 2026-10-31 00:00:00 PT - now window (82 under assigneeUserId 89 plus 1
+// the 2026-10-31 00:00:00 UTC - now window (82 under assigneeUserId 89 plus 1
 // under a second Arnulfo identity, assigneeUserId 1948070158297014318, name
 // rendered "arnulfo munguia"; 73 of them at Bay-4 doors - DOCK51 12, DOCK53 11,
 // DOCK54 11, DOCK52 11, DOCK55 8, DOCK56 7, DOCK50 7, DOCK57 3, DOCK60 2,
@@ -738,7 +766,7 @@ export const assignments: TaskRecord[] = [
     taskId: "TASK-5421821",
     dns: "LOAD",
     customer: "GURUNANDA, LLC",
-    pieces: "IN_PROGRESS · 21m since 11/16 12:04:40p PT (DANIEL BELTRAN, task created 11/16 8:54:39a PT, checked in 12:05:02p PT; LIVE_LOAD, 1 load LOAD-5043552 still at status LOADING, proNo 5043552, load appointment 11/6 8:00a PT, carrier ORG-378878, NO sealNo recorded yet)",
+    pieces: "IN_PROGRESS · 36m since 11/16 12:04:40p PT (DANIEL BELTRAN, task created 11/16 8:54:39a PT, checked in 12:05:02p PT; LIVE_LOAD, 1 load LOAD-5043552 still at status LOADING, proNo 5043552, load appointment 11/6 8:00a PT, carrier ORG-378878, NO sealNo recorded yet)",
     assignee: "DANIEL BELTRAN",
     door: "DOCK57",
   },
